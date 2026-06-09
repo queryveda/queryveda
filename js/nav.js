@@ -13,7 +13,7 @@ const Nav = {
     nav.className = "site-nav";
     nav.innerHTML = `
       <div class="nav-inner">
-        <a href="index.html" class="nav-logo">\u{1F418} SQL Practice</a>
+        <a href="index.html" class="nav-logo">\u{1F418} QueryVeda</a>
         <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
           <span></span><span></span><span></span>
         </button>
@@ -40,7 +40,7 @@ const Nav = {
   _injectFooter() {
     const footer = document.createElement("footer");
     footer.className = "site-footer";
-    footer.innerHTML = `<p>Built with <a href="https://electric-sql.com/product/pglite" target="_blank">PGlite</a> \u00B7 PostgreSQL in the browser</p>`;
+    footer.innerHTML = `<p>QueryVeda \u00B7 Built with <a href="https://electric-sql.com/product/pglite" target="_blank">PGlite</a> \u00B7 PostgreSQL in the browser</p>`;
     document.body.appendChild(footer);
   },
 

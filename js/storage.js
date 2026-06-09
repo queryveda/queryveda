@@ -1,4 +1,4 @@
-/* storage.js — localStorage API for SQL Practice */
+/* storage.js — localStorage API for QueryVeda */
 
 const Storage = {
   // --- Theme ---
