@@ -108,6 +108,61 @@
       border-radius: 8px; color: var(--warning); line-height: 1.5;
     }
     .hint-item strong { color: var(--warning); }
+
+    /* Self-promo banner */
+    .promo-banner {
+      display: block;
+      margin-top: 16px;
+      padding: 16px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--accent);
+    }
+    .promo-banner:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .promo-inner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .promo-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+    .promo-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .promo-text strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .promo-text span {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .promo-cta {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    @media (max-width: 600px) {
+      .promo-inner { flex-wrap: wrap; }
+      .promo-cta { width: 100%; text-align: right; margin-top: 4px; }
+    }
   </style>
 </head>
 <body>
@@ -154,6 +209,17 @@
       <div id="verdict"></div>
       <div id="result"></div>
       <div id="solutionArea"></div>
+
+      <a href="problems.html" class="promo-banner">
+        <div class="promo-inner">
+          <div class="promo-icon">&#9889;</div>
+          <div class="promo-text">
+            <strong>75 SQL problems across 5 topics</strong>
+            <span>Aggregations, Window Functions, Sliding Windows, Sequences &amp; Advanced Analytics</span>
+          </div>
+          <span class="promo-cta">Browse All &rarr;</span>
+        </div>
+      </a>
     </div>
   </div>
 
