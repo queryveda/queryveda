@@ -124,6 +124,7 @@
     </div>
   </div>
 
+  <script src="js/protect.js"></script>
   <script src="js/questions.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/nav.js"></script>
@@ -447,6 +448,12 @@
           }
         },
         hintOptions: { tables: currentHintTables, completeSingle: false }
+      });
+      // Block paste and drop — only allow typing
+      editor.on("beforeChange", (cm, change) => {
+        if (change.origin === "paste" || change.origin === "drop") {
+          change.cancel();
+        }
       });
       editor.on("inputRead", (cm, change) => {
         if (change.origin !== "+input") return;
