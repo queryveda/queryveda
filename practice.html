@@ -455,6 +455,15 @@
           change.cancel();
         }
       });
+      // Also block at DOM level to catch all paste vectors
+      editor.getWrapperElement().addEventListener("paste", e => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+      editor.getWrapperElement().addEventListener("drop", e => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
       editor.on("inputRead", (cm, change) => {
         if (change.origin !== "+input") return;
         const ch = change.text[0];
