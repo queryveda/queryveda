@@ -49,14 +49,18 @@ const Storage = {
   // Load cloud progress into localStorage
   async syncFromCloud() {
     if (typeof Auth === "undefined" || !Auth.isLoggedIn()) return;
-    const progress = await Auth.loadProgress();
-    for (const p of progress) {
-      if (p.status === "solved") {
-        localStorage.setItem("sql_solved_" + p.question_id, "1");
-        localStorage.removeItem("sql_attempted_" + p.question_id);
-      } else if (p.status === "attempted" && !this.isSolved(p.question_id)) {
-        localStorage.setItem("sql_attempted_" + p.question_id, "1");
+    try {
+      const progress = await Auth.loadProgress();
+      for (const p of progress) {
+        if (p.status === "solved") {
+          localStorage.setItem("sql_solved_" + p.question_id, "1");
+          localStorage.removeItem("sql_attempted_" + p.question_id);
+        } else if (p.status === "attempted" && !this.isSolved(p.question_id)) {
+          localStorage.setItem("sql_attempted_" + p.question_id, "1");
+        }
       }
+    } catch (e) {
+      console.warn("Cloud sync failed:", e);
     }
   },
 

@@ -11,8 +11,13 @@ const Auth = {
   _readyCallbacks: [],
 
   async init() {
-    const { data: { session } } = await supabase.auth.getSession();
-    this._user = session?.user || null;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      this._user = session?.user || null;
+    } catch (e) {
+      console.warn("Auth init failed:", e);
+      this._user = null;
+    }
     this._ready = true;
     this._readyCallbacks.forEach(cb => cb());
     this._readyCallbacks = [];
