@@ -5,6 +5,7 @@ const Nav = {
     this._injectNav();
     this._injectFooter();
     this._initTheme();
+    this._updateAuthUI();
   },
 
   _injectNav() {
@@ -24,6 +25,7 @@ const Nav = {
           <a href="progress.html" class="${currentPage === 'progress.html' ? 'active' : ''}">Progress</a>
         </div>
         <button class="nav-theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
+        <div class="nav-auth" id="navAuth"></div>
       </div>
     `;
     document.body.prepend(nav);
@@ -62,5 +64,34 @@ const Nav = {
   _updateToggleIcon(theme) {
     const btn = document.getElementById("themeToggle");
     btn.textContent = theme === "dark" ? "\u2600\uFE0F" : "\u{1F319}";
+  },
+
+  _updateAuthUI() {
+    const container = document.getElementById("navAuth");
+    if (!container) return;
+    const user = Auth.getUser();
+    if (user) {
+      const initial = user.name.charAt(0).toUpperCase();
+      container.innerHTML = `
+        <div class="nav-user-avatar">${initial}</div>
+        <span class="nav-user-name">${user.name.split(" ")[0]}</span>
+        <button class="nav-auth-btn" id="logoutBtn">Logout</button>
+      `;
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        Auth.logout();
+        this._updateAuthUI();
+        // If on progress page, show gate
+        if (location.pathname.split("/").pop() === "progress.html") {
+          location.reload();
+        }
+      });
+    } else {
+      container.innerHTML = `
+        <button class="nav-auth-btn" id="loginBtn">Login</button>
+        <button class="nav-auth-btn primary" id="signupBtn">Sign Up</button>
+      `;
+      document.getElementById("loginBtn").addEventListener("click", () => Auth.showModal("login"));
+      document.getElementById("signupBtn").addEventListener("click", () => Auth.showModal("signup"));
+    }
   }
 };

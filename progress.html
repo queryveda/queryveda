@@ -116,9 +116,22 @@
   <script src="js/protect.js"></script>
   <script src="js/questions.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/nav.js"></script>
   <script>
     Nav.init();
+
+    // Gate: require login for progress page
+    if (!Auth.isLoggedIn()) {
+      document.querySelector(".progress-page").innerHTML = `
+        <div class="auth-gate">
+          <h2>Sign in to view your progress</h2>
+          <p>Create a free account to track your solved problems, streaks, and achievements.</p>
+          <button onclick="Auth.showModal('signup')">Sign Up Free</button>
+          <p style="font-size:13px;color:var(--text-muted)">Already have an account? <a href="#" onclick="Auth.showModal('login');return false" style="color:var(--accent)">Login</a></p>
+        </div>
+      `;
+    } else {
 
     const totalSolved = Storage.countSolved(Q);
     const totalPct = Q.length ? Math.round(100 * totalSolved / Q.length) : 0;
@@ -241,6 +254,8 @@
         </div>
       `;
     });
+
+    } // end auth gate else
   </script>
 </body>
 </html>
