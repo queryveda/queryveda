@@ -3,7 +3,7 @@
 const SUPABASE_URL = "https://rgykwhoizdzxvcuzdhle.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJneWt3aG9pemR6eHZjdXpkaGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTg0MzUsImV4cCI6MjA5NjU3NDQzNX0.Gl-dX34Dm6cofTXF-zPMBx6FyJoDVyrfhgxdFIUX-78";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const Auth = {
   _user: null,
@@ -12,7 +12,7 @@ const Auth = {
 
   async init() {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await _sb.auth.getSession();
       this._user = session?.user || null;
     } catch (e) {
       console.warn("Auth init failed:", e);
@@ -23,7 +23,7 @@ const Auth = {
     this._readyCallbacks = [];
 
     // Listen for auth changes (OAuth redirect, logout, etc.)
-    supabase.auth.onAuthStateChange((event, session) => {
+    _sb.auth.onAuthStateChange((event, session) => {
       this._user = session?.user || null;
       if (event === "SIGNED_IN") {
         // Sync localStorage progress to Supabase on first login
@@ -63,7 +63,7 @@ const Auth = {
   async signup(name, email, password) {
     if (!name || !email || !password) return { ok: false, msg: "All fields are required." };
     if (password.length < 6) return { ok: false, msg: "Password must be at least 6 characters." };
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await _sb.auth.signUp({
       email,
       password,
       options: { data: { full_name: name } }
@@ -77,25 +77,25 @@ const Auth = {
 
   async login(email, password) {
     if (!email || !password) return { ok: false, msg: "Email and password are required." };
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await _sb.auth.signInWithPassword({ email, password });
     if (error) return { ok: false, msg: error.message };
     return { ok: true };
   },
 
   async logout() {
-    await supabase.auth.signOut();
+    await _sb.auth.signOut();
   },
 
   // --- OAuth (Google, LinkedIn) ---
   async loginWithGoogle() {
-    await supabase.auth.signInWithOAuth({
+    await _sb.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: location.origin + location.pathname }
     });
   },
 
   async loginWithLinkedIn() {
-    await supabase.auth.signInWithOAuth({
+    await _sb.auth.signInWithOAuth({
       provider: "linkedin_oidc",
       options: { redirectTo: location.origin + location.pathname }
     });
@@ -111,12 +111,12 @@ const Auth = {
       updated_at: new Date().toISOString()
     };
     if (status === "solved") row.solved_at = new Date().toISOString();
-    await supabase.from("user_progress").upsert(row, { onConflict: "user_id,question_id" });
+    await _sb.from("user_progress").upsert(row, { onConflict: "user_id,question_id" });
   },
 
   async loadProgress() {
     if (!this._user) return [];
-    const { data } = await supabase.from("user_progress")
+    const { data } = await _sb.from("user_progress")
       .select("question_id, status, solved_at")
       .eq("user_id", this._user.id);
     return data || [];
@@ -125,7 +125,7 @@ const Auth = {
   // Sync existing localStorage progress to cloud on first login
   async _syncLocalToCloud() {
     if (!this._user) return;
-    const { data: existing } = await supabase.from("user_progress")
+    const { data: existing } = await _sb.from("user_progress")
       .select("question_id")
       .eq("user_id", this._user.id);
     const cloudIds = new Set((existing || []).map(r => r.question_id));
@@ -142,7 +142,7 @@ const Auth = {
       }
     }
     if (rows.length) {
-      await supabase.from("user_progress").upsert(rows, { onConflict: "user_id,question_id" });
+      await _sb.from("user_progress").upsert(rows, { onConflict: "user_id,question_id" });
     }
   },
 
