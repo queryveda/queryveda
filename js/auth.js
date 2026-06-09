@@ -3,7 +3,13 @@
 const SUPABASE_URL = "https://rgykwhoizdzxvcuzdhle.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJneWt3aG9pemR6eHZjdXpkaGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTg0MzUsImV4cCI6MjA5NjU3NDQzNX0.Gl-dX34Dm6cofTXF-zPMBx6FyJoDVyrfhgxdFIUX-78";
 
-const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
 
 const Auth = {
   _user: null,
@@ -88,17 +94,19 @@ const Auth = {
 
   // --- OAuth (Google, LinkedIn) ---
   async loginWithGoogle() {
-    await _sb.auth.signInWithOAuth({
+    const { error } = await _sb.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: location.origin + location.pathname }
+      options: { redirectTo: location.origin + "/sql-practice/" }
     });
+    if (error) console.error("Google login error:", error);
   },
 
   async loginWithLinkedIn() {
-    await _sb.auth.signInWithOAuth({
+    const { error } = await _sb.auth.signInWithOAuth({
       provider: "linkedin_oidc",
-      options: { redirectTo: location.origin + location.pathname }
+      options: { redirectTo: location.origin + "/sql-practice/" }
     });
+    if (error) console.error("LinkedIn login error:", error);
   },
 
   // --- Cloud progress sync ---
