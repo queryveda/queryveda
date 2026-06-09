@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Progress — SQL Practice</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .progress-page { padding: 24px; max-width: 900px; margin: 0 auto; }
+    .progress-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+
+    /* Overall stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .big-num { font-size: 32px; font-weight: 800; }
+    .stat-card .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+    /* Difficulty bars */
+    .diff-section { margin-bottom: 32px; }
+    .diff-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .diff-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .diff-label { width: 80px; font-size: 14px; font-weight: 600; }
+    .diff-track { flex: 1; }
+    .diff-count { width: 60px; font-size: 14px; text-align: right; color: var(--text-secondary); }
+
+    /* Topic bars */
+    .topic-section { margin-bottom: 32px; }
+    .topic-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .topic-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .topic-label { width: 220px; font-size: 14px; font-weight: 500; }
+    .topic-track { flex: 1; }
+    .topic-count { width: 60px; font-size: 14px; text-align: right; color: var(--text-secondary); }
+
+    /* Radar chart */
+    .radar-section { margin-bottom: 32px; text-align: center; }
+    .radar-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .radar-svg { max-width: 320px; margin: 0 auto; }
+
+    /* Achievements */
+    .achievements-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .badge-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: opacity 0.2s;
+    }
+    .badge-card.locked { opacity: 0.4; filter: grayscale(1); }
+    .badge-icon { font-size: 28px; }
+    .badge-info h3 { font-size: 14px; font-weight: 600; }
+    .badge-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .badge-card.locked .badge-icon::after { content: " \1F512"; font-size: 14px; }
+
+    @media (max-width: 768px) {
+      .topic-label { width: 140px; font-size: 12px; }
+      .badge-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-page">
+    <h1>Your Progress</h1>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="diff-section">
+      <h2>By Difficulty</h2>
+      <div id="diffBars"></div>
+    </div>
+
+    <div class="topic-section">
+      <h2>By Topic</h2>
+      <div id="topicBars"></div>
+    </div>
+
+    <div class="radar-section">
+      <h2>Skill Radar</h2>
+      <div id="radarChart"></div>
+    </div>
+
+    <div class="achievements-section">
+      <h2>Achievements</h2>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </div>
+  </div>
+
+  <script src="js/questions.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    Nav.init();
+
+    const totalSolved = Storage.countSolved(Q);
+    const totalPct = Q.length ? Math.round(100 * totalSolved / Q.length) : 0;
+    const streak = Storage.getCurrentStreak();
+
+    // --- Stats grid ---
+    document.getElementById("statsGrid").innerHTML = `
+      <div class="stat-card">
+        <div class="big-num" style="color:var(--accent)">${totalSolved}/${Q.length}</div>
+        <div class="stat-label">Problems Solved</div>
+      </div>
+      <div class="stat-card">
+        <div class="big-num" style="color:var(--accent)">${totalPct}%</div>
+        <div class="stat-label">Completion Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="big-num" style="color:var(--warning)">${streak}</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+    `;
+
+    // --- Difficulty bars ---
+    const diffBars = document.getElementById("diffBars");
+    [
+      { name: "Easy", color: "var(--success)" },
+      { name: "Medium", color: "var(--warning)" },
+      { name: "Hard", color: "var(--danger)" }
+    ].forEach(d => {
+      const s = Storage.countByDifficulty(Q, d.name);
+      const pct = s.total ? Math.round(100 * s.solved / s.total) : 0;
+      diffBars.innerHTML += `
+        <div class="diff-row">
+          <span class="diff-label" style="color:${d.color}">${d.name}</span>
+          <div class="diff-track progress-bar-track">
+            <div class="progress-bar-fill" style="width:${pct}%;background:${d.color}"></div>
+          </div>
+          <span class="diff-count">${s.solved}/${s.total}</span>
+        </div>
+      `;
+    });
+
+    // --- Topic bars ---
+    const topicBars = document.getElementById("topicBars");
+    TOPICS.forEach(t => {
+      const s = Storage.countByTopic(Q, t);
+      const pct = s.total ? Math.round(100 * s.solved / s.total) : 0;
+      const color = TOPIC_COLORS[t];
+      topicBars.innerHTML += `
+        <div class="topic-row">
+          <span class="topic-label">${t}</span>
+          <div class="topic-track progress-bar-track">
+            <div class="progress-bar-fill" style="width:${pct}%;background:${color}"></div>
+          </div>
+          <span class="topic-count">${s.solved}/${s.total}</span>
+        </div>
+      `;
+    });
+
+    // --- Radar chart (SVG pentagon) ---
+    (function renderRadar() {
+      const cx = 160, cy = 160, r = 120;
+      const n = TOPICS.length;
+      const angles = TOPICS.map((_, i) => (Math.PI * 2 * i / n) - Math.PI / 2);
+
+      function point(angle, radius) {
+        return [cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)];
+      }
+
+      // Grid rings
+      let gridLines = "";
+      [0.25, 0.5, 0.75, 1.0].forEach(frac => {
+        const pts = angles.map(a => point(a, r * frac).join(",")).join(" ");
+        gridLines += `<polygon points="${pts}" fill="none" stroke="var(--border)" stroke-width="1"/>`;
+      });
+
+      // Axis lines
+      let axisLines = "";
+      angles.forEach(a => {
+        const [x, y] = point(a, r);
+        axisLines += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;
+      });
+
+      // Data polygon
+      const values = TOPICS.map(t => {
+        const s = Storage.countByTopic(Q, t);
+        return s.total ? s.solved / s.total : 0;
+      });
+      const dataPts = angles.map((a, i) => point(a, r * values[i]).join(",")).join(" ");
+
+      // Labels
+      let labels = "";
+      TOPICS.forEach((t, i) => {
+        const [x, y] = point(angles[i], r + 24);
+        const anchor = x < cx - 10 ? "end" : x > cx + 10 ? "start" : "middle";
+        const shortName = t.split(" ")[0]; // First word only for space
+        labels += `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="11" fill="var(--text-muted)" font-weight="500">${shortName}</text>`;
+      });
+
+      document.getElementById("radarChart").innerHTML = `
+        <svg viewBox="0 0 320 320" class="radar-svg">
+          ${gridLines}
+          ${axisLines}
+          <polygon points="${dataPts}" fill="rgba(37,99,235,0.2)" stroke="var(--accent)" stroke-width="2"/>
+          ${labels}
+        </svg>
+      `;
+    })();
+
+    // --- Achievements ---
+    const badges = Storage.getAchievements(Q);
+    const badgeGrid = document.getElementById("badgeGrid");
+    badges.forEach(b => {
+      badgeGrid.innerHTML += `
+        <div class="badge-card ${b.unlocked ? "" : "locked"}">
+          <span class="badge-icon">${b.icon}</span>
+          <div class="badge-info">
+            <h3>${b.name}</h3>
+            <p>${b.desc}</p>
+          </div>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>

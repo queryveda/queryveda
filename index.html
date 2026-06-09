@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SQL Practice — Master SQL by Doing</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .hero {
+      text-align: center;
+      padding: 60px 24px 40px;
+    }
+    .hero h1 {
+      font-size: 40px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+    .hero-cta {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      transition: background 0.15s;
+    }
+    .hero-cta:hover { background: var(--accent-hover); }
+
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 24px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stat { text-align: center; }
+    .stat-number { font-size: 28px; font-weight: 800; }
+    .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .stat-easy .stat-number { color: var(--success); }
+    .stat-medium .stat-number { color: var(--warning); }
+    .stat-hard .stat-number { color: var(--danger); }
+
+    .topics-section {
+      padding: 40px 24px;
+    }
+    .topics-section h2 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .topic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .topic-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+      border-left: 4px solid;
+    }
+    .topic-card:hover { border-color: var(--text-muted); transform: translateY(-2px); }
+    .topic-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .topic-card .topic-tags { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .topic-card .topic-progress-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <section class="hero">
+      <h1>Master SQL by Doing</h1>
+      <p>75 hands-on PostgreSQL problems &middot; Real database in your browser &middot; Instant feedback</p>
+      <a href="practice.html" class="hero-cta">Start Practicing &rarr;</a>
+    </section>
+
+    <div class="stats-bar">
+      <div class="stat stat-easy">
+        <div class="stat-number" id="statEasy">0/25</div>
+        <div class="stat-label">Easy</div>
+      </div>
+      <div class="stat stat-medium">
+        <div class="stat-number" id="statMedium">0/25</div>
+        <div class="stat-label">Medium</div>
+      </div>
+      <div class="stat stat-hard">
+        <div class="stat-number" id="statHard">0/25</div>
+        <div class="stat-label">Hard</div>
+      </div>
+    </div>
+
+    <section class="topics-section">
+      <h2>Browse by Topic</h2>
+      <div class="topic-grid" id="topicGrid"></div>
+    </section>
+  </div>
+
+  <script src="js/questions.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    Nav.init();
+
+    // Stats bar
+    ["Easy", "Medium", "Hard"].forEach(d => {
+      const s = Storage.countByDifficulty(Q, d);
+      document.getElementById("stat" + d).textContent = s.solved + "/" + s.total;
+    });
+
+    // Topic grid
+    const grid = document.getElementById("topicGrid");
+    const topicTags = {
+      "Aggregations & JOINs": "GROUP BY \u00B7 HAVING \u00B7 JOINs \u00B7 Subqueries \u00B7 EXISTS",
+      "Window Functions": "ROW_NUMBER \u00B7 RANK \u00B7 DENSE_RANK \u00B7 LAG \u00B7 LEAD",
+      "Cumulative & Sliding Windows": "Running totals \u00B7 Moving averages \u00B7 Frame specs",
+      "Consecutive Sequences": "Islands & gaps \u00B7 Streaks \u00B7 Sessionization",
+      "Advanced Analytics": "Sweep line \u00B7 Retention \u00B7 Funnels \u00B7 Cohort analysis"
+    };
+
+    TOPICS.forEach(topic => {
+      const stats = Storage.countByTopic(Q, topic);
+      const color = TOPIC_COLORS[topic];
+      const pct = stats.total ? Math.round(100 * stats.solved / stats.total) : 0;
+      const card = document.createElement("a");
+      card.href = "problems.html?topic=" + encodeURIComponent(topic);
+      card.className = "topic-card";
+      card.style.borderLeftColor = color;
+      card.innerHTML = `
+        <h3>${topic}</h3>
+        <div class="topic-tags">${topicTags[topic] || ""}</div>
+        <div class="topic-progress-text">${stats.solved}/${stats.total} solved</div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>

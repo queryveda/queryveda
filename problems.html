@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Problems — SQL Practice</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .problems-page { padding: 24px; max-width: 1000px; margin: 0 auto; }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-right: 4px;
+    }
+    .filter-btn {
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: var(--text-muted); }
+    .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .search-bar {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .search-bar::placeholder { color: var(--text-muted); }
+    .search-bar:focus { outline: none; border-color: var(--accent); }
+
+    .problem-count {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .topic-group-header {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 12px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+
+    .problem-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .problem-row:hover { background: var(--bg-hover); }
+    .problem-title { flex: 1; font-size: 14px; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="problems-page">
+    <h1 style="font-size:24px;font-weight:700;margin-bottom:20px;">Problems</h1>
+
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">Difficulty:</span>
+        <button class="filter-btn active" data-diff="all">All</button>
+        <button class="filter-btn" data-diff="Easy">Easy</button>
+        <button class="filter-btn" data-diff="Medium">Medium</button>
+        <button class="filter-btn" data-diff="Hard">Hard</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">Topic:</span>
+        <button class="filter-btn active" data-topic="all">All</button>
+      </div>
+    </div>
+
+    <input type="text" class="search-bar" id="search" placeholder="Search problems...">
+    <div class="problem-count" id="problemCount"></div>
+    <div id="problemList"></div>
+  </div>
+
+  <script src="js/questions.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    Nav.init();
+
+    let currentDiff = "all";
+    let currentTopic = "all";
+    let searchText = "";
+
+    // Add topic filter buttons dynamically
+    const topicGroup = document.querySelectorAll(".filter-group")[1];
+    TOPICS.forEach(t => {
+      const btn = document.createElement("button");
+      btn.className = "filter-btn";
+      btn.dataset.topic = t;
+      btn.textContent = t;
+      topicGroup.appendChild(btn);
+    });
+
+    // Read URL params
+    const params = new URLSearchParams(location.search);
+    if (params.get("topic") && TOPICS.includes(params.get("topic"))) {
+      currentTopic = params.get("topic");
+    }
+    if (params.get("difficulty") && ["Easy","Medium","Hard"].includes(params.get("difficulty"))) {
+      currentDiff = params.get("difficulty");
+    }
+
+    function render() {
+      const filtered = Q.filter(q => {
+        if (currentDiff !== "all" && q.difficulty !== currentDiff) return false;
+        if (currentTopic !== "all" && q.topic !== currentTopic) return false;
+        if (searchText && !q.title.toLowerCase().includes(searchText.toLowerCase())) return false;
+        return true;
+      });
+
+      document.getElementById("problemCount").textContent =
+        `Showing ${filtered.length} of ${Q.length} problems`;
+
+      const list = document.getElementById("problemList");
+      list.innerHTML = "";
+
+      const diffOrder = { Easy: 0, Medium: 1, Hard: 2 };
+      const grouped = {};
+      TOPICS.forEach(t => { grouped[t] = []; });
+      filtered.forEach(q => { if (grouped[q.topic]) grouped[q.topic].push(q); });
+
+      for (const topic of TOPICS) {
+        const qs = grouped[topic];
+        if (!qs.length) continue;
+        qs.sort((a, b) => diffOrder[a.difficulty] - diffOrder[b.difficulty] || a.id - b.id);
+
+        const header = document.createElement("div");
+        header.className = "topic-group-header";
+        header.style.borderLeftColor = TOPIC_COLORS[topic];
+        header.textContent = topic + ` (${qs.length})`;
+        list.appendChild(header);
+
+        qs.forEach(q => {
+          const row = document.createElement("a");
+          row.href = "practice.html?id=" + q.id;
+          row.className = "problem-row";
+          const status = Storage.getStatus(q.id);
+          const statusStr = status === "solved" ? "\u2705" : status === "attempted" ? "\u270F\uFE0F" : "\u25CB";
+          const diffClass = q.difficulty.toLowerCase();
+          row.innerHTML = `
+            <span class="status-icon">${statusStr}</span>
+            <span class="diff-dot ${diffClass}"></span>
+            <span class="problem-title">${q.title}</span>
+            <span class="pill pill-${diffClass}">${q.difficulty}</span>
+          `;
+          list.appendChild(row);
+        });
+      }
+
+      // Update filter button active states
+      document.querySelectorAll("[data-diff]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.diff === currentDiff);
+      });
+      document.querySelectorAll("[data-topic]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.topic === currentTopic);
+      });
+    }
+
+    // Event listeners
+    document.querySelectorAll("[data-diff]").forEach(btn => {
+      btn.addEventListener("click", () => { currentDiff = btn.dataset.diff; render(); });
+    });
+    document.querySelectorAll("[data-topic]").forEach(btn => {
+      btn.addEventListener("click", () => { currentTopic = btn.dataset.topic; render(); });
+    });
+    document.getElementById("search").addEventListener("input", e => {
+      searchText = e.target.value;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
