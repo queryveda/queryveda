@@ -32,10 +32,32 @@ const Storage = {
     localStorage.setItem("sql_solved_" + id, "1");
     localStorage.removeItem("sql_attempted_" + id);
     this._recordSolveDate();
+    // Sync to cloud
+    if (typeof Auth !== "undefined" && Auth.isLoggedIn()) {
+      Auth.saveProgress(id, "solved");
+    }
   },
   markAttempted(id) {
     if (this.isSolved(id)) return;
     localStorage.setItem("sql_attempted_" + id, "1");
+    // Sync to cloud
+    if (typeof Auth !== "undefined" && Auth.isLoggedIn()) {
+      Auth.saveProgress(id, "attempted");
+    }
+  },
+
+  // Load cloud progress into localStorage
+  async syncFromCloud() {
+    if (typeof Auth === "undefined" || !Auth.isLoggedIn()) return;
+    const progress = await Auth.loadProgress();
+    for (const p of progress) {
+      if (p.status === "solved") {
+        localStorage.setItem("sql_solved_" + p.question_id, "1");
+        localStorage.removeItem("sql_attempted_" + p.question_id);
+      } else if (p.status === "attempted" && !this.isSolved(p.question_id)) {
+        localStorage.setItem("sql_attempted_" + p.question_id, "1");
+      }
+    }
   },
 
   // --- Editor content ---

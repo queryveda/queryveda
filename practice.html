@@ -127,6 +127,7 @@
   <script src="js/protect.js"></script>
   <script src="js/questions.js"></script>
   <script src="js/storage.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/nav.js"></script>
   <script>
@@ -153,7 +154,7 @@
       return sortedQs.findIndex(q => q.id === currentQuestion.id);
     }
 
-    const isGuest = !Auth.isLoggedIn();
+    let isGuest = true; // updated after Auth.init()
 
     function canAccessQuestion(q) {
       if (!isGuest) return "full";
@@ -443,7 +444,10 @@
     });
 
     async function main(){
+      await Auth.init();
+      isGuest = !Auth.isLoggedIn();
       Nav.init();
+      await Storage.syncFromCloud();
       initResizer();
 
       // Initial load from URL

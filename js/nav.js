@@ -77,13 +77,10 @@ const Nav = {
         <span class="nav-user-name">${user.name.split(" ")[0]}</span>
         <button class="nav-auth-btn" id="logoutBtn">Logout</button>
       `;
-      document.getElementById("logoutBtn").addEventListener("click", () => {
-        Auth.logout();
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        await Auth.logout();
         this._updateAuthUI();
-        // If on progress page, show gate
-        if (location.pathname.split("/").pop() === "progress.html") {
-          location.reload();
-        }
+        location.reload();
       });
     } else {
       container.innerHTML = `

@@ -116,10 +116,14 @@
   <script src="js/protect.js"></script>
   <script src="js/questions.js"></script>
   <script src="js/storage.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/nav.js"></script>
   <script>
+    (async () => {
+    await Auth.init();
     Nav.init();
+    await Storage.syncFromCloud();
 
     // Stats bar
     ["Easy", "Medium", "Hard"].forEach(d => {
@@ -155,6 +159,7 @@
       `;
       grid.appendChild(card);
     });
+    })();
   </script>
 </body>
 </html>
