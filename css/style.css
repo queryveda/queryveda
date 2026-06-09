@@ -167,12 +167,16 @@ body.light .problem-row:hover {
 body.light .filter-btn {
   border-color: #dde2ec;
   background: #ffffff;
+  color: #3b4963;
 }
 body.light .filter-btn:hover {
   background: #eef1f8;
   border-color: #c8d0de;
 }
 body.light .filter-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
   box-shadow: 0 2px 10px rgba(37,99,235,0.2);
 }
 body.light .search-bar {

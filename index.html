@@ -79,12 +79,26 @@
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
-    .stat { text-align: center; transition: transform 0.2s; }
-    .stat:hover { transform: scale(1.05); }
+    .stat {
+      text-align: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 36px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-sm);
+      text-decoration: none;
+      display: block;
+    }
+    .stat:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
     .stat-number { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
     .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-easy { border-bottom: 3px solid var(--success); }
     .stat-easy .stat-number { color: var(--success); }
+    .stat-medium { border-bottom: 3px solid var(--warning); }
     .stat-medium .stat-number { color: var(--warning); }
+    .stat-hard { border-bottom: 3px solid var(--danger); }
     .stat-hard .stat-number { color: var(--danger); }
 
     .topics-section {
@@ -148,18 +162,18 @@
     </section>
 
     <div class="stats-bar">
-      <div class="stat stat-easy">
+      <a href="problems.html?difficulty=Easy" class="stat stat-easy">
         <div class="stat-number" id="statEasy">0/25</div>
         <div class="stat-label">Easy</div>
-      </div>
-      <div class="stat stat-medium">
+      </a>
+      <a href="problems.html?difficulty=Medium" class="stat stat-medium">
         <div class="stat-number" id="statMedium">0/25</div>
         <div class="stat-label">Medium</div>
-      </div>
-      <div class="stat stat-hard">
+      </a>
+      <a href="problems.html?difficulty=Hard" class="stat stat-hard">
         <div class="stat-number" id="statHard">0/25</div>
         <div class="stat-label">Hard</div>
-      </div>
+      </a>
     </div>
 
     <section class="topics-section">
