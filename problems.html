@@ -118,6 +118,7 @@
   <script src="js/nav.js"></script>
   <script>
     Nav.init();
+    const isGuest = !Auth.isLoggedIn();
 
     let currentDiff = "all";
     let currentTopic = "all";
@@ -173,16 +174,23 @@
         list.appendChild(header);
 
         qs.forEach(q => {
+          const locked = isGuest && q.difficulty !== "Easy";
           const row = document.createElement("a");
-          row.href = "practice.html?id=" + q.id;
           row.className = "problem-row";
+          if (locked) {
+            row.href = "#";
+            row.addEventListener("click", e => { e.preventDefault(); Auth.showModal("signup"); });
+            row.style.opacity = "0.5";
+          } else {
+            row.href = "practice.html?id=" + q.id;
+          }
           const status = Storage.getStatus(q.id);
-          const statusStr = status === "solved" ? "\u2705" : status === "attempted" ? "\u270F\uFE0F" : "\u25CB";
+          const statusStr = locked ? "\u{1F512}" : status === "solved" ? "\u2705" : status === "attempted" ? "\u270F\uFE0F" : "\u25CB";
           const diffClass = q.difficulty.toLowerCase();
           row.innerHTML = `
             <span class="status-icon">${statusStr}</span>
             <span class="diff-dot ${diffClass}"></span>
-            <span class="problem-title">${q.title}</span>
+            <span class="problem-title">${q.title}${locked ? " <span style='font-size:11px;color:var(--text-muted)'>(Sign up to unlock)</span>" : ""}</span>
             <span class="pill pill-${diffClass}">${q.difficulty}</span>
           `;
           list.appendChild(row);

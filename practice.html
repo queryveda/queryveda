@@ -153,7 +153,20 @@
       return sortedQs.findIndex(q => q.id === currentQuestion.id);
     }
 
+    const isGuest = !Auth.isLoggedIn();
+
+    function canAccessQuestion(q) {
+      if (!isGuest) return "full";
+      if (q.difficulty === "Easy") return "readonly";
+      return "locked";
+    }
+
     function navigateTo(q) {
+      const access = canAccessQuestion(q);
+      if (access === "locked") {
+        Auth.showModal("signup");
+        return;
+      }
       currentQuestion = q;
       history.replaceState(null, "", "practice.html?id=" + q.id);
       loadQuestion(q);
@@ -262,6 +275,8 @@
 
     async function loadQuestion(q){
       currentQuestion = q;
+      const access = canAccessQuestion(q);
+
       // Update top bar
       $("qTitle").textContent = q.title;
       const diffClass = q.difficulty.toLowerCase();
@@ -274,6 +289,27 @@
       $("result").innerHTML = "";
       $("solutionArea").innerHTML = "";
       currentHintsRevealed = 0;
+
+      // Guest on Easy: readonly mode — show question but disable editor
+      if (access === "readonly") {
+        renderHints(q); // show hints section but they can view
+        document.querySelector(".right").innerHTML = `
+          <div class="auth-gate" style="min-height:auto;padding:40px 20px;">
+            <h2 style="font-size:18px;">\u{1F512} Sign up to solve problems</h2>
+            <p style="font-size:14px;">You can read the question, but you need an account to write and run SQL queries.</p>
+            <button onclick="Auth.showModal('signup')">Sign Up Free</button>
+            <p style="font-size:12px;color:var(--text-muted)">Already have an account? <a href="#" onclick="Auth.showModal('login');return false" style="color:var(--accent)">Login</a></p>
+          </div>
+        `;
+        try {
+          await db.exec(q.setup);
+          await showTables(q);
+        } catch(e){
+          $("tables").innerHTML = `<div class="err">Setup error: ${esc(e.message)}</div>`;
+        }
+        return;
+      }
+
       renderHints(q);
       if (editor) {
         const saved = Storage.getSavedSQL(q.id);
@@ -413,7 +449,12 @@
       // Initial load from URL
       const params = new URLSearchParams(location.search);
       const startId = parseInt(params.get("id")) || sortedQs[0].id;
-      currentQuestion = getQById(startId) || sortedQs[0];
+      let startQ = getQById(startId) || sortedQs[0];
+      // If guest tries to access Medium/Hard, fall back to first Easy
+      if (isGuest && startQ.difficulty !== "Easy") {
+        startQ = sortedQs.find(q => q.difficulty === "Easy") || sortedQs[0];
+      }
+      currentQuestion = startQ;
       history.replaceState(null, "", "practice.html?id=" + currentQuestion.id);
 
       try {
