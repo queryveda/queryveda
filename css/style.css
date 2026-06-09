@@ -43,30 +43,85 @@ body.dark {
 
 /* --- Light theme --- */
 body.light {
-  --bg-primary: #f5f7fb;
+  --bg-primary: #f0f4f9;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
-  --bg-hover: #eef2f8;
-  --text-primary: #1a2234;
-  --text-secondary: #455068;
-  --text-muted: #8896ab;
-  --border: #dde3ed;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --accent-glow: rgba(59,130,246,0.08);
-  --success: #10b981;
+  --bg-hover: #e8edf5;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7a8d;
+  --border: #d1d9e6;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-glow: rgba(37,99,235,0.1);
+  --success: #059669;
   --success-bg: #ecfdf5;
-  --success-border: #a7f3d0;
-  --warning: #f59e0b;
+  --success-border: #6ee7b7;
+  --warning: #d97706;
   --warning-bg: #fffbeb;
-  --warning-border: #fde68a;
-  --danger: #ef4444;
+  --warning-border: #fcd34d;
+  --danger: #dc2626;
   --danger-bg: #fef2f2;
-  --danger-border: #fecaca;
-  --code-bg: #f0f3f9;
-  --shadow: 0 4px 24px rgba(0,0,0,0.06);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-  --gradient-hero: linear-gradient(135deg, #f5f7fb 0%, #ffffff 50%, #eef2ff 100%);
+  --danger-border: #fca5a5;
+  --code-bg: #edf0f7;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  --shadow-sm: 0 1px 6px rgba(0,0,0,0.05);
+  --gradient-hero: linear-gradient(135deg, #eef2ff 0%, #ffffff 40%, #f0fdf4 100%);
+}
+
+/* Light theme refinements */
+body.light .site-nav {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+body.light .nav-links a.active {
+  box-shadow: 0 2px 6px rgba(37,99,235,0.25);
+}
+body.light .CodeMirror {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  border-color: #c5cdd9;
+}
+body.light table {
+  border: 1px solid var(--border);
+}
+body.light th {
+  background: #e8edf5;
+}
+body.light .solution-box pre {
+  background: #f5f7fb;
+  border: 1px solid var(--border);
+}
+body.light .hint-item {
+  color: #92400e;
+}
+body.light .hints-bar button {
+  color: #fff;
+}
+body.light .diff-dot {
+  box-shadow: none;
+}
+body.light .auth-modal {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+}
+body.light .auth-social-btn {
+  border-color: #c5cdd9;
+}
+body.light .filter-btn.active {
+  box-shadow: 0 2px 6px rgba(37,99,235,0.25);
+}
+body.light .topic-card {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+body.light .topic-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+body.light .stat-card {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+body.light .badge-card {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+body.light .badge-card:not(.locked):hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 
 /* --- Navbar --- */
