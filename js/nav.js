@@ -14,7 +14,7 @@ const Nav = {
     nav.className = "site-nav";
     nav.innerHTML = `
       <div class="nav-inner">
-        <a href="index.html" class="nav-logo">\u{1F418} QueryVeda</a>
+        <a href="index.html" class="nav-logo"><span class="logo-icon">&lt;/&gt;</span> QueryVeda</a>
         <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
           <span></span><span></span><span></span>
         </button>
