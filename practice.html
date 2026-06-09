@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Practice — QueryVeda</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/monokai.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/material-darker.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/hint/show-hint.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/sql/sql.min.js"></script>
@@ -27,62 +30,81 @@
     .back-link {
       font-size: 13px;
       color: var(--accent);
-      font-weight: 500;
+      font-weight: 600;
+      transition: opacity 0.15s;
     }
-    .back-link:hover { text-decoration: underline; }
+    .back-link:hover { opacity: 0.8; }
     .question-info { flex: 1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .q-title { font-size: 15px; font-weight: 700; }
+    .q-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
     .topbar-nav { display: flex; align-items: center; gap: 8px; }
-    .status-text { font-size: 13px; color: var(--text-muted); }
+    .status-text { font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
-    .wrap { display: grid; grid-template-columns: 380px 6px 1fr; gap: 0; height: calc(100vh - 120px); }
+    .wrap { display: grid; grid-template-columns: 400px 5px 1fr; gap: 0; height: calc(100vh - 120px); }
     .resizer { background: var(--border); cursor: col-resize; position: relative; z-index: 10; transition: background .15s; }
     .resizer:hover, .resizer.active { background: var(--accent); }
-    .left { overflow: auto; padding: 16px; background: var(--bg-secondary); }
-    .right { overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .left { overflow: auto; padding: 20px; background: var(--bg-secondary); }
+    .right { overflow: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
     @media (max-width: 768px) {
       .wrap { grid-template-columns: 1fr !important; height: auto; }
       .left { border-bottom: 1px solid var(--border); }
       .resizer { display: none; }
     }
-    h2 { font-size: 14px; margin: 18px 0 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
-    .desc { font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
-    .note { font-size: 12.5px; color: var(--text-muted); background: var(--bg-hover); padding: 8px 10px; border-radius: 6px; margin-top: 8px; }
-    .CodeMirror { height: 220px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+    h2 { font-size: 12px; margin: 20px 0 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+    .desc { font-size: 14px; line-height: 1.65; white-space: pre-wrap; color: var(--text-secondary); }
+    .note { font-size: 12.5px; color: var(--text-muted); background: var(--bg-hover); padding: 10px 12px; border-radius: 8px; margin-top: 10px; border-left: 3px solid var(--accent); }
+    .CodeMirror {
+      height: 220px; border: 1px solid var(--border); border-radius: 10px;
+      font-size: 14px; font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+      box-shadow: var(--shadow-sm);
+    }
     .bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .practice-topbar button, .bar button {
-      font-size: 14px; padding: 9px 18px; border: none; border-radius: 8px;
+      font-size: 13px; padding: 9px 18px; border: none; border-radius: 8px;
       cursor: pointer; background: var(--accent); color: #fff; font-weight: 600;
+      transition: all 0.15s; box-shadow: 0 2px 6px rgba(59,130,246,0.2);
     }
+    .practice-topbar button:hover, .bar button:not(.sec):hover { background: var(--accent-hover); transform: translateY(-1px); }
     .practice-topbar button.sec, .bar button.sec {
       background: var(--bg-hover); color: var(--text-primary);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border); box-shadow: none;
     }
-    button:disabled { opacity: .5; cursor: default; }
-    .verdict { font-size: 15px; font-weight: 700; padding: 10px 14px; border-radius: 8px; }
+    .bar button.sec:hover { border-color: var(--text-muted); }
+    button:disabled { opacity: .5; cursor: default; transform: none !important; }
+    .verdict { font-size: 14px; font-weight: 700; padding: 12px 16px; border-radius: 10px; }
     .pass { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
     .fail { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
     .err  { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); font-family: ui-monospace, monospace; font-size: 13px; white-space: pre-wrap; }
-    table { border-collapse: collapse; font-size: 13px; background: var(--bg-secondary); }
-    th, td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; white-space: nowrap; }
-    th { background: var(--bg-hover); color: var(--text-primary); }
-    td { color: var(--text-secondary); }
-    .tblbox { overflow: auto; max-width: 100%; }
-    .label { font-size: 12px; color: var(--text-muted); margin: 10px 0 4px; font-weight: 600; }
+    table { border-collapse: collapse; font-size: 13px; background: var(--bg-secondary); border-radius: 8px; overflow: hidden; }
+    th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; white-space: nowrap; }
+    th { background: var(--bg-hover); color: var(--text-primary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+    td { color: var(--text-secondary); font-family: ui-monospace, monospace; font-size: 12.5px; }
+    .tblbox { overflow: auto; max-width: 100%; border-radius: 8px; }
+    .label { font-size: 11px; color: var(--text-muted); margin: 12px 0 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
     .null { color: var(--text-muted); font-style: italic; }
-    code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
-    .solution-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 10px; }
-    .solution-box h3 { margin: 0 0 8px; font-size: 13px; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
-    .solution-box pre { background: var(--code-bg); color: var(--text-primary); padding: 12px; border-radius: 6px; font-size: 13px; overflow-x: auto; margin: 6px 0; white-space: pre-wrap; font-family: ui-monospace, Menlo, Consolas, monospace; }
-    .solution-box .tip { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-top: 8px; }
+    code { background: var(--code-bg); padding: 2px 6px; border-radius: 5px; font-size: 13px; }
+    .solution-box {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; margin-top: 12px; box-shadow: var(--shadow-sm);
+    }
+    .solution-box h3 { margin: 0 0 10px; font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+    .solution-box pre {
+      background: var(--code-bg); color: var(--text-primary); padding: 14px; border-radius: 8px;
+      font-size: 13px; overflow-x: auto; margin: 8px 0; white-space: pre-wrap;
+      font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; line-height: 1.6;
+    }
+    .solution-box .tip { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-top: 10px; }
     .solution-box .tip strong { color: var(--accent); }
-    button.hint { background: #7c3aed; }
+    button.hint { background: #7c3aed; box-shadow: 0 2px 6px rgba(124,58,237,0.3); }
     button.hint:hover { background: #6d28d9; }
     .hints-bar { display: flex; align-items: center; gap: 8px; }
-    .hints-bar button { font-size: 12px; padding: 5px 12px; background: var(--warning); color: #fff; border-radius: 6px; }
-    .hints-bar button:hover { background: #d97706; }
+    .hints-bar button { font-size: 12px; padding: 6px 14px; background: var(--warning); color: #000; border-radius: 6px; font-weight: 600; box-shadow: none; }
+    .hints-bar button:hover { background: #d97706; color: #fff; }
     .hints-bar .hint-count { font-size: 12px; color: var(--text-muted); }
-    .hint-item { font-size: 13px; padding: 8px 12px; margin-top: 6px; background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: 6px; color: var(--warning); line-height: 1.5; }
+    .hint-item {
+      font-size: 13px; padding: 10px 14px; margin-top: 6px;
+      background: var(--warning-bg); border: 1px solid var(--warning-border);
+      border-radius: 8px; color: var(--warning); line-height: 1.5;
+    }
     .hint-item strong { color: var(--warning); }
   </style>
 </head>
@@ -114,7 +136,15 @@
       <div class="bar">
         <button id="run" disabled>Run &amp; Check &#9654;</button>
         <button id="clear" class="sec">Clear</button>
-        <span style="font-size:12px;color:var(--text-muted)">Ctrl/Cmd + Enter to run &middot; Hidden test cases verify your solution</span>
+        <div class="editor-theme-picker">
+          <label>Theme:</label>
+          <select id="editorTheme">
+            <option value="dracula">Dracula</option>
+            <option value="monokai">Monokai</option>
+            <option value="material-darker">Material Dark</option>
+          </select>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted);margin-left:auto">Cmd+Enter to run</span>
       </div>
       <div id="hintsArea"></div>
       <div id="sql"></div>
@@ -495,6 +525,15 @@
         },
         hintOptions: { tables: currentHintTables, completeSingle: false }
       });
+      // Editor theme picker
+      const savedEditorTheme = localStorage.getItem("sql_editor_theme") || "dracula";
+      editor.setOption("theme", savedEditorTheme);
+      $("editorTheme").value = savedEditorTheme;
+      $("editorTheme").addEventListener("change", function() {
+        editor.setOption("theme", this.value);
+        localStorage.setItem("sql_editor_theme", this.value);
+      });
+
       // Block paste and drop — only allow typing
       editor.on("beforeChange", (cm, change) => {
         if (change.origin === "paste" || change.origin === "drop") {

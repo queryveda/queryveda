@@ -6,78 +6,83 @@
   <title>Progress — QueryVeda</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .progress-page { padding: 24px; max-width: 900px; margin: 0 auto; }
-    .progress-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+    .progress-page { padding: 32px 24px; max-width: 900px; margin: 0 auto; }
+    .progress-page h1 { font-size: 28px; font-weight: 800; margin-bottom: 28px; letter-spacing: -0.02em; }
 
     /* Overall stats */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 16px;
-      margin-bottom: 32px;
+      margin-bottom: 36px;
     }
     .stat-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 14px;
+      padding: 24px;
       text-align: center;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s;
     }
-    .stat-card .big-num { font-size: 32px; font-weight: 800; }
-    .stat-card .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card .big-num { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; }
+    .stat-card .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 
     /* Difficulty bars */
-    .diff-section { margin-bottom: 32px; }
-    .diff-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .diff-section { margin-bottom: 36px; }
+    .diff-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 18px; letter-spacing: -0.01em; }
     .diff-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 14px;
+      margin-bottom: 14px;
     }
-    .diff-label { width: 80px; font-size: 14px; font-weight: 600; }
+    .diff-label { width: 80px; font-size: 14px; font-weight: 700; }
     .diff-track { flex: 1; }
-    .diff-count { width: 60px; font-size: 14px; text-align: right; color: var(--text-secondary); }
+    .diff-count { width: 60px; font-size: 14px; text-align: right; color: var(--text-secondary); font-weight: 600; }
 
     /* Topic bars */
-    .topic-section { margin-bottom: 32px; }
-    .topic-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .topic-section { margin-bottom: 36px; }
+    .topic-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 18px; letter-spacing: -0.01em; }
     .topic-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 14px;
+      margin-bottom: 14px;
     }
     .topic-label { width: 220px; font-size: 14px; font-weight: 500; }
     .topic-track { flex: 1; }
-    .topic-count { width: 60px; font-size: 14px; text-align: right; color: var(--text-secondary); }
+    .topic-count { width: 60px; font-size: 14px; text-align: right; color: var(--text-secondary); font-weight: 600; }
 
     /* Radar chart */
-    .radar-section { margin-bottom: 32px; text-align: center; }
-    .radar-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .radar-section { margin-bottom: 36px; text-align: center; }
+    .radar-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 18px; letter-spacing: -0.01em; }
     .radar-svg { max-width: 320px; margin: 0 auto; }
 
     /* Achievements */
-    .achievements-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .achievements-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 18px; letter-spacing: -0.01em; }
     .badge-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
     }
     .badge-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
+      border-radius: 12px;
+      padding: 18px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      transition: opacity 0.2s;
+      gap: 14px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
     }
-    .badge-card.locked { opacity: 0.4; filter: grayscale(1); }
-    .badge-icon { font-size: 28px; }
-    .badge-info h3 { font-size: 14px; font-weight: 600; }
-    .badge-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .badge-card:not(.locked):hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .badge-card.locked { opacity: 0.35; filter: grayscale(1); }
+    .badge-icon { font-size: 30px; }
+    .badge-info h3 { font-size: 14px; font-weight: 700; }
+    .badge-info p { font-size: 12px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
     .badge-card.locked .badge-icon::after { content: " \1F512"; font-size: 14px; }
 
     @media (max-width: 768px) {
