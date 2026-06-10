@@ -14,6 +14,7 @@ const navLinks = [
   { href: "/problems", label: "Problems" },
   { href: "/progress", label: "Progress" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/about", label: "About" },
 ];
 
 export function MobileDrawer() {
