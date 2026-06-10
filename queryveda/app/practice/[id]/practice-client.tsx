@@ -169,7 +169,7 @@ export function PracticeClient({ id }: { id: string }) {
       {/* Toolbar */}
       <div className="flex items-center gap-2 flex-wrap">
         <Button onClick={handleRun} disabled={running || !ready} size="sm" className="rounded-full">
-          {running ? "Running..." : "Run (Ctrl+Enter)"}
+          {running ? "Running..." : "Run (⌘/Ctrl+Enter)"}
         </Button>
       </div>
 
