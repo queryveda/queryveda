@@ -159,57 +159,81 @@ export function PracticeClient({ id }: { id: string }) {
     tableHints[name] = result.cols;
   }
 
+  // Medium/Hard without login — block the entire page
+  if (isLocked) {
+    return (
+      <div>
+        <div className="flex items-center justify-between px-5 py-3 border-b">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            disabled={!prevQ}
+            onClick={() => prevQ && navigateTo(prevQ)}
+          >
+            Prev
+          </Button>
+          <h2 className="text-sm font-semibold truncate px-2">
+            {question.title}
+          </h2>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            disabled={!nextQ}
+            onClick={() => nextQ && navigateTo(nextQ)}
+          >
+            Next
+          </Button>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-5 px-4 py-24 text-center">
+          <div className="text-5xl">🔒</div>
+          <h3 className="text-2xl font-bold">
+            This is a {question.difficulty} problem
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-md">
+            Medium and Hard difficulty questions require a free account.
+            Sign in to unlock all 75 problems, track your progress, and
+            compete on the leaderboard.
+          </p>
+          <Button onClick={() => setAuthOpen(true)} size="lg" className="rounded-full px-8">
+            Sign In to Unlock
+          </Button>
+        </div>
+        <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
+      </div>
+    );
+  }
+
   const leftPanel = (
     <ProblemPanel question={question} schemaTables={schemaTables} />
   );
 
-  // Sign-in prompt overlay for locked content
-  const signInPrompt = (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-muted/30 p-8 text-center">
-      <div className="text-4xl">🔒</div>
-      <h3 className="text-lg font-semibold">
-        {isLocked
-          ? "Sign in to access Medium & Hard problems"
-          : "Sign in to use the SQL editor"}
-      </h3>
-      <p className="text-sm text-muted-foreground max-w-md">
-        {isLocked
-          ? "Medium and Hard difficulty questions require a free account. Sign in to unlock all 75 problems."
-          : "Create a free account to write and run SQL queries, track your progress, and compete on the leaderboard."}
-      </p>
-      <Button onClick={() => setAuthOpen(true)} className="rounded-full">
-        Sign In to Continue
-      </Button>
+  const rightPanel = editorDisabled ? (
+    // Easy question but not logged in — show disabled editor area
+    <div className="flex flex-col gap-4">
+      <div className="relative">
+        <div className="pointer-events-none opacity-40">
+          <SQLEditor
+            initialValue=""
+            onChange={() => {}}
+            onRun={() => {}}
+            tables={tableHints}
+          />
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Button
+            onClick={() => setAuthOpen(true)}
+            className="rounded-full shadow-lg"
+          >
+            Sign In to Write SQL
+          </Button>
+        </div>
+      </div>
     </div>
-  );
-
-  const rightPanel = isLocked ? (
-    signInPrompt
   ) : (
     <>
-      {editorDisabled ? (
-        // Easy question but not logged in — show disabled editor area
-        <div className="relative">
-          <div className="pointer-events-none opacity-40">
-            <SQLEditor
-              initialValue=""
-              onChange={() => {}}
-              onRun={() => {}}
-              tables={tableHints}
-            />
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Button
-              onClick={() => setAuthOpen(true)}
-              className="rounded-full shadow-lg"
-            >
-              Sign In to Write SQL
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {!ready && (
+      {!ready && (
             <p className="text-sm text-muted-foreground">
               Loading database...
             </p>
@@ -264,8 +288,6 @@ export function PracticeClient({ id }: { id: string }) {
             tips={question.tips}
             optSolution={question.optSolution}
           />
-        </>
-      )}
     </>
   );
 
