@@ -24,9 +24,21 @@ export default function Home() {
       {/* Features */}
       <section className="mx-auto max-w-5xl px-6 py-16">
         <div className="grid gap-6 sm:grid-cols-3">
-          <Card><CardHeader><CardTitle className="text-lg">75 Problems</CardTitle><CardDescription>From easy aggregations to hard analytics across 5 curated topics.</CardDescription></CardHeader></Card>
-          <Card><CardHeader><CardTitle className="text-lg">In-Browser PostgreSQL</CardTitle><CardDescription>Powered by PGlite WASM. Write real SQL, get instant results. No backend needed.</CardDescription></CardHeader></Card>
-          <Card><CardHeader><CardTitle className="text-lg">Track Progress</CardTitle><CardDescription>Streaks, achievements, and skill radar. Sync across devices with your account.</CardDescription></CardHeader></Card>
+          <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 p-[1px]">
+            <Card className="h-full rounded-2xl border-0">
+              <CardHeader><CardTitle className="text-lg">75 Problems</CardTitle><CardDescription>From easy aggregations to hard analytics across 5 curated topics.</CardDescription></CardHeader>
+            </Card>
+          </div>
+          <div className="rounded-2xl bg-gradient-to-br from-purple-500/10 to-cyan-500/10 p-[1px]">
+            <Card className="h-full rounded-2xl border-0">
+              <CardHeader><CardTitle className="text-lg">In-Browser PostgreSQL</CardTitle><CardDescription>Powered by PGlite WASM. Write real SQL, get instant results. No backend needed.</CardDescription></CardHeader>
+            </Card>
+          </div>
+          <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 to-green-500/10 p-[1px]">
+            <Card className="h-full rounded-2xl border-0">
+              <CardHeader><CardTitle className="text-lg">Track Progress</CardTitle><CardDescription>Streaks, achievements, and skill radar. Sync across devices with your account.</CardDescription></CardHeader>
+            </Card>
+          </div>
         </div>
       </section>
 

@@ -4,24 +4,24 @@
 
 @layer base {
   :root {
-    --background: 247 248 252;
-    --foreground: 15 23 42;
-    --card: 255 255 255;
-    --card-foreground: 15 23 42;
-    --popover: 255 255 255;
-    --popover-foreground: 15 23 42;
+    --background: 245 243 240;
+    --foreground: 28 25 23;
+    --card: 252 250 248;
+    --card-foreground: 28 25 23;
+    --popover: 252 250 248;
+    --popover-foreground: 28 25 23;
     --primary: 37 99 235;
     --primary-foreground: 255 255 255;
-    --secondary: 240 242 248;
-    --secondary-foreground: 15 23 42;
-    --muted: 240 242 248;
-    --muted-foreground: 123 139 163;
-    --accent: 240 242 248;
-    --accent-foreground: 15 23 42;
+    --secondary: 238 235 230;
+    --secondary-foreground: 28 25 23;
+    --muted: 238 235 230;
+    --muted-foreground: 120 113 108;
+    --accent: 238 235 230;
+    --accent-foreground: 28 25 23;
     --destructive: 220 38 38;
     --destructive-foreground: 255 255 255;
-    --border: 226 231 240;
-    --input: 226 231 240;
+    --border: 220 215 208;
+    --input: 220 215 208;
     --ring: 37 99 235;
     --radius: 0.5rem;
     --qv-success: #059669;
@@ -30,8 +30,8 @@
     --qv-warning-bg: #fffbeb;
     --qv-danger: #dc2626;
     --qv-danger-bg: #fef2f2;
-    --qv-code-bg: #f0f3fa;
-    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #dbeafe 0%, #ede9fe 30%, #f7f8fc 70%);
+    --qv-code-bg: #f0ede8;
+    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #dbeafe 0%, #e8e0f0 30%, #f5f3f0 70%);
   }
   .dark {
     --background: 8 13 26;
@@ -71,5 +71,21 @@
     font-family: 'Inter', -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* Ensure all tables and containers have rounded corners */
+  .overflow-x-auto.rounded-lg {
+    @apply rounded-2xl;
+  }
+
+  /* Gradient border wrapper for cards */
+  .gradient-card {
+    @apply rounded-2xl p-[1px];
+    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15));
+  }
+  .dark .gradient-card {
+    background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(139,92,246,0.25));
   }
 }

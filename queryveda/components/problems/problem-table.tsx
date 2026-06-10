@@ -17,7 +17,7 @@ interface ProblemTableProps {
 
 export function ProblemTable({ questions, getStatus }: ProblemTableProps) {
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div className="overflow-hidden rounded-2xl border border-border/50 shadow-sm">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">

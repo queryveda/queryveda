@@ -47,7 +47,7 @@ export function Navbar() {
                     <Link
                       key={href}
                       href={href}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive
                           ? "bg-primary text-primary-foreground"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent"
