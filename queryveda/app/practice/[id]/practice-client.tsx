@@ -6,6 +6,7 @@ import { getQuestionById, getSortedQuestions } from "@/lib/questions";
 import { runTests, executeQuery, type QueryResult } from "@/lib/pglite";
 import { usePGlite } from "@/hooks/use-pglite";
 import { useStorage } from "@/hooks/use-storage";
+import { useAuth } from "@/hooks/use-auth";
 import type { Question } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { SplitPane } from "@/components/practice/split-pane";
@@ -14,6 +15,7 @@ import { SQLEditor } from "@/components/practice/sql-editor";
 import { HintsPanel } from "@/components/practice/hints-panel";
 import { SolutionPanel } from "@/components/practice/solution-panel";
 import { ResultTable } from "@/components/practice/result-table";
+import { AuthModal } from "@/components/auth/auth-modal";
 
 interface Verdict {
   type: "pass" | "fail" | "idle";
@@ -27,6 +29,7 @@ export function PracticeClient({ id }: { id: string }) {
   const currentIdx = sorted.findIndex((q) => q.id === questionId);
 
   const router = useRouter();
+  const { user } = useAuth();
   const { db, ready, error: dbError } = usePGlite();
   const { getSavedSQL, saveSQL, markSolved, markAttempted } = useStorage();
 
@@ -40,10 +43,16 @@ export function PracticeClient({ id }: { id: string }) {
     Record<string, QueryResult>
   >({});
   const [running, setRunning] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
   // Ref to avoid stale closure in onRun callback
   const sqlRef = useRef(sqlValue);
   sqlRef.current = sqlValue;
+
+  // Access control
+  const isEasy = question?.difficulty === "Easy";
+  const isLocked = !user && question && !isEasy; // Medium/Hard locked without login
+  const editorDisabled = !user; // Editor disabled for all difficulties without login
 
   // Load saved SQL and set up schema on question/db change
   useEffect(() => {
@@ -57,7 +66,6 @@ export function PracticeClient({ id }: { id: string }) {
     async function setupSchema() {
       try {
         await db!.exec(question!.setup);
-        // Load schema tables for display
         const tables: Record<string, QueryResult> = {};
         for (const tableName of question!.tables) {
           try {
@@ -82,6 +90,7 @@ export function PracticeClient({ id }: { id: string }) {
 
   const handleRun = useCallback(async () => {
     if (!db || !question) return;
+    if (!user) return; // guard
     const trimmed = sqlRef.current.trim();
     if (!trimmed) {
       setVerdict({ type: "fail", message: "Please write a SQL query first." });
@@ -107,17 +116,18 @@ export function PracticeClient({ id }: { id: string }) {
     } finally {
       setRunning(false);
     }
-  }, [db, question, questionId, markSolved, markAttempted]);
+  }, [db, question, questionId, markSolved, markAttempted, user]);
 
   const handleChange = useCallback(
     (value: string) => {
+      if (!user) return; // guard
       setSqlValue(value);
       saveSQL(questionId, value);
       if (value.trim()) {
         markAttempted(questionId);
       }
     },
-    [questionId, saveSQL, markAttempted]
+    [questionId, saveSQL, markAttempted, user]
   );
 
   const navigateTo = (q: Question) => {
@@ -153,56 +163,109 @@ export function PracticeClient({ id }: { id: string }) {
     <ProblemPanel question={question} schemaTables={schemaTables} />
   );
 
-  const rightPanel = (
+  // Sign-in prompt overlay for locked content
+  const signInPrompt = (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-muted/30 p-8 text-center">
+      <div className="text-4xl">🔒</div>
+      <h3 className="text-lg font-semibold">
+        {isLocked
+          ? "Sign in to access Medium & Hard problems"
+          : "Sign in to use the SQL editor"}
+      </h3>
+      <p className="text-sm text-muted-foreground max-w-md">
+        {isLocked
+          ? "Medium and Hard difficulty questions require a free account. Sign in to unlock all 75 problems."
+          : "Create a free account to write and run SQL queries, track your progress, and compete on the leaderboard."}
+      </p>
+      <Button onClick={() => setAuthOpen(true)} className="rounded-full">
+        Sign In to Continue
+      </Button>
+    </div>
+  );
+
+  const rightPanel = isLocked ? (
+    signInPrompt
+  ) : (
     <>
-      {!ready && (
-        <p className="text-sm text-muted-foreground">Loading database...</p>
-      )}
-
-      <SQLEditor
-        initialValue={sqlValue}
-        onChange={handleChange}
-        onRun={handleRun}
-        tables={tableHints}
-      />
-
-      {/* Toolbar */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Button onClick={handleRun} disabled={running || !ready} size="sm" className="rounded-full">
-          {running ? "Running..." : "Run (⌘/Ctrl+Enter)"}
-        </Button>
-      </div>
-
-      {/* Verdict */}
-      {verdict.type !== "idle" && (
-        <div
-          className={`rounded-xl p-3 text-sm ${
-            verdict.type === "pass"
-              ? "bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/30"
-              : "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30"
-          }`}
-        >
-          {verdict.message}
+      {editorDisabled ? (
+        // Easy question but not logged in — show disabled editor area
+        <div className="relative">
+          <div className="pointer-events-none opacity-40">
+            <SQLEditor
+              initialValue=""
+              onChange={() => {}}
+              onRun={() => {}}
+              tables={tableHints}
+            />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Button
+              onClick={() => setAuthOpen(true)}
+              className="rounded-full shadow-lg"
+            >
+              Sign In to Write SQL
+            </Button>
+          </div>
         </div>
+      ) : (
+        <>
+          {!ready && (
+            <p className="text-sm text-muted-foreground">
+              Loading database...
+            </p>
+          )}
+
+          <SQLEditor
+            initialValue={sqlValue}
+            onChange={handleChange}
+            onRun={handleRun}
+            tables={tableHints}
+          />
+
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              onClick={handleRun}
+              disabled={running || !ready}
+              size="sm"
+              className="rounded-full"
+            >
+              {running ? "Running..." : "Run (⌘/Ctrl+Enter)"}
+            </Button>
+          </div>
+
+          {/* Verdict */}
+          {verdict.type !== "idle" && (
+            <div
+              className={`rounded-xl p-3 text-sm ${
+                verdict.type === "pass"
+                  ? "bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/30"
+                  : "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30"
+              }`}
+            >
+              {verdict.message}
+            </div>
+          )}
+
+          {/* User result */}
+          {userResult && (
+            <div>
+              <h4 className="text-sm font-semibold mb-1">Your Output</h4>
+              <ResultTable cols={userResult.cols} rows={userResult.rows} />
+            </div>
+          )}
+
+          {/* Hints */}
+          {question.hints.length > 0 && <HintsPanel hints={question.hints} />}
+
+          {/* Solution */}
+          <SolutionPanel
+            solution={question.solution}
+            tips={question.tips}
+            optSolution={question.optSolution}
+          />
+        </>
       )}
-
-      {/* User result */}
-      {userResult && (
-        <div>
-          <h4 className="text-sm font-semibold mb-1">Your Output</h4>
-          <ResultTable cols={userResult.cols} rows={userResult.rows} />
-        </div>
-      )}
-
-      {/* Hints */}
-      {question.hints.length > 0 && <HintsPanel hints={question.hints} />}
-
-      {/* Solution */}
-      <SolutionPanel
-        solution={question.solution}
-        tips={question.tips}
-        optSolution={question.optSolution}
-      />
     </>
   );
 
@@ -234,6 +297,8 @@ export function PracticeClient({ id }: { id: string }) {
       </div>
 
       <SplitPane left={leftPanel} right={rightPanel} />
+
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
     </div>
   );
 }

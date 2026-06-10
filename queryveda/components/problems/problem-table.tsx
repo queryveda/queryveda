@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 import type { Question, QuestionStatus } from "@/lib/types";
 import { DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
 
 const STATUS_EMOJI: Record<QuestionStatus, string> = {
-  solved: "✅",
-  attempted: "🟡",
+  solved: "\u2705",
+  attempted: "\uD83D\uDFE1",
   todo: "",
 };
 
@@ -16,6 +17,8 @@ interface ProblemTableProps {
 }
 
 export function ProblemTable({ questions, getStatus }: ProblemTableProps) {
+  const { user } = useAuth();
+
   return (
     <div className="overflow-hidden rounded-2xl border border-border/50 shadow-sm">
       <table className="w-full text-sm">
@@ -31,17 +34,23 @@ export function ProblemTable({ questions, getStatus }: ProblemTableProps) {
         <tbody>
           {questions.map((q) => {
             const status = getStatus(q.id);
+            const isLocked = !user && q.difficulty !== "Easy";
             return (
               <tr
                 key={q.id}
-                className="border-b transition-colors last:border-0 hover:bg-muted/30"
+                className={`border-b transition-colors last:border-0 ${
+                  isLocked
+                    ? "opacity-60"
+                    : "hover:bg-muted/30"
+                }`}
               >
                 <td className="px-4 py-3 text-muted-foreground">{q.id}</td>
                 <td className="px-4 py-3 font-medium">
                   <Link
                     href={`/practice/${q.id}`}
-                    className="hover:text-primary hover:underline"
+                    className="hover:text-primary hover:underline inline-flex items-center gap-1.5"
                   >
+                    {isLocked && <span className="text-xs">🔒</span>}
                     {q.title}
                   </Link>
                 </td>
@@ -72,7 +81,7 @@ export function ProblemTable({ questions, getStatus }: ProblemTableProps) {
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  {STATUS_EMOJI[status]}
+                  {isLocked ? "🔒" : STATUS_EMOJI[status]}
                 </td>
               </tr>
             );
