@@ -7,7 +7,7 @@ import type { QuestionStatus } from "@/lib/types";
 
 export function useStorage() {
   const { user } = useAuth();
-  const getStatus = useCallback((id: number): QuestionStatus => storage.getStatus(id), []);
+  const getStatus = useCallback((id: number): QuestionStatus => user ? storage.getStatus(id) : "todo", [user]);
   const markSolved = useCallback(
     (id: number) => storage.markSolved(id, user?.id),
     [user]
