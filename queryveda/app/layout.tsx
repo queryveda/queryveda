@@ -10,9 +10,15 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 export const metadata: Metadata = {
   title: "QueryVeda — Master SQL by Doing",
   description: "Practice 75 PostgreSQL problems in your browser. No server needed.",
+  icons: {
+    icon: `${basePath}/favicon.png`,
+    apple: `${basePath}/favicon.png`,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
