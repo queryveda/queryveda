@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 247 248 252;
+    --foreground: 15 23 42;
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
+    --primary: 37 99 235;
+    --primary-foreground: 255 255 255;
+    --secondary: 240 242 248;
+    --secondary-foreground: 15 23 42;
+    --muted: 240 242 248;
+    --muted-foreground: 123 139 163;
+    --accent: 240 242 248;
+    --accent-foreground: 15 23 42;
+    --destructive: 220 38 38;
+    --destructive-foreground: 255 255 255;
+    --border: 226 231 240;
+    --input: 226 231 240;
+    --ring: 37 99 235;
+    --radius: 0.5rem;
+    --qv-success: #059669;
+    --qv-success-bg: #ecfdf5;
+    --qv-warning: #d97706;
+    --qv-warning-bg: #fffbeb;
+    --qv-danger: #dc2626;
+    --qv-danger-bg: #fef2f2;
+    --qv-code-bg: #f0f3fa;
+    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #dbeafe 0%, #ede9fe 30%, #f7f8fc 70%);
+  }
+  .dark {
+    --background: 8 13 26;
+    --foreground: 234 240 250;
+    --card: 20 27 46;
+    --card-foreground: 234 240 250;
+    --popover: 20 27 46;
+    --popover-foreground: 234 240 250;
+    --primary: 59 130 246;
+    --primary-foreground: 255 255 255;
+    --secondary: 26 35 64;
+    --secondary-foreground: 234 240 250;
+    --muted: 26 35 64;
+    --muted-foreground: 78 99 135;
+    --accent: 26 35 64;
+    --accent-foreground: 234 240 250;
+    --destructive: 248 113 113;
+    --destructive-foreground: 255 255 255;
+    --border: 28 38 64;
+    --input: 28 38 64;
+    --ring: 59 130 246;
+    --qv-success: #34d399;
+    --qv-success-bg: #0a2015;
+    --qv-warning: #fbbf24;
+    --qv-warning-bg: #221a05;
+    --qv-danger: #f87171;
+    --qv-danger-bg: #200a0a;
+    --qv-code-bg: #0a1020;
+    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #1a1050 0%, #0f1629 50%, #080d1a 100%);
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
