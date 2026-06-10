@@ -142,7 +142,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = "login" }: AuthMod
         </div>
 
         {/* Login / Sign Up tab buttons */}
-        <div className="flex rounded-md border overflow-hidden">
+        <div className="flex rounded-xl border overflow-hidden">
           <button
             type="button"
             onClick={() => switchMode("login")}

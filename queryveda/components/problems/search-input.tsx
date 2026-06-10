@@ -9,7 +9,7 @@ interface SearchInputProps {
 export function SearchInput({ value, onChange }: SearchInputProps) {
   return (
     <Input
-      className="max-w-sm"
+      className="max-w-sm rounded-full"
       placeholder="Search problems..."
       value={value}
       onChange={(e) => onChange(e.target.value)}

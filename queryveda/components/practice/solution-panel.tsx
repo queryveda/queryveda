@@ -23,12 +23,13 @@ export function SolutionPanel({
       <Button
         variant="outline"
         size="sm"
+        className="rounded-full"
         onClick={() => setShowMain((s) => !s)}
       >
         {showMain ? "Hide Solution & Tips" : "Show Solution & Tips"}
       </Button>
       {showMain && (
-        <div className="rounded-md border-l-4 border-purple-500 bg-purple-500/10 p-4 flex flex-col gap-2">
+        <div className="rounded-xl border-l-4 border-purple-500 bg-purple-500/10 p-4 flex flex-col gap-2">
           <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono">
             {solution}
           </pre>
@@ -42,6 +43,7 @@ export function SolutionPanel({
           <Button
             variant="outline"
             size="sm"
+            className="rounded-full"
             onClick={() => setShowOpt((s) => !s)}
           >
             {showOpt
@@ -49,7 +51,7 @@ export function SolutionPanel({
               : "Show Optimized Solution & Tips"}
           </Button>
           {showOpt && (
-            <div className="rounded-md border-l-4 border-purple-500 bg-purple-500/10 p-4">
+            <div className="rounded-xl border-l-4 border-purple-500 bg-purple-500/10 p-4">
               <pre className="text-sm overflow-x-auto whitespace-pre-wrap font-mono">
                 {optSolution}
               </pre>

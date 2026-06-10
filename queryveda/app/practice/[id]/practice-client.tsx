@@ -168,7 +168,7 @@ export function PracticeClient({ id }: { id: string }) {
 
       {/* Toolbar */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Button onClick={handleRun} disabled={running || !ready} size="sm">
+        <Button onClick={handleRun} disabled={running || !ready} size="sm" className="rounded-full">
           {running ? "Running..." : "Run (Ctrl+Enter)"}
         </Button>
       </div>
@@ -176,7 +176,7 @@ export function PracticeClient({ id }: { id: string }) {
       {/* Verdict */}
       {verdict.type !== "idle" && (
         <div
-          className={`rounded-md p-3 text-sm ${
+          className={`rounded-xl p-3 text-sm ${
             verdict.type === "pass"
               ? "bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/30"
               : "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30"
@@ -213,6 +213,7 @@ export function PracticeClient({ id }: { id: string }) {
         <Button
           variant="outline"
           size="sm"
+          className="rounded-full"
           disabled={!prevQ}
           onClick={() => prevQ && navigateTo(prevQ)}
         >
@@ -224,6 +225,7 @@ export function PracticeClient({ id }: { id: string }) {
         <Button
           variant="outline"
           size="sm"
+          className="rounded-full"
           disabled={!nextQ}
           onClick={() => nextQ && navigateTo(nextQ)}
         >

@@ -21,7 +21,7 @@ export function FilterBar({ difficulty, topic, onDifficultyChange, onTopicChange
           size="sm"
           variant={difficulty === "All" ? "default" : "outline"}
           onClick={() => onDifficultyChange("All")}
-          className="shrink-0"
+          className="shrink-0 rounded-full"
         >
           All
         </Button>
@@ -31,7 +31,7 @@ export function FilterBar({ difficulty, topic, onDifficultyChange, onTopicChange
             size="sm"
             variant="outline"
             onClick={() => onDifficultyChange(d)}
-            className="shrink-0 border-transparent"
+            className="shrink-0 rounded-full border-transparent"
             style={
               difficulty === d
                 ? { backgroundColor: DIFFICULTY_COLORS[d], color: "#fff", borderColor: DIFFICULTY_COLORS[d] }
@@ -49,7 +49,7 @@ export function FilterBar({ difficulty, topic, onDifficultyChange, onTopicChange
           size="sm"
           variant={topic === "All" ? "default" : "outline"}
           onClick={() => onTopicChange("All")}
-          className="shrink-0"
+          className="shrink-0 rounded-full"
         >
           All Topics
         </Button>
@@ -59,7 +59,7 @@ export function FilterBar({ difficulty, topic, onDifficultyChange, onTopicChange
             size="sm"
             variant="outline"
             onClick={() => onTopicChange(t)}
-            className="shrink-0"
+            className="shrink-0 rounded-full"
             style={
               topic === t
                 ? { backgroundColor: TOPIC_COLORS[t], color: "#fff", borderColor: TOPIC_COLORS[t] }

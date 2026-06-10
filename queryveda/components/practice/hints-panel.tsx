@@ -18,6 +18,7 @@ export function HintsPanel({ hints }: HintsPanelProps) {
         <Button
           variant="outline"
           size="sm"
+          className="rounded-full"
           disabled={allRevealed}
           onClick={() => setRevealed((r) => r + 1)}
         >
@@ -28,7 +29,7 @@ export function HintsPanel({ hints }: HintsPanelProps) {
         </span>
       </div>
       {hints.slice(0, revealed).map((hint, i) => (
-        <div key={i} className="rounded-md bg-muted p-3 text-sm">
+        <div key={i} className="rounded-xl bg-muted p-3 text-sm">
           <span className="font-medium">Hint {i + 1}:</span> {hint}
         </div>
       ))}

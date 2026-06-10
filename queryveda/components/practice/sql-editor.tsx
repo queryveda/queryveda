@@ -92,6 +92,6 @@ export function SQLEditor({
   }, [initialValue]);
 
   return (
-    <div className="rounded-md border overflow-hidden" ref={containerRef} />
+    <div className="rounded-xl border overflow-hidden" ref={containerRef} />
   );
 }
