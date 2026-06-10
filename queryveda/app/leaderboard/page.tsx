@@ -16,6 +16,36 @@ interface LeaderboardRow {
 
 const TOTAL_QUESTIONS = 75;
 
+// Deterministic random username from user_id
+const ADJECTIVES = [
+  "Swift", "Clever", "Bold", "Quiet", "Bright", "Cosmic", "Lucky", "Nimble",
+  "Witty", "Calm", "Daring", "Epic", "Fierce", "Grand", "Happy", "Jolly",
+  "Keen", "Lively", "Mighty", "Noble", "Plucky", "Radiant", "Savvy", "Vivid",
+  "Zesty", "Agile", "Brave", "Crisp", "Eager", "Fresh", "Gentle", "Hardy",
+];
+const ANIMALS = [
+  "Falcon", "Panda", "Otter", "Fox", "Eagle", "Wolf", "Dolphin", "Lynx",
+  "Hawk", "Bear", "Cobra", "Raven", "Tiger", "Owl", "Heron", "Bison",
+  "Crane", "Deer", "Gecko", "Koala", "Moose", "Parrot", "Quail", "Seal",
+  "Turtle", "Viper", "Whale", "Yak", "Zebra", "Lemur", "Marten", "Newt",
+];
+
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function getUsername(userId: string): string {
+  const h = hashCode(userId);
+  const adj = ADJECTIVES[h % ADJECTIVES.length];
+  const animal = ANIMALS[(h >> 8) % ANIMALS.length];
+  const num = (h % 100).toString().padStart(2, "0");
+  return `${adj}${animal}${num}`;
+}
+
 function getDateCutoff(period: TimePeriod): string | null {
   if (period === "all") return null;
   const now = new Date();
@@ -23,7 +53,6 @@ function getDateCutoff(period: TimePeriod): string | null {
     now.setDate(1);
     now.setHours(0, 0, 0, 0);
   } else {
-    // this week: Sunday
     const day = now.getDay();
     now.setDate(now.getDate() - day);
     now.setHours(0, 0, 0, 0);
@@ -53,7 +82,6 @@ export default function LeaderboardPage() {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Group by user_id
       const map = new Map<string, { solved: number; days: Set<string> }>();
       for (const row of data || []) {
         if (!map.has(row.user_id)) {
@@ -146,8 +174,8 @@ export default function LeaderboardPage() {
                       {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : idx + 1}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-mono">
-                        {row.user_id.slice(0, 8)}…
+                      <span className="font-medium">
+                        {getUsername(row.user_id)}
                         {isCurrentUser && (
                           <span className="ml-2 text-xs text-primary">(you)</span>
                         )}

@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   EditorView,
   keymap,
   placeholder as placeholderExt,
   lineNumbers,
 } from "@codemirror/view";
-import { EditorState } from "@codemirror/state";
+import { EditorState, type Extension } from "@codemirror/state";
 import { sql, PostgreSQL } from "@codemirror/lang-sql";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -18,41 +18,38 @@ import {
 } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { autocompletion } from "@codemirror/autocomplete";
+import {
+  dracula,
+  solarizedLight,
+  cobalt,
+  coolGlow,
+  espresso,
+  noctisLilac,
+  ayuLight,
+} from "thememirror";
 import { useTheme } from "next-themes";
 
-// Custom light theme for the editor chrome
-const lightEditorTheme = EditorView.theme(
+// Custom warm light theme matching the site
+const warmLightTheme = EditorView.theme(
   {
-    "&": {
-      backgroundColor: "#faf9f7",
-      color: "#1c1917",
-    },
-    ".cm-content": {
-      caretColor: "#2563eb",
-    },
-    ".cm-cursor": {
-      borderLeftColor: "#2563eb",
-    },
+    "&": { backgroundColor: "#faf9f7", color: "#1c1917" },
+    ".cm-content": { caretColor: "#2563eb" },
+    ".cm-cursor": { borderLeftColor: "#2563eb" },
     "&.cm-focused .cm-selectionBackground, ::selection": {
       backgroundColor: "#dbeafe",
     },
-    ".cm-activeLine": {
-      backgroundColor: "#f0ede8",
-    },
+    ".cm-activeLine": { backgroundColor: "#f0ede8" },
     ".cm-gutters": {
       backgroundColor: "#f5f3f0",
       color: "#a8a29e",
       borderRight: "1px solid #e7e5e4",
     },
-    ".cm-activeLineGutter": {
-      backgroundColor: "#e7e5e4",
-    },
+    ".cm-activeLineGutter": { backgroundColor: "#e7e5e4" },
   },
   { dark: false }
 );
 
-// Custom light syntax highlighting with vivid colors
-const lightHighlightStyle = HighlightStyle.define([
+const warmLightHighlight = HighlightStyle.define([
   { tag: tags.keyword, color: "#7c3aed", fontWeight: "bold" },
   { tag: tags.operatorKeyword, color: "#7c3aed", fontWeight: "bold" },
   { tag: tags.definitionKeyword, color: "#7c3aed", fontWeight: "bold" },
@@ -71,6 +68,57 @@ const lightHighlightStyle = HighlightStyle.define([
   { tag: tags.special(tags.string), color: "#059669" },
 ]);
 
+type EditorThemeName =
+  | "default"
+  | "dracula"
+  | "cobalt"
+  | "solarized-light"
+  | "ayu-light"
+  | "noctis-lilac"
+  | "cool-glow"
+  | "espresso";
+
+const THEME_LABELS: Record<EditorThemeName, string> = {
+  default: "Default",
+  dracula: "Dracula",
+  cobalt: "Cobalt",
+  "cool-glow": "Cool Glow",
+  espresso: "Espresso",
+  "noctis-lilac": "Noctis Lilac",
+  "solarized-light": "Solarized Light",
+  "ayu-light": "Ayu Light",
+};
+
+function getThemeExtensions(
+  name: EditorThemeName,
+  isDark: boolean
+): Extension[] {
+  switch (name) {
+    case "dracula":
+      return [dracula];
+    case "cobalt":
+      return [cobalt];
+    case "cool-glow":
+      return [coolGlow];
+    case "espresso":
+      return [espresso];
+    case "noctis-lilac":
+      return [noctisLilac];
+    case "solarized-light":
+      return [solarizedLight];
+    case "ayu-light":
+      return [ayuLight];
+    case "default":
+    default:
+      if (isDark) return [oneDark];
+      return [
+        warmLightTheme,
+        syntaxHighlighting(warmLightHighlight),
+        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+      ];
+  }
+}
+
 interface SQLEditorProps {
   initialValue: string;
   onChange: (value: string) => void;
@@ -88,10 +136,31 @@ export function SQLEditor({
   const viewRef = useRef<EditorView | null>(null);
   const { resolvedTheme } = useTheme();
 
+  // Use refs to avoid stale closures in CodeMirror callbacks
+  const onRunRef = useRef(onRun);
+  onRunRef.current = onRun;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  const [editorTheme, setEditorTheme] = useState<EditorThemeName>(() => {
+    if (typeof window !== "undefined") {
+      return (
+        (localStorage.getItem("qv-editor-theme") as EditorThemeName) ||
+        "default"
+      );
+    }
+    return "default";
+  });
+
+  const handleThemeChange = (name: EditorThemeName) => {
+    setEditorTheme(name);
+    localStorage.setItem("qv-editor-theme", name);
+  };
+
+  const isDark = resolvedTheme === "dark";
+
   useEffect(() => {
     if (!containerRef.current) return;
-
-    const isDark = resolvedTheme === "dark";
 
     const extensions = [
       sql({ dialect: PostgreSQL, schema: tables }),
@@ -102,7 +171,7 @@ export function SQLEditor({
         {
           key: "Mod-Enter",
           run: () => {
-            onRun();
+            onRunRef.current();
             return true;
           },
         },
@@ -111,22 +180,15 @@ export function SQLEditor({
       ]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
-          onChange(update.state.doc.toString());
+          onChangeRef.current(update.state.doc.toString());
         }
       }),
       EditorView.theme({
         "&": { height: "220px", fontFamily: "var(--font-mono)" },
         ".cm-scroller": { overflow: "auto" },
       }),
+      ...getThemeExtensions(editorTheme, isDark),
     ];
-
-    if (isDark) {
-      extensions.push(oneDark);
-    } else {
-      extensions.push(lightEditorTheme);
-      extensions.push(syntaxHighlighting(lightHighlightStyle));
-      extensions.push(syntaxHighlighting(defaultHighlightStyle, { fallback: true }));
-    }
 
     const state = EditorState.create({
       doc: initialValue,
@@ -140,9 +202,8 @@ export function SQLEditor({
       view.destroy();
       viewRef.current = null;
     };
-    // Recreate editor on theme change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolvedTheme]);
+  }, [isDark, editorTheme]);
 
   // Update doc when initialValue changes (question navigation)
   useEffect(() => {
@@ -157,6 +218,23 @@ export function SQLEditor({
   }, [initialValue]);
 
   return (
-    <div className="rounded-xl border overflow-hidden" ref={containerRef} />
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-end">
+        <select
+          value={editorTheme}
+          onChange={(e) =>
+            handleThemeChange(e.target.value as EditorThemeName)
+          }
+          className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground outline-none focus:ring-1 focus:ring-ring"
+        >
+          {Object.entries(THEME_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="rounded-xl border overflow-hidden" ref={containerRef} />
+    </div>
   );
 }
