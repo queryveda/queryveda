@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { runTests, executeQuery, type QueryResult } from "@/lib/pglite";
 import { usePGlite } from "@/hooks/use-pglite";
 import { Badge } from "@/components/ui/badge";
@@ -67,10 +67,13 @@ export default function DailyPage() {
   }, []);
 
   // Build a Question object for reuse with ProblemPanel and runTests
-  const question: Question | null =
-    daily && daily.date === todayIST()
-      ? { id: -1, ...daily.question }
-      : null;
+  const question: Question | null = useMemo(
+    () =>
+      daily && daily.date === todayIST()
+        ? { id: -1, ...daily.question }
+        : null,
+    [daily]
+  );
 
   // Set up schema when DB + question are ready
   useEffect(() => {
