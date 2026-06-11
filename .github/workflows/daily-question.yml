@@ -1,0 +1,37 @@
+name: Generate Daily Question
+
+on:
+  schedule:
+    # 3:30 UTC = 9:00 AM IST
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: queryveda
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate daily question
+        run: node scripts/generate-daily-question.mjs
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/daily-question.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: update daily question for $(date -u +%Y-%m-%d)"
+          git push
