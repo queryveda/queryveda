@@ -1,0 +1,39 @@
+{
+  "date": "2026-06-11",
+  "question": {
+    "title": "Department Salary Rankings",
+    "difficulty": "Medium",
+    "topic": "Window Functions",
+    "desc": "Given an employees table with department information, write a query that returns each employee's name, department, salary, and their salary rank within their department (highest salary = rank 1). Order results by department name, then by rank.",
+    "setup": "DROP TABLE IF EXISTS employees;\nCREATE TABLE employees (\n  id SERIAL PRIMARY KEY,\n  name TEXT NOT NULL,\n  department TEXT NOT NULL,\n  salary INTEGER NOT NULL\n);\nINSERT INTO employees (name, department, salary) VALUES\n  ('Alice', 'Engineering', 95000),\n  ('Bob', 'Engineering', 88000),\n  ('Carol', 'Engineering', 92000),\n  ('Dave', 'Marketing', 75000),\n  ('Eve', 'Marketing', 82000),\n  ('Frank', 'Sales', 70000),\n  ('Grace', 'Sales', 78000),\n  ('Hank', 'Sales', 72000);",
+    "tables": ["employees"],
+    "cols": ["name", "department", "salary", "rank"],
+    "rows": [
+      ["Alice", "Engineering", 95000, 1],
+      ["Carol", "Engineering", 92000, 2],
+      ["Bob", "Engineering", 88000, 3],
+      ["Eve", "Marketing", 82000, 1],
+      ["Dave", "Marketing", 75000, 2],
+      ["Grace", "Sales", 78000, 1],
+      ["Hank", "Sales", 72000, 2],
+      ["Frank", "Sales", 70000, 3]
+    ],
+    "solution": "SELECT name, department, salary, RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rank FROM employees ORDER BY department, rank;",
+    "tips": "RANK() leaves gaps after ties. Use DENSE_RANK() if you want consecutive numbers even with ties.",
+    "hints": [
+      "Think about how to partition the data by department",
+      "You'll need a window function with PARTITION BY and ORDER BY clauses",
+      "Use RANK() OVER (PARTITION BY department ORDER BY salary DESC)"
+    ],
+    "tests": [
+      {
+        "setup": "DROP TABLE IF EXISTS employees;\nCREATE TABLE employees (\n  id SERIAL PRIMARY KEY,\n  name TEXT NOT NULL,\n  department TEXT NOT NULL,\n  salary INTEGER NOT NULL\n);\nINSERT INTO employees (name, department, salary) VALUES\n  ('Tom', 'HR', 60000),\n  ('Jane', 'HR', 65000);",
+        "rows": [["Jane", "HR", 65000, 1], ["Tom", "HR", 60000, 2]]
+      },
+      {
+        "setup": "DROP TABLE IF EXISTS employees;\nCREATE TABLE employees (\n  id SERIAL PRIMARY KEY,\n  name TEXT NOT NULL,\n  department TEXT NOT NULL,\n  salary INTEGER NOT NULL\n);\nINSERT INTO employees (name, department, salary) VALUES\n  ('Ava', 'Tech', 90000),\n  ('Ben', 'Tech', 90000),\n  ('Cal', 'Tech', 80000);",
+        "rows": [["Ava", "Tech", 90000, 1], ["Ben", "Tech", 90000, 1], ["Cal", "Tech", 80000, 3]]
+      }
+    ]
+  }
+}
