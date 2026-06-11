@@ -1,38 +1,62 @@
 {
   "date": "2026-06-11",
   "question": {
-    "title": "Department Salary Rankings",
+    "title": "Average Order Value by Customer",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "Given an employees table with department information, write a query that returns each employee's name, department, salary, and their salary rank within their department (highest salary = rank 1). Order results by department name, then by rank.",
-    "setup": "DROP TABLE IF EXISTS employees;\nCREATE TABLE employees (\n  id SERIAL PRIMARY KEY,\n  name TEXT NOT NULL,\n  department TEXT NOT NULL,\n  salary INTEGER NOT NULL\n);\nINSERT INTO employees (name, department, salary) VALUES\n  ('Alice', 'Engineering', 95000),\n  ('Bob', 'Engineering', 88000),\n  ('Carol', 'Engineering', 92000),\n  ('Dave', 'Marketing', 75000),\n  ('Eve', 'Marketing', 82000),\n  ('Frank', 'Sales', 70000),\n  ('Grace', 'Sales', 78000),\n  ('Hank', 'Sales', 72000);",
-    "tables": ["employees"],
-    "cols": ["name", "department", "salary", "rank"],
-    "rows": [
-      ["Alice", "Engineering", 95000, 1],
-      ["Carol", "Engineering", 92000, 2],
-      ["Bob", "Engineering", 88000, 3],
-      ["Eve", "Marketing", 82000, 1],
-      ["Dave", "Marketing", 75000, 2],
-      ["Grace", "Sales", 78000, 1],
-      ["Hank", "Sales", 72000, 2],
-      ["Frank", "Sales", 70000, 3]
+    "topic": "Aggregations & JOINs",
+    "desc": "Find the average order value for each customer who has placed more than one order. Join the customers table with the orders table, group by customer name, and calculate the average order value.",
+    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('John Doe'), ('Jane Doe'), ('Bob Smith'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_value) VALUES (1, 100.00), (1, 200.00), (2, 50.00), (3, 150.00), (3, 250.00), (3, 300.00);",
+    "tables": [
+      "customers",
+      "orders"
     ],
-    "solution": "SELECT name, department, salary, RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rank FROM employees ORDER BY department, rank;",
-    "tips": "RANK() leaves gaps after ties. Use DENSE_RANK() if you want consecutive numbers even with ties.",
+    "cols": [
+      "name",
+      "avg_order_value"
+    ],
+    "rows": [
+      [
+        "John Doe",
+        150
+      ],
+      [
+        "Bob Smith",
+        233.33
+      ]
+    ],
+    "solution": "SELECT c.name, AVG(o.order_value) AS avg_order_value FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.name HAVING COUNT(o.id) > 1",
+    "tips": "Consider using window functions for more complex aggregations.",
     "hints": [
-      "Think about how to partition the data by department",
-      "You'll need a window function with PARTITION BY and ORDER BY clauses",
-      "Use RANK() OVER (PARTITION BY department ORDER BY salary DESC)"
+      "Use a JOIN to combine the customers and orders tables.",
+      "Group by customer name and calculate the average order value using the AVG function.",
+      "Add a HAVING clause to filter customers with more than one order."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS employees;\nCREATE TABLE employees (\n  id SERIAL PRIMARY KEY,\n  name TEXT NOT NULL,\n  department TEXT NOT NULL,\n  salary INTEGER NOT NULL\n);\nINSERT INTO employees (name, department, salary) VALUES\n  ('Tom', 'HR', 60000),\n  ('Jane', 'HR', 65000);",
-        "rows": [["Jane", "HR", 65000, 1], ["Tom", "HR", 60000, 2]]
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Alice Johnson'), ('Mike Brown'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_value) VALUES (1, 75.00), (1, 125.00), (2, 225.00), (2, 325.00);",
+        "rows": [
+          [
+            "Alice Johnson",
+            100
+          ],
+          [
+            "Mike Brown",
+            275
+          ]
+        ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS employees;\nCREATE TABLE employees (\n  id SERIAL PRIMARY KEY,\n  name TEXT NOT NULL,\n  department TEXT NOT NULL,\n  salary INTEGER NOT NULL\n);\nINSERT INTO employees (name, department, salary) VALUES\n  ('Ava', 'Tech', 90000),\n  ('Ben', 'Tech', 90000),\n  ('Cal', 'Tech', 80000);",
-        "rows": [["Ava", "Tech", 90000, 1], ["Ben", "Tech", 90000, 1], ["Cal", "Tech", 80000, 3]]
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Emily Davis'), ('David Lee'), ('Sarah Taylor'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_value) VALUES (1, 90.00), (1, 110.00), (2, 140.00), (3, 160.00), (3, 180.00);",
+        "rows": [
+          [
+            "Emily Davis",
+            100
+          ],
+          [
+            "Sarah Taylor",
+            170
+          ]
+        ]
       }
     ]
   }
