@@ -77,10 +77,14 @@ Important:
 - Ensure the "rows" match what the "solution" query would actually produce against the "setup" data.
 - Column names in "cols" must match the query output exactly.`;
 
-async function generate() {
-  console.log(`Generating daily question for ${today}, topic: ${topic}`);
+const MODELS = [
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash",
+];
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+async function callGemini(model) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
   const res = await fetch(url, {
     method: "POST",
@@ -97,12 +101,44 @@ async function generate() {
 
   if (!res.ok) {
     const text = await res.text();
-    console.error(`API error ${res.status}: ${text}`);
-    process.exit(1);
+    throw new Error(`${model} returned ${res.status}: ${text.slice(0, 200)}`);
   }
 
   const data = await res.json();
-  const content = data.candidates[0].content.parts[0].text;
+  return data.candidates[0].content.parts[0].text;
+}
+
+async function generate() {
+  console.log(`Generating daily question for ${today}, topic: ${topic}`);
+
+  let content;
+  for (const model of MODELS) {
+    try {
+      console.log(`Trying model: ${model}`);
+      content = await callGemini(model);
+      console.log(`Success with ${model}`);
+      break;
+    } catch (e) {
+      console.warn(`${e.message}`);
+      // If rate-limited, wait and retry once with same model
+      if (e.message.includes("429")) {
+        console.log(`Rate limited, waiting 20s and retrying ${model}...`);
+        await new Promise((r) => setTimeout(r, 20000));
+        try {
+          content = await callGemini(model);
+          console.log(`Success with ${model} after retry`);
+          break;
+        } catch (e2) {
+          console.warn(`Retry failed: ${e2.message}`);
+        }
+      }
+    }
+  }
+
+  if (!content) {
+    console.error("All models failed");
+    process.exit(1);
+  }
 
   // Parse and validate
   let question;
