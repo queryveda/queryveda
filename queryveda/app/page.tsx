@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TOPICS, TOPIC_COLORS } from "@/lib/constants";
+import { DailyHeroCard } from "@/components/daily/daily-hero-card";
 
 export default function Home() {
   return (
@@ -20,6 +21,9 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* Daily Challenge */}
+      <DailyHeroCard />
 
       {/* Features */}
       <section className="mx-auto max-w-5xl px-6 py-16">
