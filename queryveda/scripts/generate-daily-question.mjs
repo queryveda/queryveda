@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Generates a daily SQL practice question using Google Gemini API.
+ * Generates a daily SQL practice question using Groq API (Llama 3.3 70B).
  * Writes to public/daily-question.json.
  *
- * Usage: GEMINI_API_KEY=xxx node scripts/generate-daily-question.mjs
+ * Usage: GROK_API_KEY=xxx node scripts/generate-daily-question.mjs
  */
 
 import { writeFileSync } from "fs";
@@ -14,9 +14,9 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT = resolve(__dirname, "../public/daily-question.json");
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) {
-  console.error("GEMINI_API_KEY is required");
+const GROK_API_KEY = process.env.GROK_API_KEY;
+if (!GROK_API_KEY) {
+  console.error("GROK_API_KEY is required");
   process.exit(1);
 }
 
@@ -78,24 +78,24 @@ Important:
 - Column names in "cols" must match the query output exactly.`;
 
 const MODELS = [
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-1.5-flash",
+  "llama-3.3-70b-versatile",
+  "llama3-70b-8192",
+  "mixtral-8x7b-32768",
 ];
 
-async function callGemini(model) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const res = await fetch(url, {
+async function callGroq(model) {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${GROK_API_KEY}`,
+    },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: PROMPT }] }],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-        responseMimeType: "application/json",
-      },
+      model,
+      messages: [{ role: "user", content: PROMPT }],
+      temperature: 0.7,
+      max_tokens: 4096,
+      response_format: { type: "json_object" },
     }),
   });
 
@@ -105,7 +105,7 @@ async function callGemini(model) {
   }
 
   const data = await res.json();
-  return data.candidates[0].content.parts[0].text;
+  return data.choices[0].message.content;
 }
 
 async function generate() {
@@ -115,17 +115,16 @@ async function generate() {
   for (const model of MODELS) {
     try {
       console.log(`Trying model: ${model}`);
-      content = await callGemini(model);
+      content = await callGroq(model);
       console.log(`Success with ${model}`);
       break;
     } catch (e) {
-      console.warn(`${e.message}`);
-      // If rate-limited, wait and retry once with same model
+      console.warn(e.message);
       if (e.message.includes("429")) {
         console.log(`Rate limited, waiting 20s and retrying ${model}...`);
         await new Promise((r) => setTimeout(r, 20000));
         try {
-          content = await callGemini(model);
+          content = await callGroq(model);
           console.log(`Success with ${model} after retry`);
           break;
         } catch (e2) {
