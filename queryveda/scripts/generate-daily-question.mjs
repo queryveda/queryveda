@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Generates a daily SQL practice question using Claude API.
+ * Generates a daily SQL practice question using Google Gemini API.
  * Writes to public/daily-question.json.
  *
- * Usage: ANTHROPIC_API_KEY=xxx node scripts/generate-daily-question.mjs
+ * Usage: GEMINI_API_KEY=xxx node scripts/generate-daily-question.mjs
  */
 
 import { writeFileSync } from "fs";
@@ -14,9 +14,9 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT = resolve(__dirname, "../public/daily-question.json");
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-if (!ANTHROPIC_API_KEY) {
-  console.error("ANTHROPIC_API_KEY is required");
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+  console.error("GEMINI_API_KEY is required");
   process.exit(1);
 }
 
@@ -80,17 +80,18 @@ Important:
 async function generate() {
   console.log(`Generating daily question for ${today}, topic: ${topic}`);
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
-      messages: [{ role: "user", content: PROMPT }],
+      contents: [{ parts: [{ text: PROMPT }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 4096,
+        responseMimeType: "application/json",
+      },
     }),
   });
 
@@ -101,7 +102,7 @@ async function generate() {
   }
 
   const data = await res.json();
-  const content = data.content[0].text;
+  const content = data.candidates[0].content.parts[0].text;
 
   // Parse and validate
   let question;
