@@ -14,6 +14,7 @@ import { ResultTable } from "@/components/practice/result-table";
 import { CountdownTimer } from "@/components/daily/countdown-timer";
 import { TimeUpBanner } from "@/components/daily/time-up-banner";
 import { useAuth } from "@/hooks/use-auth";
+import { AuthModal } from "@/components/auth/auth-modal";
 import type { Question } from "@/lib/types";
 import {
   fetchDailyQuestion,
@@ -33,7 +34,8 @@ interface Verdict {
 }
 
 export default function DailyPage() {
-  const { user, loading: authLoading, loginWithGoogle, loginWithLinkedIn } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [authOpen, setAuthOpen] = useState(false);
   const { db, ready, error: dbError } = usePGlite();
 
   const [daily, setDaily] = useState<DailyQuestion | null>(null);
@@ -154,21 +156,21 @@ export default function DailyPage() {
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center gap-6 p-12 text-center">
-        <span className="text-4xl">&#128274;</span>
-        <h2 className="text-2xl font-bold">Sign In to Access the Daily Challenge</h2>
-        <p className="text-muted-foreground max-w-md">
-          Log in or create an account to solve today&apos;s SQL challenge and track your progress.
-        </p>
-        <div className="flex flex-col gap-3 w-64">
-          <Button onClick={loginWithGoogle} size="lg" className="rounded-full">
-            Continue with Google
-          </Button>
-          <Button onClick={loginWithLinkedIn} size="lg" variant="outline" className="rounded-full">
-            Continue with LinkedIn
+      <>
+        <div className="flex flex-col items-center justify-center gap-5 px-4 py-24 text-center">
+          <div className="text-5xl">🔒</div>
+          <h3 className="text-2xl font-bold">Daily SQL Challenge</h3>
+          <p className="text-sm text-muted-foreground max-w-md">
+            The daily challenge requires a free account.
+            Sign in to unlock today&apos;s problem, track your progress, and
+            compete on the leaderboard.
+          </p>
+          <Button onClick={() => setAuthOpen(true)} size="lg" className="rounded-full px-8">
+            Sign In to Unlock
           </Button>
         </div>
-      </div>
+        <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
+      </>
     );
   }
 
