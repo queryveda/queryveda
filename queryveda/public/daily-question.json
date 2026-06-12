@@ -1,110 +1,158 @@
 {
   "date": "2026-06-12",
   "question": {
-    "title": "Ranking Sales by Region",
+    "title": "Ranking Student Scores",
     "difficulty": "Medium",
     "topic": "Window Functions",
-    "desc": "Rank sales representatives in each region based on their total sales. The sales representatives should be ranked in descending order of their sales within each region.",
-    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_rep TEXT, sales_amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name TEXT); INSERT INTO regions (id, region_name) VALUES (1, 'North'), (2, 'South'); INSERT INTO sales (region_id, sales_rep, sales_amount) VALUES (1, 'John Doe', 10000.00), (1, 'Jane Smith', 8000.00), (2, 'Bob Johnson', 12000.00), (2, 'Alice Brown', 9000.00);",
+    "desc": "You have two tables, students and scores. The students table contains information about each student, and the scores table contains the scores of each student in different subjects. You need to rank the students based on their total score in each subject and display their rank, name, subject, and total score.",
+    "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('John'), ('Alice'), ('Bob'), ('Charlie'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER); INSERT INTO scores (student_id, subject, score) VALUES (1, 'Math', 90), (1, 'Science', 80), (2, 'Math', 95), (2, 'Science', 85), (3, 'Math', 70), (3, 'Science', 75), (4, 'Math', 85), (4, 'Science', 90);",
     "tables": [
-      "sales",
-      "regions"
+      "students",
+      "scores"
     ],
     "cols": [
-      "region_name",
-      "sales_rep",
-      "sales_amount",
-      "rank"
+      "rank",
+      "name",
+      "subject",
+      "total_score"
     ],
     "rows": [
       [
-        "North",
-        "John Doe",
-        10000,
-        1
+        1,
+        "Alice",
+        "Math",
+        95
       ],
       [
-        "North",
-        "Jane Smith",
-        8000,
-        2
+        2,
+        "John",
+        "Math",
+        90
       ],
       [
-        "South",
-        "Bob Johnson",
-        12000,
-        1
+        3,
+        "Charlie",
+        "Math",
+        85
       ],
       [
-        "South",
-        "Alice Brown",
-        9000,
-        2
+        4,
+        "Bob",
+        "Math",
+        70
+      ],
+      [
+        1,
+        "Charlie",
+        "Science",
+        90
+      ],
+      [
+        2,
+        "Alice",
+        "Science",
+        85
+      ],
+      [
+        3,
+        "John",
+        "Science",
+        80
+      ],
+      [
+        4,
+        "Bob",
+        "Science",
+        75
       ]
     ],
-    "solution": "SELECT r.region_name, s.sales_rep, s.sales_amount, DENSE_RANK() OVER (PARTITION BY r.id ORDER BY s.sales_amount DESC) AS rank FROM sales s JOIN regions r ON s.region_id = r.id ORDER BY r.region_name, s.sales_amount DESC;",
-    "tips": "Using DENSE_RANK() instead of RANK() ensures that if two sales reps have the same sales amount, they will have the same rank and the next rep will have a rank that is one more than the previous rank.",
+    "solution": "SELECT rank, s.name, sub.subject, sub.total_score FROM students s JOIN (SELECT student_id, subject, SUM(score) AS total_score, DENSE_RANK() OVER (PARTITION BY subject ORDER BY SUM(score) DESC) AS rank FROM scores GROUP BY student_id, subject) sub ON s.id = sub.student_id ORDER BY sub.subject, sub.rank;",
+    "tips": "Using DENSE_RANK() instead of RANK() will prevent gaps in the ranking if two students have the same score.",
     "hints": [
-      "You will need to use a window function to rank the sales reps in each region.",
-      "The DENSE_RANK() window function will be useful in this scenario, as it assigns a unique rank to each distinct sales amount within a partition.",
-      "The PARTITION BY clause should be used with the region id to ensure that the ranking is done separately for each region."
+      "You need to join the students table with a subquery that calculates the total score for each student in each subject.",
+      "Use the DENSE_RANK() window function to rank the students based on their total score in each subject.",
+      "The subquery should group the scores by student_id and subject, and then calculate the rank using DENSE_RANK() OVER (PARTITION BY subject ORDER BY SUM(score) DESC)"
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_rep TEXT, sales_amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name TEXT); INSERT INTO regions (id, region_name) VALUES (1, 'East'), (2, 'West'); INSERT INTO sales (region_id, sales_rep, sales_amount) VALUES (1, 'Mike Davis', 15000.00), (1, 'Emily Chen', 11000.00), (2, 'David Lee', 13000.00), (2, 'Sophia Patel', 10000.00);",
+        "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('David'), ('Emily'), ('Frank'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER); INSERT INTO scores (student_id, subject, score) VALUES (1, 'History', 80), (1, 'Geography', 90), (2, 'History', 85), (2, 'Geography', 95), (3, 'History', 70), (3, 'Geography', 75);",
         "rows": [
           [
-            "East",
-            "Mike Davis",
-            15000,
-            1
+            1,
+            "Emily",
+            "Geography",
+            95
           ],
           [
-            "East",
-            "Emily Chen",
-            11000,
-            2
+            2,
+            "David",
+            "Geography",
+            90
           ],
           [
-            "West",
-            "David Lee",
-            13000,
-            1
+            3,
+            "Frank",
+            "Geography",
+            75
           ],
           [
-            "West",
-            "Sophia Patel",
-            10000,
-            2
+            1,
+            "Emily",
+            "History",
+            85
+          ],
+          [
+            2,
+            "David",
+            "History",
+            80
+          ],
+          [
+            3,
+            "Frank",
+            "History",
+            70
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_rep TEXT, sales_amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name TEXT); INSERT INTO regions (id, region_name) VALUES (1, 'Central'), (2, 'Coastal'); INSERT INTO sales (region_id, sales_rep, sales_amount) VALUES (1, 'Tom White', 20000.00), (1, 'Kate Martin', 18000.00), (2, 'Peter Hall', 16000.00), (2, 'Linda Brooks', 14000.00);",
+        "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('George'), ('Hannah'), ('Isaac'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER); INSERT INTO scores (student_id, subject, score) VALUES (1, 'Physics', 90), (1, 'Chemistry', 80), (2, 'Physics', 95), (2, 'Chemistry', 85), (3, 'Physics', 70), (3, 'Chemistry', 75);",
         "rows": [
           [
-            "Central",
-            "Tom White",
-            20000,
-            1
+            1,
+            "Hannah",
+            "Physics",
+            95
           ],
           [
-            "Central",
-            "Kate Martin",
-            18000,
-            2
+            2,
+            "George",
+            "Physics",
+            90
           ],
           [
-            "Coastal",
-            "Peter Hall",
-            16000,
-            1
+            3,
+            "Isaac",
+            "Physics",
+            70
           ],
           [
-            "Coastal",
-            "Linda Brooks",
-            14000,
-            2
+            1,
+            "Hannah",
+            "Chemistry",
+            85
+          ],
+          [
+            2,
+            "George",
+            "Chemistry",
+            80
+          ],
+          [
+            3,
+            "Isaac",
+            "Chemistry",
+            75
           ]
         ]
       }
