@@ -1,158 +1,165 @@
 {
   "date": "2026-06-12",
   "question": {
-    "title": "Ranking Student Scores",
+    "title": "Employee Salaries by Department",
     "difficulty": "Medium",
     "topic": "Window Functions",
-    "desc": "You have two tables, students and scores. The students table contains information about each student, and the scores table contains the scores of each student in different subjects. You need to rank the students based on their total score in each subject and display their rank, name, subject, and total score.",
-    "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('John'), ('Alice'), ('Bob'), ('Charlie'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER); INSERT INTO scores (student_id, subject, score) VALUES (1, 'Math', 90), (1, 'Science', 80), (2, 'Math', 95), (2, 'Science', 85), (3, 'Math', 70), (3, 'Science', 75), (4, 'Math', 85), (4, 'Science', 90);",
+    "desc": "Write a SQL query that calculates the average salary for each department and assigns a ranking to each employee within their department based on their salary. The output should include the employee's name, department name, salary, average department salary, and ranking.",
+    "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); INSERT INTO employees (name, department_id, salary) VALUES ('John Doe', 1, 50000.00), ('Jane Doe', 1, 60000.00), ('Bob Smith', 2, 40000.00), ('Alice Johnson', 2, 55000.00), ('Mike Brown', 3, 70000.00), ('Emily Davis', 3, 65000.00);",
     "tables": [
-      "students",
-      "scores"
+      "employees",
+      "departments"
     ],
     "cols": [
-      "rank",
       "name",
-      "subject",
-      "total_score"
+      "department_name",
+      "salary",
+      "avg_salary",
+      "ranking"
     ],
     "rows": [
       [
-        1,
-        "Alice",
-        "Math",
-        95
+        "John Doe",
+        "Sales",
+        50000,
+        55000,
+        2
       ],
       [
-        2,
-        "John",
-        "Math",
-        90
+        "Jane Doe",
+        "Sales",
+        60000,
+        55000,
+        1
       ],
       [
-        3,
-        "Charlie",
-        "Math",
-        85
+        "Bob Smith",
+        "Marketing",
+        40000,
+        47500,
+        2
       ],
       [
-        4,
-        "Bob",
-        "Math",
-        70
+        "Alice Johnson",
+        "Marketing",
+        55000,
+        47500,
+        1
       ],
       [
-        1,
-        "Charlie",
-        "Science",
-        90
+        "Mike Brown",
+        "IT",
+        70000,
+        67500,
+        1
       ],
       [
-        2,
-        "Alice",
-        "Science",
-        85
-      ],
-      [
-        3,
-        "John",
-        "Science",
-        80
-      ],
-      [
-        4,
-        "Bob",
-        "Science",
-        75
+        "Emily Davis",
+        "IT",
+        65000,
+        67500,
+        2
       ]
     ],
-    "solution": "SELECT rank, s.name, sub.subject, sub.total_score FROM students s JOIN (SELECT student_id, subject, SUM(score) AS total_score, DENSE_RANK() OVER (PARTITION BY subject ORDER BY SUM(score) DESC) AS rank FROM scores GROUP BY student_id, subject) sub ON s.id = sub.student_id ORDER BY sub.subject, sub.rank;",
-    "tips": "Using DENSE_RANK() instead of RANK() will prevent gaps in the ranking if two students have the same score.",
+    "solution": "WITH ranked_employees AS ( SELECT e.name, d.name AS department_name, e.salary, AVG(e.salary) OVER (PARTITION BY d.id) AS avg_salary, RANK() OVER (PARTITION BY d.id ORDER BY e.salary DESC) AS ranking FROM employees e JOIN departments d ON e.department_id = d.id ) SELECT * FROM ranked_employees;",
+    "tips": "Consider using window functions to simplify the query and improve performance.",
     "hints": [
-      "You need to join the students table with a subquery that calculates the total score for each student in each subject.",
-      "Use the DENSE_RANK() window function to rank the students based on their total score in each subject.",
-      "The subquery should group the scores by student_id and subject, and then calculate the rank using DENSE_RANK() OVER (PARTITION BY subject ORDER BY SUM(score) DESC)"
+      "Use a window function to calculate the average salary for each department.",
+      "Join the employees table with the departments table to access department information.",
+      "Use the RANK() function to assign a ranking to each employee within their department based on their salary."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('David'), ('Emily'), ('Frank'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER); INSERT INTO scores (student_id, subject, score) VALUES (1, 'History', 80), (1, 'Geography', 90), (2, 'History', 85), (2, 'Geography', 95), (3, 'History', 70), (3, 'Geography', 75);",
+        "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'), ('Operations'); INSERT INTO employees (name, department_id, salary) VALUES ('David Lee', 1, 45000.00), ('Sophia Patel', 1, 52000.00), ('Kevin White', 2, 58000.00), ('Olivia Martin', 2, 62000.00), ('William Harris', 3, 68000.00), ('Ava Thompson', 3, 72000.00);",
         "rows": [
           [
-            1,
-            "Emily",
-            "Geography",
-            95
+            "David Lee",
+            "HR",
+            45000,
+            48500,
+            2
           ],
           [
-            2,
-            "David",
-            "Geography",
-            90
+            "Sophia Patel",
+            "HR",
+            52000,
+            48500,
+            1
           ],
           [
-            3,
-            "Frank",
-            "Geography",
-            75
+            "Kevin White",
+            "Finance",
+            58000,
+            60000,
+            2
           ],
           [
-            1,
-            "Emily",
-            "History",
-            85
+            "Olivia Martin",
+            "Finance",
+            62000,
+            60000,
+            1
           ],
           [
-            2,
-            "David",
-            "History",
-            80
+            "William Harris",
+            "Operations",
+            68000,
+            70000,
+            2
           ],
           [
-            3,
-            "Frank",
-            "History",
-            70
+            "Ava Thompson",
+            "Operations",
+            72000,
+            70000,
+            1
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('George'), ('Hannah'), ('Isaac'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER); INSERT INTO scores (student_id, subject, score) VALUES (1, 'Physics', 90), (1, 'Chemistry', 80), (2, 'Physics', 95), (2, 'Chemistry', 85), (3, 'Physics', 70), (3, 'Chemistry', 75);",
+        "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('Research'), ('Development'), ('Quality Assurance'); INSERT INTO employees (name, department_id, salary) VALUES ('Ethan Hall', 1, 48000.00), ('Lily Chen', 1, 54000.00), ('Jackson Kim', 2, 60000.00), ['Julia Lee', 2, 66000.00], ['Alexander Brooks', 3, 72000.00], ['Sofia Rodriguez', 3, 78000.00];",
         "rows": [
           [
-            1,
-            "Hannah",
-            "Physics",
-            95
+            "Ethan Hall",
+            "Research",
+            48000,
+            51000,
+            2
           ],
           [
-            2,
-            "George",
-            "Physics",
-            90
+            "Lily Chen",
+            "Research",
+            54000,
+            51000,
+            1
           ],
           [
-            3,
-            "Isaac",
-            "Physics",
-            70
+            "Jackson Kim",
+            "Development",
+            60000,
+            63000,
+            2
           ],
           [
-            1,
-            "Hannah",
-            "Chemistry",
-            85
+            "Julia Lee",
+            "Development",
+            66000,
+            63000,
+            1
           ],
           [
-            2,
-            "George",
-            "Chemistry",
-            80
+            "Alexander Brooks",
+            "Quality Assurance",
+            72000,
+            75000,
+            2
           ],
           [
-            3,
-            "Isaac",
-            "Chemistry",
-            75
+            "Sofia Rodriguez",
+            "Quality Assurance",
+            78000,
+            75000,
+            1
           ]
         ]
       }
