@@ -1,165 +1,121 @@
 {
   "date": "2026-06-12",
   "question": {
-    "title": "Employee Salaries by Department",
+    "title": "Ranking Sales by Region",
     "difficulty": "Medium",
     "topic": "Window Functions",
-    "desc": "Write a SQL query that calculates the average salary for each department and assigns a ranking to each employee within their department based on their salary. The output should include the employee's name, department name, salary, average department salary, and ranking.",
-    "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); INSERT INTO employees (name, department_id, salary) VALUES ('John Doe', 1, 50000.00), ('Jane Doe', 1, 60000.00), ('Bob Smith', 2, 40000.00), ('Alice Johnson', 2, 55000.00), ('Mike Brown', 3, 70000.00), ('Emily Davis', 3, 65000.00);",
+    "desc": "Find the ranking of sales for each product in its respective region. Use a window function to assign a rank to each product based on its sales within the region.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(20), product VARCHAR(20), sales INTEGER); INSERT INTO sales (region, product, sales) VALUES ('North', 'Product A', 100), ('North', 'Product B', 200), ('South', 'Product A', 50), ('South', 'Product B', 150), ('East', 'Product A', 75), ('East', 'Product B', 225);",
     "tables": [
-      "employees",
-      "departments"
+      "sales"
     ],
     "cols": [
-      "name",
-      "department_name",
-      "salary",
-      "avg_salary",
-      "ranking"
+      "region",
+      "product",
+      "sales",
+      "rank"
     ],
     "rows": [
       [
-        "John Doe",
-        "Sales",
-        50000,
-        55000,
+        "East",
+        "Product B",
+        225,
+        1
+      ],
+      [
+        "East",
+        "Product A",
+        75,
         2
       ],
       [
-        "Jane Doe",
-        "Sales",
-        60000,
-        55000,
+        "North",
+        "Product B",
+        200,
         1
       ],
       [
-        "Bob Smith",
-        "Marketing",
-        40000,
-        47500,
+        "North",
+        "Product A",
+        100,
         2
       ],
       [
-        "Alice Johnson",
-        "Marketing",
-        55000,
-        47500,
+        "South",
+        "Product B",
+        150,
         1
       ],
       [
-        "Mike Brown",
-        "IT",
-        70000,
-        67500,
-        1
-      ],
-      [
-        "Emily Davis",
-        "IT",
-        65000,
-        67500,
+        "South",
+        "Product A",
+        50,
         2
       ]
     ],
-    "solution": "WITH ranked_employees AS ( SELECT e.name, d.name AS department_name, e.salary, AVG(e.salary) OVER (PARTITION BY d.id) AS avg_salary, RANK() OVER (PARTITION BY d.id ORDER BY e.salary DESC) AS ranking FROM employees e JOIN departments d ON e.department_id = d.id ) SELECT * FROM ranked_employees;",
-    "tips": "Consider using window functions to simplify the query and improve performance.",
+    "solution": "SELECT region, product, sales, DENSE_RANK() OVER (PARTITION BY region ORDER BY sales DESC) AS rank FROM sales;",
+    "tips": "Use DENSE_RANK() to avoid gaps in ranking when there are ties in sales.",
     "hints": [
-      "Use a window function to calculate the average salary for each department.",
-      "Join the employees table with the departments table to access department information.",
-      "Use the RANK() function to assign a ranking to each employee within their department based on their salary."
+      "Consider using a window function to rank sales within each region.",
+      "Partition the data by region and order by sales in descending order.",
+      "Use DENSE_RANK() to assign a unique rank to each product within its region."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'), ('Operations'); INSERT INTO employees (name, department_id, salary) VALUES ('David Lee', 1, 45000.00), ('Sophia Patel', 1, 52000.00), ('Kevin White', 2, 58000.00), ('Olivia Martin', 2, 62000.00), ('William Harris', 3, 68000.00), ('Ava Thompson', 3, 72000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(20), product VARCHAR(20), sales INTEGER); INSERT INTO sales (region, product, sales) VALUES ('West', 'Product C', 300), ('West', 'Product D', 400), ('Central', 'Product C', 200), ('Central', 'Product D', 250);",
         "rows": [
           [
-            "David Lee",
-            "HR",
-            45000,
-            48500,
-            2
-          ],
-          [
-            "Sophia Patel",
-            "HR",
-            52000,
-            48500,
+            "Central",
+            "Product D",
+            250,
             1
           ],
           [
-            "Kevin White",
-            "Finance",
-            58000,
-            60000,
+            "Central",
+            "Product C",
+            200,
             2
           ],
           [
-            "Olivia Martin",
-            "Finance",
-            62000,
-            60000,
+            "West",
+            "Product D",
+            400,
             1
           ],
           [
-            "William Harris",
-            "Operations",
-            68000,
-            70000,
+            "West",
+            "Product C",
+            300,
             2
-          ],
-          [
-            "Ava Thompson",
-            "Operations",
-            72000,
-            70000,
-            1
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('Research'), ('Development'), ('Quality Assurance'); INSERT INTO employees (name, department_id, salary) VALUES ('Ethan Hall', 1, 48000.00), ('Lily Chen', 1, 54000.00), ('Jackson Kim', 2, 60000.00), ['Julia Lee', 2, 66000.00], ['Alexander Brooks', 3, 72000.00], ['Sofia Rodriguez', 3, 78000.00];",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(20), product VARCHAR(20), sales INTEGER); INSERT INTO sales (region, product, sales) VALUES ('Midwest', 'Product E', 500), ('Midwest', 'Product F', 600), ('Northeast', 'Product E', 350), ('Northeast', 'Product F', 450);",
         "rows": [
           [
-            "Ethan Hall",
-            "Research",
-            48000,
-            51000,
-            2
-          ],
-          [
-            "Lily Chen",
-            "Research",
-            54000,
-            51000,
+            "Midwest",
+            "Product F",
+            600,
             1
           ],
           [
-            "Jackson Kim",
-            "Development",
-            60000,
-            63000,
+            "Midwest",
+            "Product E",
+            500,
             2
           ],
           [
-            "Julia Lee",
-            "Development",
-            66000,
-            63000,
+            "Northeast",
+            "Product F",
+            450,
             1
           ],
           [
-            "Alexander Brooks",
-            "Quality Assurance",
-            72000,
-            75000,
+            "Northeast",
+            "Product E",
+            350,
             2
-          ],
-          [
-            "Sofia Rodriguez",
-            "Quality Assurance",
-            78000,
-            75000,
-            1
           ]
         ]
       }
