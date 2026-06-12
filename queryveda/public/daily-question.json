@@ -1,60 +1,110 @@
 {
-  "date": "2026-06-11",
+  "date": "2026-06-12",
   "question": {
-    "title": "Average Order Value by Customer",
+    "title": "Ranking Sales by Region",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the average order value for each customer who has placed more than one order. Join the customers table with the orders table, group by customer name, and calculate the average order value.",
-    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('John Doe'), ('Jane Doe'), ('Bob Smith'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_value) VALUES (1, 100.00), (1, 200.00), (2, 50.00), (3, 150.00), (3, 250.00), (3, 300.00);",
+    "topic": "Window Functions",
+    "desc": "Rank sales representatives in each region based on their total sales. The sales representatives should be ranked in descending order of their sales within each region.",
+    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_rep TEXT, sales_amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name TEXT); INSERT INTO regions (id, region_name) VALUES (1, 'North'), (2, 'South'); INSERT INTO sales (region_id, sales_rep, sales_amount) VALUES (1, 'John Doe', 10000.00), (1, 'Jane Smith', 8000.00), (2, 'Bob Johnson', 12000.00), (2, 'Alice Brown', 9000.00);",
     "tables": [
-      "customers",
-      "orders"
+      "sales",
+      "regions"
     ],
     "cols": [
-      "name",
-      "avg_order_value"
+      "region_name",
+      "sales_rep",
+      "sales_amount",
+      "rank"
     ],
     "rows": [
       [
+        "North",
         "John Doe",
-        150
+        10000,
+        1
       ],
       [
-        "Bob Smith",
-        233.33
+        "North",
+        "Jane Smith",
+        8000,
+        2
+      ],
+      [
+        "South",
+        "Bob Johnson",
+        12000,
+        1
+      ],
+      [
+        "South",
+        "Alice Brown",
+        9000,
+        2
       ]
     ],
-    "solution": "SELECT c.name, AVG(o.order_value) AS avg_order_value FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.name HAVING COUNT(o.id) > 1",
-    "tips": "Consider using window functions for more complex aggregations.",
+    "solution": "SELECT r.region_name, s.sales_rep, s.sales_amount, DENSE_RANK() OVER (PARTITION BY r.id ORDER BY s.sales_amount DESC) AS rank FROM sales s JOIN regions r ON s.region_id = r.id ORDER BY r.region_name, s.sales_amount DESC;",
+    "tips": "Using DENSE_RANK() instead of RANK() ensures that if two sales reps have the same sales amount, they will have the same rank and the next rep will have a rank that is one more than the previous rank.",
     "hints": [
-      "Use a JOIN to combine the customers and orders tables.",
-      "Group by customer name and calculate the average order value using the AVG function.",
-      "Add a HAVING clause to filter customers with more than one order."
+      "You will need to use a window function to rank the sales reps in each region.",
+      "The DENSE_RANK() window function will be useful in this scenario, as it assigns a unique rank to each distinct sales amount within a partition.",
+      "The PARTITION BY clause should be used with the region id to ensure that the ranking is done separately for each region."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Alice Johnson'), ('Mike Brown'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_value) VALUES (1, 75.00), (1, 125.00), (2, 225.00), (2, 325.00);",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_rep TEXT, sales_amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name TEXT); INSERT INTO regions (id, region_name) VALUES (1, 'East'), (2, 'West'); INSERT INTO sales (region_id, sales_rep, sales_amount) VALUES (1, 'Mike Davis', 15000.00), (1, 'Emily Chen', 11000.00), (2, 'David Lee', 13000.00), (2, 'Sophia Patel', 10000.00);",
         "rows": [
           [
-            "Alice Johnson",
-            100
+            "East",
+            "Mike Davis",
+            15000,
+            1
           ],
           [
-            "Mike Brown",
-            275
+            "East",
+            "Emily Chen",
+            11000,
+            2
+          ],
+          [
+            "West",
+            "David Lee",
+            13000,
+            1
+          ],
+          [
+            "West",
+            "Sophia Patel",
+            10000,
+            2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Emily Davis'), ('David Lee'), ('Sarah Taylor'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_value) VALUES (1, 90.00), (1, 110.00), (2, 140.00), (3, 160.00), (3, 180.00);",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_rep TEXT, sales_amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name TEXT); INSERT INTO regions (id, region_name) VALUES (1, 'Central'), (2, 'Coastal'); INSERT INTO sales (region_id, sales_rep, sales_amount) VALUES (1, 'Tom White', 20000.00), (1, 'Kate Martin', 18000.00), (2, 'Peter Hall', 16000.00), (2, 'Linda Brooks', 14000.00);",
         "rows": [
           [
-            "Emily Davis",
-            100
+            "Central",
+            "Tom White",
+            20000,
+            1
           ],
           [
-            "Sarah Taylor",
-            170
+            "Central",
+            "Kate Martin",
+            18000,
+            2
+          ],
+          [
+            "Coastal",
+            "Peter Hall",
+            16000,
+            1
+          ],
+          [
+            "Coastal",
+            "Linda Brooks",
+            14000,
+            2
           ]
         ]
       }
