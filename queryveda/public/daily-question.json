@@ -4,118 +4,123 @@
     "title": "Cumulative Sales by Region",
     "difficulty": "Medium",
     "topic": "Cumulative & Sliding Windows",
-    "desc": "Find the cumulative sales for each region over time, and also calculate the difference in sales between the current month and the previous month.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(50), date DATE, sales INT); INSERT INTO sales (region, date, sales) VALUES ('North', '2022-01-01', 100), ('North', '2022-02-01', 150), ('South', '2022-01-01', 200), ('South', '2022-02-01', 250), ('East', '2022-01-01', 50), ('East', '2022-02-01', 75);",
+    "desc": "Find the cumulative sales for each region over time. Use the 'sales' table to calculate the cumulative sales for each region and return the 'region', 'date', and 'cumulative_sales' for each date in the 'sales' table.",
+    "setup": "\n      DROP TABLE IF EXISTS sales;\n      CREATE TABLE sales (\n         region VARCHAR(255),\n         date DATE,\n         sales_amount DECIMAL(10,2)\n      );\n      INSERT INTO sales (region, date, sales_amount)\n      VALUES \n         ('North', '2022-01-01', 100.00),\n         ('North', '2022-01-02', 200.00),\n         ('South', '2022-01-01', 50.00),\n         ('South', '2022-01-02', 75.00),\n         ('East', '2022-01-01', 150.00),\n         ('East', '2022-01-02', 225.00);\n   ",
     "tables": [
       "sales"
     ],
     "cols": [
       "region",
       "date",
-      "cumulative_sales",
-      "sales_diff"
+      "cumulative_sales"
     ],
     "rows": [
       [
         "East",
         "2022-01-01",
-        50,
-        null
+        150
       ],
       [
         "East",
-        "2022-02-01",
-        125,
-        25
+        "2022-01-02",
+        375
       ],
       [
         "North",
         "2022-01-01",
-        100,
-        null
+        100
       ],
       [
         "North",
-        "2022-02-01",
-        250,
-        50
+        "2022-01-02",
+        300
       ],
       [
         "South",
         "2022-01-01",
-        200,
-        null
+        50
       ],
       [
         "South",
-        "2022-02-01",
-        450,
-        50
+        "2022-01-02",
+        125
       ]
     ],
-    "solution": "WITH cumulative AS (SELECT region, date, sales, SUM(sales) OVER (PARTITION BY region ORDER BY date) AS cumulative_sales FROM sales) SELECT region, date, cumulative_sales, LAG(sales, 1) OVER (PARTITION BY region ORDER BY date) AS prev_sales, cumulative_sales - LAG(sales, 1) OVER (PARTITION BY region ORDER BY date) AS sales_diff FROM cumulative ORDER BY region, date;",
-    "tips": "Using window functions allows for efficient calculation of cumulative and difference values without the need for self-joins or subqueries.",
+    "solution": "SELECT region, date, SUM(sales_amount) OVER (PARTITION BY region ORDER BY date) AS cumulative_sales FROM sales ORDER BY region, date;",
+    "tips": "Window functions are useful for calculating cumulative values.",
     "hints": [
-      "To find the cumulative sales, consider using a window function that sums sales over the region and date.",
-      "To calculate the difference in sales between the current month and the previous month, consider using the LAG function to access the previous row's sales.",
-      "Use a Common Table Expression (CTE) to first calculate the cumulative sales, and then use the LAG function in the outer query to calculate the sales difference."
+      "Use a window function to calculate the cumulative sales.",
+      "You need to partition the data by 'region' to calculate the cumulative sales for each region separately.",
+      "Use the 'SUM' window function with 'OVER (PARTITION BY region ORDER BY date)' to calculate the cumulative sales for each date in each region."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(50), date DATE, sales INT); INSERT INTO sales (region, date, sales) VALUES ('West', '2023-01-01', 300), ('West', '2023-02-01', 350), ('Central', '2023-01-01', 400), ('Central', '2023-02-01', 500);",
+        "setup": "\n            DROP TABLE IF EXISTS sales;\n            CREATE TABLE sales (\n               region VARCHAR(255),\n               date DATE,\n               sales_amount DECIMAL(10,2)\n            );\n            INSERT INTO sales (region, date, sales_amount)\n            VALUES \n               ('West', '2022-01-01', 200.00),\n               ('West', '2022-01-02', 250.00),\n               ('West', '2022-01-03', 300.00);\n         ",
         "rows": [
           [
-            "Central",
-            "2023-01-01",
-            400,
-            null
-          ],
-          [
-            "Central",
-            "2023-02-01",
-            900,
-            100
+            "West",
+            "2022-01-01",
+            200
           ],
           [
             "West",
-            "2023-01-01",
-            300,
-            null
+            "2022-01-02",
+            450
           ],
           [
             "West",
-            "2023-02-01",
-            650,
-            50
+            "2022-01-03",
+            750
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(50), date DATE, sales INT); INSERT INTO sales (region, date, sales) VALUES ('Northwest', '2024-01-01', 500), ('Northwest', '2024-02-01', 600), ('Northeast', '2024-01-01', 700), ('Northeast', '2024-02-01', 800);",
+        "setup": "\n            DROP TABLE IF EXISTS sales;\n            CREATE TABLE sales (\n               region VARCHAR(255),\n               date DATE,\n               sales_amount DECIMAL(10,2)\n            );\n            INSERT INTO sales (region, date, sales_amount)\n            VALUES \n               ('North', '2022-01-01', 100.00),\n               ('South', '2022-01-01', 50.00),\n               ('East', '2022-01-01', 150.00),\n               ('North', '2022-01-02', 200.00),\n               ('South', '2022-01-02', 75.00),\n               ('East', '2022-01-02', 225.00),\n               ('North', '2022-01-03', 250.00),\n               ('South', '2022-01-03', 100.00),\n               ('East', '2022-01-03', 300.00);\n         ",
         "rows": [
           [
-            "Northeast",
-            "2024-01-01",
-            700,
-            null
+            "East",
+            "2022-01-01",
+            150
           ],
           [
-            "Northeast",
-            "2024-02-01",
-            1500,
+            "East",
+            "2022-01-02",
+            375
+          ],
+          [
+            "East",
+            "2022-01-03",
+            675
+          ],
+          [
+            "North",
+            "2022-01-01",
             100
           ],
           [
-            "Northwest",
-            "2024-01-01",
-            500,
-            null
+            "North",
+            "2022-01-02",
+            300
           ],
           [
-            "Northwest",
-            "2024-02-01",
-            1100,
-            100
+            "North",
+            "2022-01-03",
+            550
+          ],
+          [
+            "South",
+            "2022-01-01",
+            50
+          ],
+          [
+            "South",
+            "2022-01-02",
+            125
+          ],
+          [
+            "South",
+            "2022-01-03",
+            225
           ]
         ]
       }
