@@ -1,121 +1,121 @@
 {
-  "date": "2026-06-12",
+  "date": "2026-06-13",
   "question": {
-    "title": "Ranking Sales by Region",
+    "title": "Cumulative Sales by Region",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "Find the ranking of sales for each product in its respective region. Use a window function to assign a rank to each product based on its sales within the region.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(20), product VARCHAR(20), sales INTEGER); INSERT INTO sales (region, product, sales) VALUES ('North', 'Product A', 100), ('North', 'Product B', 200), ('South', 'Product A', 50), ('South', 'Product B', 150), ('East', 'Product A', 75), ('East', 'Product B', 225);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Find the cumulative sales for each region over time, and also calculate the difference in sales between the current month and the previous month.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(50), date DATE, sales INT); INSERT INTO sales (region, date, sales) VALUES ('North', '2022-01-01', 100), ('North', '2022-02-01', 150), ('South', '2022-01-01', 200), ('South', '2022-02-01', 250), ('East', '2022-01-01', 50), ('East', '2022-02-01', 75);",
     "tables": [
       "sales"
     ],
     "cols": [
       "region",
-      "product",
-      "sales",
-      "rank"
+      "date",
+      "cumulative_sales",
+      "sales_diff"
     ],
     "rows": [
       [
         "East",
-        "Product B",
-        225,
-        1
+        "2022-01-01",
+        50,
+        null
       ],
       [
         "East",
-        "Product A",
-        75,
-        2
+        "2022-02-01",
+        125,
+        25
       ],
       [
         "North",
-        "Product B",
-        200,
-        1
-      ],
-      [
-        "North",
-        "Product A",
+        "2022-01-01",
         100,
-        2
+        null
+      ],
+      [
+        "North",
+        "2022-02-01",
+        250,
+        50
       ],
       [
         "South",
-        "Product B",
-        150,
-        1
+        "2022-01-01",
+        200,
+        null
       ],
       [
         "South",
-        "Product A",
-        50,
-        2
+        "2022-02-01",
+        450,
+        50
       ]
     ],
-    "solution": "SELECT region, product, sales, DENSE_RANK() OVER (PARTITION BY region ORDER BY sales DESC) AS rank FROM sales;",
-    "tips": "Use DENSE_RANK() to avoid gaps in ranking when there are ties in sales.",
+    "solution": "WITH cumulative AS (SELECT region, date, sales, SUM(sales) OVER (PARTITION BY region ORDER BY date) AS cumulative_sales FROM sales) SELECT region, date, cumulative_sales, LAG(sales, 1) OVER (PARTITION BY region ORDER BY date) AS prev_sales, cumulative_sales - LAG(sales, 1) OVER (PARTITION BY region ORDER BY date) AS sales_diff FROM cumulative ORDER BY region, date;",
+    "tips": "Using window functions allows for efficient calculation of cumulative and difference values without the need for self-joins or subqueries.",
     "hints": [
-      "Consider using a window function to rank sales within each region.",
-      "Partition the data by region and order by sales in descending order.",
-      "Use DENSE_RANK() to assign a unique rank to each product within its region."
+      "To find the cumulative sales, consider using a window function that sums sales over the region and date.",
+      "To calculate the difference in sales between the current month and the previous month, consider using the LAG function to access the previous row's sales.",
+      "Use a Common Table Expression (CTE) to first calculate the cumulative sales, and then use the LAG function in the outer query to calculate the sales difference."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(20), product VARCHAR(20), sales INTEGER); INSERT INTO sales (region, product, sales) VALUES ('West', 'Product C', 300), ('West', 'Product D', 400), ('Central', 'Product C', 200), ('Central', 'Product D', 250);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(50), date DATE, sales INT); INSERT INTO sales (region, date, sales) VALUES ('West', '2023-01-01', 300), ('West', '2023-02-01', 350), ('Central', '2023-01-01', 400), ('Central', '2023-02-01', 500);",
         "rows": [
           [
             "Central",
-            "Product D",
-            250,
-            1
+            "2023-01-01",
+            400,
+            null
           ],
           [
             "Central",
-            "Product C",
-            200,
-            2
+            "2023-02-01",
+            900,
+            100
           ],
           [
             "West",
-            "Product D",
-            400,
-            1
-          ],
-          [
-            "West",
-            "Product C",
+            "2023-01-01",
             300,
-            2
+            null
+          ],
+          [
+            "West",
+            "2023-02-01",
+            650,
+            50
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(20), product VARCHAR(20), sales INTEGER); INSERT INTO sales (region, product, sales) VALUES ('Midwest', 'Product E', 500), ('Midwest', 'Product F', 600), ('Northeast', 'Product E', 350), ('Northeast', 'Product F', 450);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(50), date DATE, sales INT); INSERT INTO sales (region, date, sales) VALUES ('Northwest', '2024-01-01', 500), ('Northwest', '2024-02-01', 600), ('Northeast', '2024-01-01', 700), ('Northeast', '2024-02-01', 800);",
         "rows": [
           [
-            "Midwest",
-            "Product F",
-            600,
-            1
+            "Northeast",
+            "2024-01-01",
+            700,
+            null
           ],
           [
-            "Midwest",
-            "Product E",
+            "Northeast",
+            "2024-02-01",
+            1500,
+            100
+          ],
+          [
+            "Northwest",
+            "2024-01-01",
             500,
-            2
+            null
           ],
           [
-            "Northeast",
-            "Product F",
-            450,
-            1
-          ],
-          [
-            "Northeast",
-            "Product E",
-            350,
-            2
+            "Northwest",
+            "2024-02-01",
+            1100,
+            100
           ]
         ]
       }
