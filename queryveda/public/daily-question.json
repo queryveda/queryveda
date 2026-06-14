@@ -1,126 +1,51 @@
 {
-  "date": "2026-06-13",
+  "date": "2026-06-14",
   "question": {
-    "title": "Cumulative Sales by Region",
+    "title": "Consecutive Logs",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "Find the cumulative sales for each region over time. Use the 'sales' table to calculate the cumulative sales for each region and return the 'region', 'date', and 'cumulative_sales' for each date in the 'sales' table.",
-    "setup": "\n      DROP TABLE IF EXISTS sales;\n      CREATE TABLE sales (\n         region VARCHAR(255),\n         date DATE,\n         sales_amount DECIMAL(10,2)\n      );\n      INSERT INTO sales (region, date, sales_amount)\n      VALUES \n         ('North', '2022-01-01', 100.00),\n         ('North', '2022-01-02', 200.00),\n         ('South', '2022-01-01', 50.00),\n         ('South', '2022-01-02', 75.00),\n         ('East', '2022-01-01', 150.00),\n         ('East', '2022-01-02', 225.00);\n   ",
+    "topic": "Consecutive Sequences",
+    "desc": "Given a table of log entries with user IDs and timestamps, write a query to find all users who have logged in for at least three consecutive days. Return the user ID and the start date of their longest streak.",
+    "setup": "DROP TABLE IF EXISTS logs; CREATE TABLE logs (user_id INT, log_date DATE); INSERT INTO logs (user_id, log_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (1, '2022-01-05'), (2, '2022-01-01'), (2, '2022-01-02'), (3, '2022-01-01'), (3, '2022-01-02'), (3, '2022-01-03'), (3, '2022-01-04');",
     "tables": [
-      "sales"
+      "logs"
     ],
     "cols": [
-      "region",
-      "date",
-      "cumulative_sales"
+      "user_id",
+      "start_date"
     ],
     "rows": [
       [
-        "East",
-        "2022-01-01",
-        150
+        1,
+        "2022-01-01"
       ],
       [
-        "East",
-        "2022-01-02",
-        375
-      ],
-      [
-        "North",
-        "2022-01-01",
-        100
-      ],
-      [
-        "North",
-        "2022-01-02",
-        300
-      ],
-      [
-        "South",
-        "2022-01-01",
-        50
-      ],
-      [
-        "South",
-        "2022-01-02",
-        125
+        3,
+        "2022-01-01"
       ]
     ],
-    "solution": "SELECT region, date, SUM(sales_amount) OVER (PARTITION BY region ORDER BY date) AS cumulative_sales FROM sales ORDER BY region, date;",
-    "tips": "Window functions are useful for calculating cumulative values.",
+    "solution": "WITH ranked_logs AS ( SELECT user_id, log_date, DATE_TRUNC('day', log_date) - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY log_date) AS seq FROM logs ), consecutive_logs AS ( SELECT user_id, MIN(log_date) AS start_date, COUNT(*) AS streak_length FROM ranked_logs GROUP BY user_id, seq ) SELECT user_id, start_date FROM consecutive_logs WHERE streak_length >= 3 ORDER BY streak_length DESC;",
+    "tips": "Use window functions to assign a sequence number to each log entry for each user, then group by this sequence number to find consecutive days.",
     "hints": [
-      "Use a window function to calculate the cumulative sales.",
-      "You need to partition the data by 'region' to calculate the cumulative sales for each region separately.",
-      "Use the 'SUM' window function with 'OVER (PARTITION BY region ORDER BY date)' to calculate the cumulative sales for each date in each region."
+      "Use window functions to identify consecutive days.",
+      "Create a temporary result set or CTE to hold the ranked logs, then group by the user ID and the sequence number to find the start date of each streak.",
+      "The final query should filter the results to only include streaks of three or more days, and return the user ID and start date of the longest streak for each user."
     ],
     "tests": [
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            CREATE TABLE sales (\n               region VARCHAR(255),\n               date DATE,\n               sales_amount DECIMAL(10,2)\n            );\n            INSERT INTO sales (region, date, sales_amount)\n            VALUES \n               ('West', '2022-01-01', 200.00),\n               ('West', '2022-01-02', 250.00),\n               ('West', '2022-01-03', 300.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS logs; CREATE TABLE logs (user_id INT, log_date DATE); INSERT INTO logs (user_id, log_date) VALUES (4, '2022-01-01'), (4, '2022-01-02'), (4, '2022-01-03'), (4, '2022-01-04'), (5, '2022-01-01'), (5, '2022-01-03');",
         "rows": [
           [
-            "West",
-            "2022-01-01",
-            200
-          ],
-          [
-            "West",
-            "2022-01-02",
-            450
-          ],
-          [
-            "West",
-            "2022-01-03",
-            750
+            4,
+            "2022-01-01"
           ]
         ]
       },
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            CREATE TABLE sales (\n               region VARCHAR(255),\n               date DATE,\n               sales_amount DECIMAL(10,2)\n            );\n            INSERT INTO sales (region, date, sales_amount)\n            VALUES \n               ('North', '2022-01-01', 100.00),\n               ('South', '2022-01-01', 50.00),\n               ('East', '2022-01-01', 150.00),\n               ('North', '2022-01-02', 200.00),\n               ('South', '2022-01-02', 75.00),\n               ('East', '2022-01-02', 225.00),\n               ('North', '2022-01-03', 250.00),\n               ('South', '2022-01-03', 100.00),\n               ('East', '2022-01-03', 300.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS logs; CREATE TABLE logs (user_id INT, log_date DATE); INSERT INTO logs (user_id, log_date) VALUES (6, '2022-01-01'), (6, '2022-01-02'), (7, '2022-01-01'), (7, '2022-01-02'), (7, '2022-01-03');",
         "rows": [
           [
-            "East",
-            "2022-01-01",
-            150
-          ],
-          [
-            "East",
-            "2022-01-02",
-            375
-          ],
-          [
-            "East",
-            "2022-01-03",
-            675
-          ],
-          [
-            "North",
-            "2022-01-01",
-            100
-          ],
-          [
-            "North",
-            "2022-01-02",
-            300
-          ],
-          [
-            "North",
-            "2022-01-03",
-            550
-          ],
-          [
-            "South",
-            "2022-01-01",
-            50
-          ],
-          [
-            "South",
-            "2022-01-02",
-            125
-          ],
-          [
-            "South",
-            "2022-01-03",
-            225
+            7,
+            "2022-01-01"
           ]
         ]
       }
