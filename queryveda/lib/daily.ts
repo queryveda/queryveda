@@ -97,7 +97,7 @@ export function msUntilNextRefresh(): number {
 }
 
 export function solveTimerRemaining(state: DailyChallengeState): number {
-  if (!state.startedAt || !state.duration) return 0;
+  if (!state.startedAt || !state.duration || state.solved) return 0;
   const elapsed = Date.now() - state.startedAt;
   const total = state.duration * 60_000;
   return Math.max(0, total - elapsed);

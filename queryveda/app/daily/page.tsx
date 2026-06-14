@@ -64,7 +64,7 @@ export default function DailyPage() {
     if (state.startedAt) {
       setStarted(true);
       setSelectedDuration(state.duration ?? 30);
-      if (solveTimerRemaining(state) <= 0) setTimeUp(true);
+      if (!state.solved && solveTimerRemaining(state) <= 0) setTimeUp(true);
     }
     if (state.solved) setSolved(true);
     if (state.sql) setSqlValue(state.sql);
@@ -120,6 +120,7 @@ export default function DailyPage() {
       if (result.passed) {
         markDailySolved();
         setSolved(true);
+        setTimeUp(false);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
