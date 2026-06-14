@@ -7,9 +7,10 @@ import {
   placeholder as placeholderExt,
   lineNumbers,
 } from "@codemirror/view";
-import { EditorState, type Extension } from "@codemirror/state";
+import { EditorState, Compartment, type Extension } from "@codemirror/state";
 import { sql, PostgreSQL } from "@codemirror/lang-sql";
-import { defaultKeymap, indentWithTab } from "@codemirror/commands";
+import { defaultKeymap, historyKeymap, indentWithTab } from "@codemirror/commands";
+import { history } from "@codemirror/commands";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 import {
@@ -135,6 +136,7 @@ export function SQLEditor({
 }: SQLEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const sqlCompartment = useRef(new Compartment());
   const { resolvedTheme } = useTheme();
 
   // Use refs to avoid stale closures in CodeMirror callbacks
@@ -164,9 +166,10 @@ export function SQLEditor({
     if (!containerRef.current) return;
 
     const extensions = [
-      sql({ dialect: PostgreSQL, schema: tables, upperCaseKeywords: true }),
+      sqlCompartment.current.of(sql({ dialect: PostgreSQL, schema: tables, upperCaseKeywords: true })),
       autocompletion(),
       closeBrackets(),
+      history(),
       lineNumbers(),
       placeholderExt("Write your SQL here..."),
       keymap.of([
@@ -179,6 +182,7 @@ export function SQLEditor({
         },
         { key: "Tab", run: acceptCompletion },
         ...closeBracketsKeymap,
+        ...historyKeymap,
         indentWithTab,
         ...defaultKeymap,
       ]),
@@ -208,6 +212,17 @@ export function SQLEditor({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDark, editorTheme]);
+
+  // Update SQL schema when tables change (without recreating editor)
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({
+      effects: sqlCompartment.current.reconfigure(
+        sql({ dialect: PostgreSQL, schema: tables, upperCaseKeywords: true })
+      ),
+    });
+  }, [tables]);
 
   // Update doc when initialValue changes (question navigation)
   useEffect(() => {
