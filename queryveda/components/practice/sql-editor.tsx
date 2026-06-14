@@ -10,6 +10,7 @@ import {
 import { EditorState, type Extension } from "@codemirror/state";
 import { sql, PostgreSQL } from "@codemirror/lang-sql";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
+import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 import {
   syntaxHighlighting,
@@ -17,7 +18,7 @@ import {
   HighlightStyle,
 } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
-import { autocompletion } from "@codemirror/autocomplete";
+import { autocompletion, acceptCompletion } from "@codemirror/autocomplete";
 import {
   dracula,
   solarizedLight,
@@ -163,8 +164,9 @@ export function SQLEditor({
     if (!containerRef.current) return;
 
     const extensions = [
-      sql({ dialect: PostgreSQL, schema: tables }),
+      sql({ dialect: PostgreSQL, schema: tables, upperCaseKeywords: true }),
       autocompletion(),
+      closeBrackets(),
       lineNumbers(),
       placeholderExt("Write your SQL here..."),
       keymap.of([
@@ -175,6 +177,8 @@ export function SQLEditor({
             return true;
           },
         },
+        { key: "Tab", run: acceptCompletion },
+        ...closeBracketsKeymap,
         indentWithTab,
         ...defaultKeymap,
       ]),
