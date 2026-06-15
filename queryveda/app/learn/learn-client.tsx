@@ -4,7 +4,7 @@ import { useSkillTree } from "@/hooks/use-skill-tree";
 import { SkillTreeMap } from "@/components/learn/skill-tree-map";
 
 export function LearnClient() {
-  const { masteries, getNodeMastery } = useSkillTree();
+  const { getNodeMastery } = useSkillTree();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -16,7 +16,7 @@ export function LearnClient() {
           Master SQL concepts step by step. Complete exercises to unlock new topics.
         </p>
       </div>
-      <SkillTreeMap masteries={masteries} getMastery={getNodeMastery} />
+      <SkillTreeMap getMastery={getNodeMastery} />
     </div>
   );
 }

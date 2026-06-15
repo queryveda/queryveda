@@ -1,5 +1,15 @@
+import { skillTreeNodes } from "@/lib/skill-tree-data";
 import { NodeClient } from "./node-client";
 
-export default function NodePage({ params }: { params: { nodeId: string } }) {
-  return <NodeClient nodeId={params.nodeId} />;
+export function generateStaticParams() {
+  return skillTreeNodes.map((n) => ({ nodeId: n.id }));
+}
+
+export default async function NodePage({
+  params,
+}: {
+  params: Promise<{ nodeId: string }>;
+}) {
+  const { nodeId } = await params;
+  return <NodeClient nodeId={nodeId} />;
 }

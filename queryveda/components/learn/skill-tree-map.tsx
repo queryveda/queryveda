@@ -5,11 +5,10 @@ import { SkillNodeCard } from "./skill-node-card";
 import type { NodeMastery } from "@/lib/skill-tree-types";
 
 interface SkillTreeMapProps {
-  masteries: NodeMastery[];
   getMastery: (nodeId: string) => NodeMastery;
 }
 
-export function SkillTreeMap({ masteries, getMastery }: SkillTreeMapProps) {
+export function SkillTreeMap({ getMastery }: SkillTreeMapProps) {
   // Group nodes by row
   const rows = new Map<number, typeof skillTreeNodes>();
   for (const node of skillTreeNodes) {
