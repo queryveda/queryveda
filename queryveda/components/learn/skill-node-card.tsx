@@ -15,11 +15,11 @@ export function SkillNodeCard({ node, mastery }: SkillNodeCardProps) {
 
   if (!unlocked) {
     return (
-      <div className="flex flex-col items-center gap-2 opacity-50">
-        <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
-          <Lock className="w-5 h-5 text-muted-foreground/50" />
+      <div className="flex flex-col items-center gap-2">
+        <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/50 flex items-center justify-center bg-muted/40">
+          <Lock className="w-5 h-5 text-muted-foreground/70" />
         </div>
-        <span className="text-sm text-muted-foreground text-center max-w-[140px]">
+        <span className="text-sm text-muted-foreground/80 text-center max-w-[140px]">
           {node.title}
         </span>
       </div>
