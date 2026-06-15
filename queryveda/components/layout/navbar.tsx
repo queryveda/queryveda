@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { useDailyStatus } from "@/hooks/use-daily-status";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileDrawer } from "./mobile-drawer";
 import { AuthModal } from "@/components/auth/auth-modal";
@@ -23,6 +24,7 @@ const navLinks = [
 export function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { hasUnattempted } = useDailyStatus();
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
@@ -50,13 +52,19 @@ export function Navbar() {
                     <Link
                       key={href}
                       href={href}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive
                           ? "bg-primary text-primary-foreground"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent"
                       }`}
                     >
                       {label}
+                      {label === "Daily" && hasUnattempted && !isActive && (
+                        <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
