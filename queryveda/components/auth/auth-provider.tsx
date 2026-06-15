@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { AuthContext, type AuthUser } from "@/hooks/use-auth";
+import { storage } from "@/lib/storage";
 
 function toAuthUser(user: User | null): AuthUser | null {
   if (!user) return null;
@@ -24,11 +25,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setRawUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user) {
+        storage.syncLocalToCloud(session.user.id).then(() =>
+          storage.syncFromCloud(session.user.id)
+        );
+      }
     });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setRawUser(session?.user ?? null);
+      if (session?.user) {
+        storage.syncLocalToCloud(session.user.id).then(() =>
+          storage.syncFromCloud(session.user.id)
+        );
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
