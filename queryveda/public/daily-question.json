@@ -1,68 +1,72 @@
 {
   "date": "2026-06-15",
   "question": {
-    "title": "Ranking Products by Sales",
+    "title": "Top Sales Employees by Region",
     "difficulty": "Medium",
     "topic": "Advanced Analytics",
-    "desc": "You are given two tables: products and sales. The products table contains information about each product, including its id and name. The sales table contains information about each sale, including the product_id, sale_date, and sale_amount. Write a query to rank products by their total sales amount in descending order, with the product name and total sales amount.",
-    "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (id, name) VALUES (1, 'Product A'), (2, 'Product B'), (3, 'Product C'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_date DATE, sale_amount DECIMAL(10,2)); INSERT INTO sales (product_id, sale_date, sale_amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-15', 200.00), (2, '2022-02-01', 50.00), (3, '2022-03-01', 300.00), (1, '2022-04-01', 150.00);",
+    "desc": "Find the top sales employee for each region based on total sales. If there are multiple employees with the same highest sales in a region, return all of them.",
+    "setup": "\n      DROP TABLE IF EXISTS Employees;\n      DROP TABLE IF EXISTS Sales;\n      CREATE TABLE Employees (\n         EmployeeID INT,\n         Name VARCHAR(255),\n         Region VARCHAR(255)\n      );\n      CREATE TABLE Sales (\n         SalesID INT,\n         EmployeeID INT,\n         SalesAmount DECIMAL(10,2)\n      );\n      INSERT INTO Employees (EmployeeID, Name, Region)\n      VALUES\n         (1, 'John Doe', 'North'),\n         (2, 'Jane Doe', 'North'),\n         (3, 'Alice Smith', 'South'),\n         (4, 'Bob Johnson', 'South'),\n         (5, 'Mike Brown', 'East');\n      INSERT INTO Sales (SalesID, EmployeeID, SalesAmount)\n      VALUES\n         (1, 1, 1000.00),\n         (2, 1, 2000.00),\n         (3, 2, 1500.00),\n         (4, 3, 1200.00),\n         (5, 4, 1800.00),\n         (6, 5, 2500.00),\n         (7, 1, 3000.00),\n         (8, 3, 1000.00);\n   ",
     "tables": [
-      "products",
-      "sales"
+      "Employees",
+      "Sales"
     ],
     "cols": [
-      "name",
-      "total_sales"
+      "Region",
+      "Name",
+      "TotalSales"
     ],
     "rows": [
       [
-        "Product A",
-        450
+        "East",
+        "Mike Brown",
+        2500
       ],
       [
-        "Product C",
-        300
+        "North",
+        "John Doe",
+        6000
       ],
       [
-        "Product B",
-        50
+        "South",
+        "Bob Johnson",
+        1800
       ]
     ],
-    "solution": "SELECT p.name, SUM(s.sale_amount) AS total_sales FROM products p JOIN sales s ON p.id = s.product_id GROUP BY p.name ORDER BY total_sales DESC;",
-    "tips": "Use window functions for more complex ranking scenarios.",
+    "solution": "\n      WITH RegionalSales AS (\n         SELECT \n            E.Region,\n            E.Name,\n            SUM(S.SalesAmount) AS TotalSales,\n            RANK() OVER (PARTITION BY E.Region ORDER BY SUM(S.SalesAmount) DESC) AS SalesRank\n         FROM \n            Employees E\n         JOIN \n            Sales S ON E.EmployeeID = S.EmployeeID\n         GROUP BY \n            E.Region, E.Name\n      )\n      SELECT \n         Region,\n         Name,\n         TotalSales\n      FROM \n         RegionalSales\n      WHERE \n         SalesRank = 1;\n   ",
+    "tips": "Use window functions to rank sales within each region.",
     "hints": [
-      "You will need to join the two tables based on the product id.",
-      "Use the SUM aggregation function to calculate the total sales amount for each product.",
-      "Order the results by the total sales amount in descending order using the ORDER BY clause."
+      "You will need to join the Employees and Sales tables to calculate total sales per employee.",
+      "Use a Common Table Expression (CTE) or a subquery to calculate the rank of each employee within their region.",
+      "The RANK() function can be used with PARTITION BY to reset the ranking for each region."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (id, name) VALUES (1, 'Product X'), (2, 'Product Y'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_date DATE, sale_amount DECIMAL(10,2)); INSERT INTO sales (product_id, sale_date, sale_amount) VALUES (1, '2022-01-01', 500.00), (2, '2022-02-01', 200.00);",
+        "setup": "\n            DROP TABLE IF EXISTS Employees;\n            DROP TABLE IF EXISTS Sales;\n            CREATE TABLE Employees (\n               EmployeeID INT,\n               Name VARCHAR(255),\n               Region VARCHAR(255)\n            );\n            CREATE TABLE Sales (\n               SalesID INT,\n               EmployeeID INT,\n               SalesAmount DECIMAL(10,2)\n            );\n            INSERT INTO Employees (EmployeeID, Name, Region)\n            VALUES\n               (6, 'Sam Davis', 'West'),\n               (7, 'Tom White', 'West'),\n               (8, 'Linda Lee', 'Central');\n            INSERT INTO Sales (SalesID, EmployeeID, SalesAmount)\n            VALUES\n               (9, 6, 4000.00),\n               (10, 7, 3500.00),\n               (11, 8, 2000.00),\n               (12, 6, 1500.00);\n         ",
         "rows": [
           [
-            "Product X",
-            500
+            "Central",
+            "Linda Lee",
+            2000
           ],
           [
-            "Product Y",
-            200
+            "West",
+            "Sam Davis",
+            5500
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (id, name) VALUES (1, 'Product M'), (2, 'Product N'), (3, 'Product O'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_date DATE, sale_amount DECIMAL(10,2)); INSERT INTO sales (product_id, sale_date, sale_amount) VALUES (1, '2022-01-01', 1000.00), (2, '2022-02-01', 800.00), (3, '2022-03-01', 600.00);",
+        "setup": "\n            DROP TABLE IF EXISTS Employees;\n            DROP TABLE IF EXISTS Sales;\n            CREATE TABLE Employees (\n               EmployeeID INT,\n               Name VARCHAR(255),\n               Region VARCHAR(255)\n            );\n            CREATE TABLE Sales (\n               SalesID INT,\n               EmployeeID INT,\n               SalesAmount DECIMAL(10,2)\n            );\n            INSERT INTO Employees (EmployeeID, Name, Region)\n            VALUES\n               (9, 'Peter Kim', 'North'),\n               (10, 'Emily Chen', 'North'),\n               (11, 'David Kim', 'South');\n            INSERT INTO Sales (SalesID, EmployeeID, SalesAmount)\n            VALUES\n               (13, 9, 5000.00),\n               (14, 10, 4000.00),\n               (15, 11, 3000.00),\n               (16, 9, 2000.00),\n               (17, 10, 1000.00);\n         ",
         "rows": [
           [
-            "Product M",
-            1000
+            "North",
+            "Peter Kim",
+            7000
           ],
           [
-            "Product N",
-            800
-          ],
-          [
-            "Product O",
-            600
+            "South",
+            "David Kim",
+            3000
           ]
         ]
       }
