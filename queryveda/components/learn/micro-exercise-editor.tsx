@@ -29,6 +29,7 @@ export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: Micr
   // For build-incremental, track which step we're on
   const [stepIdx, setStepIdx] = useState(0);
   const [prevStepsOpen, setPrevStepsOpen] = useState(false);
+  const [stepAnswers, setStepAnswers] = useState<Record<number, string>>({});
   const isIncremental = exercise.type === "build-incremental" && exercise.steps;
   const currentStep = isIncremental ? exercise.steps![stepIdx] : null;
   const currentTemplate = currentStep?.template ?? exercise.template;
@@ -66,6 +67,8 @@ export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: Micr
 
       if (cmp.pass) {
         if (isIncremental && stepIdx < exercise.steps!.length - 1) {
+          // Save this step's answer before moving on
+          setStepAnswers((prev) => ({ ...prev, [stepIdx]: sqlRef.current.trim() }));
           // Move to next step
           setVerdict({ type: "pass", message: `Step ${stepIdx + 1} passed! Moving to next step...` });
           setTimeout(() => {
@@ -94,6 +97,7 @@ export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: Micr
     setStepIdx(0);
     setHintIdx(-1);
     setPrevStepsOpen(false);
+    setStepAnswers({});
   }, [exercise.editableDefault]);
 
   const handleChange = useCallback((value: string) => {
@@ -151,32 +155,8 @@ export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: Micr
                   <p className="text-xs font-semibold text-muted-foreground mb-1">Step {i + 1}</p>
                   <p className="text-sm mb-2">{step.prompt}</p>
                   <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono bg-muted/40 rounded p-2">
-                    {step.template.replace("{{BLANK}}", "/* your answer */")}
+                    {step.template.replace("{{BLANK}}", stepAnswers[i] ?? "/* your answer */")}
                   </pre>
-                  {/* Expected output */}
-                  <div className="mt-2">
-                    <p className="text-xs font-semibold text-muted-foreground mb-1">Expected Result</p>
-                    <div className="overflow-x-auto rounded bg-muted/40 text-xs font-mono">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-border/50">
-                            {exercise.cols.map((col) => (
-                              <th key={col} className="px-2 py-1 text-left text-muted-foreground font-semibold">{col}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {step.expectedOutput.map((row, ri) => (
-                            <tr key={ri} className="border-b border-border/30 last:border-0">
-                              {row.map((cell, ci) => (
-                                <td key={ci} className="px-2 py-1 text-foreground/80">{cell === null ? "NULL" : String(cell)}</td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
                 </div>
               ))}
             </div>
