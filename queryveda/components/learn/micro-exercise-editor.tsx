@@ -5,7 +5,7 @@ import { SQLEditor } from "@/components/practice/sql-editor";
 import { ExerciseVerdict } from "./exercise-verdict";
 import { executeQuery, compareResults, type QueryResult } from "@/lib/pglite";
 import { Button } from "@/components/ui/button";
-import { Play, RotateCcw, Lightbulb } from "lucide-react";
+import { Play, RotateCcw, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 import type { MicroExercise } from "@/lib/skill-tree-types";
 
 interface MicroExerciseEditorProps {
@@ -28,6 +28,7 @@ export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: Micr
 
   // For build-incremental, track which step we're on
   const [stepIdx, setStepIdx] = useState(0);
+  const [prevStepsOpen, setPrevStepsOpen] = useState(false);
   const isIncremental = exercise.type === "build-incremental" && exercise.steps;
   const currentStep = isIncremental ? exercise.steps![stepIdx] : null;
   const currentTemplate = currentStep?.template ?? exercise.template;
@@ -92,6 +93,7 @@ export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: Micr
     setVerdict({ type: "idle", message: "" });
     setStepIdx(0);
     setHintIdx(-1);
+    setPrevStepsOpen(false);
   }, [exercise.editableDefault]);
 
   const handleChange = useCallback((value: string) => {
@@ -128,6 +130,33 @@ export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: Micr
               {i + 1}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Previous steps reference for build-incremental */}
+      {isIncremental && stepIdx > 0 && (
+        <div className="rounded-lg border border-primary/15 bg-primary/5">
+          <button
+            type="button"
+            onClick={() => setPrevStepsOpen((v) => !v)}
+            className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+          >
+            <span>Previous Steps (1–{stepIdx})</span>
+            {prevStepsOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+          {prevStepsOpen && (
+            <div className="px-3 pb-3 flex flex-col gap-3">
+              {exercise.steps!.slice(0, stepIdx).map((step, i) => (
+                <div key={i} className="rounded-lg bg-card border p-3">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Step {i + 1}</p>
+                  <p className="text-sm mb-2">{step.prompt}</p>
+                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono bg-muted/40 rounded p-2">
+                    {step.template.replace("{{BLANK}}", "/* your answer */")}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
