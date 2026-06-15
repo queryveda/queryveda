@@ -17,11 +17,19 @@ function toAuthUser(user: User | null): AuthUser | null {
   };
 }
 
+const AUTH_VERSION = "2"; // bump to force re-login for all users
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [rawUser, setRawUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const storedVersion = localStorage.getItem("qv-auth-version");
+    if (storedVersion !== AUTH_VERSION) {
+      supabase.auth.signOut();
+      localStorage.setItem("qv-auth-version", AUTH_VERSION);
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setRawUser(session?.user ?? null);
       setLoading(false);
