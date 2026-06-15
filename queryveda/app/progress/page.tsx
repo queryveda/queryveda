@@ -9,6 +9,10 @@ import { StatsCards } from "@/components/progress/stats-cards";
 import { ProgressBars } from "@/components/progress/progress-bars";
 import { SkillRadar } from "@/components/progress/skill-radar";
 import { Achievements } from "@/components/progress/achievements";
+import { useSkillTree } from "@/hooks/use-skill-tree";
+import { skillTreeNodes } from "@/lib/skill-tree-data";
+import { MasteryBar } from "@/components/learn/mastery-bar";
+import Link from "next/link";
 
 function ProgressContent() {
   const totalQuestions = questions.length;
@@ -42,6 +46,8 @@ function ProgressContent() {
 
   const achievements = useMemo(() => storage.getAchievements(questions), []);
 
+  const { getNodeMastery } = useSkillTree();
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="mb-8 text-3xl font-bold">My Progress</h1>
@@ -56,6 +62,27 @@ function ProgressContent() {
         <div>
           <h3 className="mb-4 font-semibold">Skill Radar</h3>
           <SkillRadar byTopic={byTopic} />
+        </div>
+        <div className="rounded-xl border p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Learning Progress</h2>
+            <Link href="/learn" className="text-sm text-primary hover:underline">
+              View Skill Tree
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {skillTreeNodes.map((node) => {
+              const m = getNodeMastery(node.id);
+              return (
+                <div key={node.id} className="flex items-center gap-3">
+                  <span className="text-sm w-40 truncate">{node.title}</span>
+                  <div className="flex-1">
+                    <MasteryBar completed={m.completed} total={m.total} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
         <Achievements achievements={achievements} />
       </div>
