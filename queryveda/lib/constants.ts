@@ -9,7 +9,7 @@ export const TOPICS: Topic[] = [
 ];
 
 export const TOPIC_COLORS: Record<Topic, string> = {
-  "Aggregations & JOINs": "#2563eb",
+  "Aggregations & JOINs": "#7C3AED",
   "Window Functions": "#8b5cf6",
   "Cumulative & Sliding Windows": "#06b6d4",
   "Consecutive Sequences": "#f59e0b",

@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 245 243 240;
-    --foreground: 28 25 23;
-    --card: 252 250 248;
-    --card-foreground: 28 25 23;
-    --popover: 252 250 248;
-    --popover-foreground: 28 25 23;
-    --primary: 37 99 235;
+    --background: 240 236 231;
+    --foreground: 35 30 28;
+    --card: 246 242 238;
+    --card-foreground: 35 30 28;
+    --popover: 246 242 238;
+    --popover-foreground: 35 30 28;
+    --primary: 109 40 217;
     --primary-foreground: 255 255 255;
-    --secondary: 238 235 230;
-    --secondary-foreground: 28 25 23;
-    --muted: 238 235 230;
-    --muted-foreground: 120 113 108;
-    --accent: 238 235 230;
-    --accent-foreground: 28 25 23;
+    --secondary: 233 229 224;
+    --secondary-foreground: 35 30 28;
+    --muted: 233 229 224;
+    --muted-foreground: 110 103 98;
+    --accent: 233 229 224;
+    --accent-foreground: 35 30 28;
     --destructive: 220 38 38;
     --destructive-foreground: 255 255 255;
-    --border: 220 215 208;
-    --input: 220 215 208;
-    --ring: 37 99 235;
+    --border: 215 210 203;
+    --input: 215 210 203;
+    --ring: 109 40 217;
     --radius: 0.5rem;
     --qv-success: #059669;
     --qv-success-bg: #ecfdf5;
@@ -30,37 +30,37 @@
     --qv-warning-bg: #fffbeb;
     --qv-danger: #dc2626;
     --qv-danger-bg: #fef2f2;
-    --qv-code-bg: #f0ede8;
-    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #dbeafe 0%, #e8e0f0 30%, #f5f3f0 70%);
+    --qv-code-bg: #ece8e2;
+    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #e0d4f0 0%, #e4dce8 30%, #f0ece7 70%);
   }
   .dark {
-    --background: 8 13 26;
-    --foreground: 234 240 250;
-    --card: 20 27 46;
-    --card-foreground: 234 240 250;
-    --popover: 20 27 46;
-    --popover-foreground: 234 240 250;
-    --primary: 59 130 246;
+    --background: 10 8 20;
+    --foreground: 230 226 240;
+    --card: 22 18 38;
+    --card-foreground: 230 226 240;
+    --popover: 22 18 38;
+    --popover-foreground: 230 226 240;
+    --primary: 139 92 246;
     --primary-foreground: 255 255 255;
-    --secondary: 26 35 64;
-    --secondary-foreground: 234 240 250;
-    --muted: 26 35 64;
-    --muted-foreground: 78 99 135;
-    --accent: 26 35 64;
-    --accent-foreground: 234 240 250;
+    --secondary: 30 24 52;
+    --secondary-foreground: 230 226 240;
+    --muted: 30 24 52;
+    --muted-foreground: 100 90 130;
+    --accent: 30 24 52;
+    --accent-foreground: 230 226 240;
     --destructive: 248 113 113;
     --destructive-foreground: 255 255 255;
-    --border: 28 38 64;
-    --input: 28 38 64;
-    --ring: 59 130 246;
+    --border: 35 28 58;
+    --input: 35 28 58;
+    --ring: 139 92 246;
     --qv-success: #34d399;
-    --qv-success-bg: #0a2015;
+    --qv-success-bg: #0a1a15;
     --qv-warning: #fbbf24;
-    --qv-warning-bg: #221a05;
+    --qv-warning-bg: #1a1505;
     --qv-danger: #f87171;
-    --qv-danger-bg: #200a0a;
-    --qv-code-bg: #0a1020;
-    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #1a1050 0%, #0f1629 50%, #080d1a 100%);
+    --qv-danger-bg: #1a0a0a;
+    --qv-code-bg: #120e20;
+    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #2a1060 0%, #150e30 50%, #0a0814 100%);
   }
 }
 

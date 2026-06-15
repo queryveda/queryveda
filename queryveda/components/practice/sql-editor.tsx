@@ -34,11 +34,11 @@ import { useTheme } from "next-themes";
 // Custom warm light theme matching the site
 const warmLightTheme = EditorView.theme(
   {
-    "&": { backgroundColor: "#faf9f7", color: "#1c1917" },
-    ".cm-content": { caretColor: "#2563eb" },
-    ".cm-cursor": { borderLeftColor: "#2563eb" },
+    "&": { backgroundColor: "#f0ece7", color: "#231e1c" },
+    ".cm-content": { caretColor: "#7C3AED" },
+    ".cm-cursor": { borderLeftColor: "#7C3AED" },
     "&.cm-focused .cm-selectionBackground, ::selection": {
-      backgroundColor: "#dbeafe",
+      backgroundColor: "#e4d8f0",
     },
     ".cm-activeLine": { backgroundColor: "#f0ede8" },
     ".cm-gutters": {
@@ -62,8 +62,8 @@ const warmLightHighlight = HighlightStyle.define([
   { tag: tags.null, color: "#d97706", fontStyle: "italic" },
   { tag: tags.comment, color: "#a8a29e", fontStyle: "italic" },
   { tag: tags.variableName, color: "#1c1917" },
-  { tag: tags.propertyName, color: "#2563eb" },
-  { tag: tags.function(tags.variableName), color: "#2563eb" },
+  { tag: tags.propertyName, color: "#7C3AED" },
+  { tag: tags.function(tags.variableName), color: "#7C3AED" },
   { tag: tags.operator, color: "#78716c" },
   { tag: tags.punctuation, color: "#78716c" },
   { tag: tags.bracket, color: "#78716c" },
