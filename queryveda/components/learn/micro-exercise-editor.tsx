@@ -153,6 +153,30 @@ export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: Micr
                   <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono bg-muted/40 rounded p-2">
                     {step.template.replace("{{BLANK}}", "/* your answer */")}
                   </pre>
+                  {/* Expected output */}
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">Expected Result</p>
+                    <div className="overflow-x-auto rounded bg-muted/40 text-xs font-mono">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-border/50">
+                            {exercise.cols.map((col) => (
+                              <th key={col} className="px-2 py-1 text-left text-muted-foreground font-semibold">{col}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {step.expectedOutput.map((row, ri) => (
+                            <tr key={ri} className="border-b border-border/30 last:border-0">
+                              {row.map((cell, ci) => (
+                                <td key={ci} className="px-2 py-1 text-foreground/80">{cell === null ? "NULL" : String(cell)}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
