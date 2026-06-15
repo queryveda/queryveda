@@ -6,38 +6,57 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getSkillNode } from "@/lib/skill-tree-data";
 import { questions } from "@/lib/questions";
 import { useSkillTree } from "@/hooks/use-skill-tree";
+import { useAuth } from "@/hooks/use-auth";
 import { usePGlite } from "@/hooks/use-pglite";
 import { MasteryBar } from "@/components/learn/mastery-bar";
 import { ExerciseList } from "@/components/learn/exercise-list";
 import { MicroExerciseEditor } from "@/components/learn/micro-exercise-editor";
+import { AuthModal } from "@/components/auth/auth-modal";
 import { Button } from "@/components/ui/button";
 
 export function NodeClient({ nodeId }: { nodeId: string }) {
   const node = getSkillNode(nodeId);
   const { db, ready } = usePGlite();
+  const { user } = useAuth();
   const { markCompleted, isExerciseCompleted, getNodeMastery } = useSkillTree();
   const mastery = getNodeMastery(nodeId);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(
     node?.exercises[0]?.id ?? null
   );
+  const [anonRunCount, setAnonRunCount] = useState(0);
+  const [authOpen, setAuthOpen] = useState(false);
 
   const activeExercise = node?.exercises.find((e) => e.id === activeExerciseId);
 
+  const handleAuthPrompt = useCallback(() => {
+    if (user) return;
+    const newCount = anonRunCount + 1;
+    setAnonRunCount(newCount);
+    if (newCount >= 2) {
+      setAuthOpen(true);
+    }
+  }, [user, anonRunCount]);
+
   const handlePass = useCallback(() => {
     if (!activeExerciseId) return;
-    markCompleted(activeExerciseId);
+    if (user) {
+      markCompleted(activeExerciseId);
+    }
+    if (!user) {
+      setAuthOpen(true);
+    }
     // Auto-advance to next incomplete exercise after a delay
     if (node) {
       setTimeout(() => {
         const nextIncomplete = node.exercises.find(
-          (e) => e.id !== activeExerciseId && !isExerciseCompleted(e.id)
+          (e) => e.id !== activeExerciseId && (user ? !isExerciseCompleted(e.id) : true)
         );
         if (nextIncomplete) {
           setActiveExerciseId(nextIncomplete.id);
         }
       }, 1500);
     }
-  }, [activeExerciseId, markCompleted, node, isExerciseCompleted]);
+  }, [activeExerciseId, markCompleted, node, isExerciseCompleted, user]);
 
   if (!node) {
     return (
@@ -108,6 +127,7 @@ export function NodeClient({ nodeId }: { nodeId: string }) {
               exercise={activeExercise}
               db={db}
               onPass={handlePass}
+              onAuthPrompt={handleAuthPrompt}
             />
           ) : (
             <p className="text-sm text-muted-foreground">Select an exercise to begin.</p>
@@ -131,6 +151,8 @@ export function NodeClient({ nodeId }: { nodeId: string }) {
           </div>
         </div>
       )}
+
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
     </div>
   );
 }
