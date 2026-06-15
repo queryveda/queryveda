@@ -47,3 +47,24 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+-- Skill tree micro-exercise progress
+CREATE TABLE IF NOT EXISTS skill_tree_progress (
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  node_id TEXT NOT NULL,
+  exercise_id TEXT NOT NULL,
+  completed BOOLEAN DEFAULT FALSE,
+  completed_at TIMESTAMPTZ,
+  PRIMARY KEY (user_id, node_id, exercise_id)
+);
+
+ALTER TABLE skill_tree_progress ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own skill tree progress"
+  ON skill_tree_progress FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own skill tree progress"
+  ON skill_tree_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own skill tree progress"
+  ON skill_tree_progress FOR UPDATE USING (auth.uid() = user_id);
