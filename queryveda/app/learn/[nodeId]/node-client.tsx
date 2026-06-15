@@ -23,7 +23,7 @@ export function NodeClient({ nodeId }: { nodeId: string }) {
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(
     node?.exercises[0]?.id ?? null
   );
-  const [anonRunCount, setAnonRunCount] = useState(0);
+  const [, setAnonRunCount] = useState(0);
   const [authOpen, setAuthOpen] = useState(false);
 
   const activeExercise = node?.exercises.find((e) => e.id === activeExerciseId);
