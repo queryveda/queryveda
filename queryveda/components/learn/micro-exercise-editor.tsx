@@ -15,9 +15,10 @@ interface MicroExerciseEditorProps {
     query: (sql: string) => Promise<{ fields: { name: string }[]; rows: Record<string, unknown>[] }>;
   };
   onPass: () => void;
+  onAuthPrompt?: () => void;
 }
 
-export function MicroExerciseEditor({ exercise, db, onPass }: MicroExerciseEditorProps) {
+export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: MicroExerciseEditorProps) {
   const [sqlValue, setSqlValue] = useState(exercise.editableDefault ?? "");
   const [verdict, setVerdict] = useState<{ type: "idle" | "pass" | "fail"; message: string }>({ type: "idle", message: "" });
   const [running, setRunning] = useState(false);
@@ -40,6 +41,7 @@ export function MicroExerciseEditor({ exercise, db, onPass }: MicroExerciseEdito
   );
 
   const handleRun = useCallback(async () => {
+    if (onAuthPrompt) onAuthPrompt();
     const trimmed = sqlRef.current.trim();
     if (!trimmed) {
       setVerdict({ type: "fail", message: "Write some SQL first." });
@@ -83,7 +85,7 @@ export function MicroExerciseEditor({ exercise, db, onPass }: MicroExerciseEdito
     } finally {
       setRunning(false);
     }
-  }, [db, exercise, assembleQuery, currentExpected, isIncremental, stepIdx, onPass]);
+  }, [db, exercise, assembleQuery, currentExpected, isIncremental, stepIdx, onPass, onAuthPrompt]);
 
   const handleReset = useCallback(() => {
     setSqlValue(exercise.editableDefault ?? "");
