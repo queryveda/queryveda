@@ -6,11 +6,22 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden px-6 py-24 text-center" style={{ background: "var(--qv-gradient-hero)" }}>
-        <h1 className="mx-auto max-w-3xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-          Go from SQL Zero to Interview Ready
+      <section
+        className="relative overflow-hidden px-6 py-28 text-center"
+        style={{ background: "var(--qv-gradient-hero)" }}
+      >
+        {/* Decorative glow orbs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-72 h-72 rounded-full bg-primary/8 blur-3xl pointer-events-none" />
+
+        <h1 className="relative mx-auto max-w-3xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+          Go from{" "}
+          <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--qv-gradient-accent)" }}>
+            SQL Zero
+          </span>{" "}
+          to Interview Ready
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
+        <p className="relative mx-auto mt-5 max-w-xl text-lg text-muted-foreground">
           Structured lessons + 75 practice problems. No installations.
         </p>
       </section>

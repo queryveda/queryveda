@@ -34,19 +34,19 @@ import { useTheme } from "next-themes";
 // Custom warm light theme matching the site
 const warmLightTheme = EditorView.theme(
   {
-    "&": { backgroundColor: "#f0ece7", color: "#231e1c" },
+    "&": { backgroundColor: "#f8f5f1", color: "#1c1917" },
     ".cm-content": { caretColor: "#7C3AED" },
     ".cm-cursor": { borderLeftColor: "#7C3AED" },
     "&.cm-focused .cm-selectionBackground, ::selection": {
-      backgroundColor: "#e4d8f0",
+      backgroundColor: "#e8dcf5",
     },
-    ".cm-activeLine": { backgroundColor: "#f0ede8" },
+    ".cm-activeLine": { backgroundColor: "#f4f0ec" },
     ".cm-gutters": {
-      backgroundColor: "#f5f3f0",
+      backgroundColor: "#f5f2ee",
       color: "#a8a29e",
-      borderRight: "1px solid #e7e5e4",
+      borderRight: "1px solid #e8e4df",
     },
-    ".cm-activeLineGutter": { backgroundColor: "#e7e5e4" },
+    ".cm-activeLineGutter": { backgroundColor: "#ece8e3" },
   },
   { dark: false }
 );

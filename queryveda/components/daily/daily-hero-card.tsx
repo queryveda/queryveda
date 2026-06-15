@@ -52,7 +52,7 @@ export function DailyHeroCard() {
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-8">
-      <div className="rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 p-[1px]">
+      <div className="rounded-2xl bg-gradient-to-br from-amber-500/25 via-orange-500/15 to-primary/10 p-[1px]">
         <Card className="rounded-2xl border-0">
           <CardHeader className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">

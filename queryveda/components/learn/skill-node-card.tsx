@@ -32,12 +32,12 @@ export function SkillNodeCard({ node, mastery }: SkillNodeCardProps) {
       className="flex flex-col items-center gap-2 group"
     >
       <div
-        className={`relative w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all group-hover:scale-110 ${
+        className={`relative w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
           starred
-            ? "border-yellow-500 bg-yellow-500/10"
+            ? "border-yellow-500 bg-yellow-500/10 shadow-md shadow-yellow-500/15"
             : percentage > 0
-            ? "border-primary bg-primary/10"
-            : "border-muted-foreground/40 bg-background"
+            ? "border-primary bg-primary/10 shadow-md shadow-primary/15"
+            : "border-muted-foreground/30 bg-card group-hover:border-primary/40 group-hover:shadow-sm group-hover:shadow-primary/10"
         }`}
       >
         {starred ? (

@@ -27,7 +27,7 @@ export function DailyToast() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
-      <div className="rounded-xl border bg-card p-4 shadow-lg flex items-center gap-3 max-w-sm">
+      <div className="rounded-xl border border-primary/20 bg-card p-4 shadow-lg shadow-primary/5 flex items-center gap-3 max-w-sm">
         <div className="flex-1">
           <p className="text-sm font-medium">Today&apos;s Daily Challenge is live!</p>
         </div>

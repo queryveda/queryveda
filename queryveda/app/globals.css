@@ -4,24 +4,24 @@
 
 @layer base {
   :root {
-    --background: 240 236 231;
-    --foreground: 35 30 28;
-    --card: 246 242 238;
-    --card-foreground: 35 30 28;
-    --popover: 246 242 238;
-    --popover-foreground: 35 30 28;
+    --background: 245 241 237;
+    --foreground: 28 25 23;
+    --card: 251 248 245;
+    --card-foreground: 28 25 23;
+    --popover: 251 248 245;
+    --popover-foreground: 28 25 23;
     --primary: 109 40 217;
     --primary-foreground: 255 255 255;
-    --secondary: 233 229 224;
-    --secondary-foreground: 35 30 28;
-    --muted: 233 229 224;
-    --muted-foreground: 110 103 98;
-    --accent: 233 229 224;
-    --accent-foreground: 35 30 28;
+    --secondary: 237 233 228;
+    --secondary-foreground: 28 25 23;
+    --muted: 237 233 228;
+    --muted-foreground: 120 113 108;
+    --accent: 237 233 228;
+    --accent-foreground: 28 25 23;
     --destructive: 220 38 38;
     --destructive-foreground: 255 255 255;
-    --border: 215 210 203;
-    --input: 215 210 203;
+    --border: 222 216 210;
+    --input: 222 216 210;
     --ring: 109 40 217;
     --radius: 0.5rem;
     --qv-success: #059669;
@@ -30,28 +30,30 @@
     --qv-warning-bg: #fffbeb;
     --qv-danger: #dc2626;
     --qv-danger-bg: #fef2f2;
-    --qv-code-bg: #ece8e2;
-    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #e0d4f0 0%, #e4dce8 30%, #f0ece7 70%);
+    --qv-code-bg: #eee9e3;
+    --qv-gradient-hero: linear-gradient(135deg, #ede4f7 0%, #e8ddf3 25%, #f2ebe4 50%, #faf6f2 100%);
+    --qv-gradient-card: linear-gradient(135deg, rgba(109,40,217,0.12), rgba(168,85,247,0.08), rgba(109,40,217,0.04));
+    --qv-gradient-accent: linear-gradient(135deg, #6d28d9, #a855f7, #7c3aed);
   }
   .dark {
-    --background: 10 8 20;
-    --foreground: 230 226 240;
-    --card: 22 18 38;
-    --card-foreground: 230 226 240;
-    --popover: 22 18 38;
-    --popover-foreground: 230 226 240;
+    --background: 8 6 18;
+    --foreground: 237 233 248;
+    --card: 16 12 32;
+    --card-foreground: 237 233 248;
+    --popover: 16 12 32;
+    --popover-foreground: 237 233 248;
     --primary: 139 92 246;
     --primary-foreground: 255 255 255;
-    --secondary: 30 24 52;
-    --secondary-foreground: 230 226 240;
-    --muted: 30 24 52;
-    --muted-foreground: 100 90 130;
-    --accent: 30 24 52;
-    --accent-foreground: 230 226 240;
+    --secondary: 24 18 46;
+    --secondary-foreground: 237 233 248;
+    --muted: 24 18 46;
+    --muted-foreground: 120 108 155;
+    --accent: 24 18 46;
+    --accent-foreground: 237 233 248;
     --destructive: 248 113 113;
     --destructive-foreground: 255 255 255;
-    --border: 35 28 58;
-    --input: 35 28 58;
+    --border: 32 24 56;
+    --input: 32 24 56;
     --ring: 139 92 246;
     --qv-success: #34d399;
     --qv-success-bg: #0a1a15;
@@ -59,8 +61,12 @@
     --qv-warning-bg: #1a1505;
     --qv-danger: #f87171;
     --qv-danger-bg: #1a0a0a;
-    --qv-code-bg: #120e20;
-    --qv-gradient-hero: radial-gradient(ellipse at 50% 0%, #2a1060 0%, #150e30 50%, #0a0814 100%);
+    --qv-code-bg: #100c22;
+    --qv-gradient-hero: radial-gradient(ellipse at 30% 0%, rgba(109,40,217,0.25) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 0%, rgba(168,85,247,0.15) 0%, transparent 50%),
+      linear-gradient(180deg, #0e0a1e 0%, #080612 100%);
+    --qv-gradient-card: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(168,85,247,0.08), rgba(139,92,246,0.03));
+    --qv-gradient-accent: linear-gradient(135deg, #8b5cf6, #a78bfa, #7c3aed);
   }
 }
 
@@ -83,9 +89,17 @@
   /* Gradient border wrapper for cards */
   .gradient-card {
     @apply rounded-2xl p-[1px];
-    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15));
+    background: linear-gradient(135deg, rgba(109,40,217,0.2), rgba(168,85,247,0.15), rgba(109,40,217,0.08));
   }
   .dark .gradient-card {
-    background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(139,92,246,0.25));
+    background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(168,85,247,0.2), rgba(139,92,246,0.1));
+  }
+
+  /* Glow effect for primary actions */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(109,40,217,0.15), 0 0 40px rgba(109,40,217,0.05);
+  }
+  .dark .glow-primary {
+    box-shadow: 0 0 20px rgba(139,92,246,0.2), 0 0 40px rgba(139,92,246,0.08);
   }
 }
