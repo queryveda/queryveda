@@ -16,6 +16,7 @@ import { HintsPanel } from "@/components/practice/hints-panel";
 import { SolutionPanel } from "@/components/practice/solution-panel";
 import { ResultTable } from "@/components/practice/result-table";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { StruggleBanner } from "@/components/practice/struggle-banner";
 
 interface Verdict {
   type: "pass" | "fail" | "idle";
@@ -44,6 +45,7 @@ export function PracticeClient({ id }: { id: string }) {
   >({});
   const [running, setRunning] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [failCount, setFailCount] = useState(0);
 
   // Ref to avoid stale closure in onRun callback
   const sqlRef = useRef(sqlValue);
@@ -109,6 +111,7 @@ export function PracticeClient({ id }: { id: string }) {
         markSolved(questionId);
       } else {
         markAttempted(questionId);
+        setFailCount((prev) => prev + 1);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -257,6 +260,9 @@ export function PracticeClient({ id }: { id: string }) {
               {running ? "Running..." : "Run (⌘/Ctrl+Enter)"}
             </Button>
           </div>
+
+          {/* Struggle banner */}
+          {question && <StruggleBanner question={question} failCount={failCount} />}
 
           {/* Verdict */}
           {verdict.type !== "idle" && (

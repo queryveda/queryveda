@@ -11,6 +11,8 @@ import {
 
 const navLinks = [
   { href: "/", label: "Home" },
+  { href: "/learn", label: "Learn" },
+  { href: "/daily", label: "Daily" },
   { href: "/problems", label: "Problems" },
   { href: "/progress", label: "Progress" },
   { href: "/leaderboard", label: "Leaderboard" },
