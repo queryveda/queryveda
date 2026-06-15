@@ -1,4 +1,5 @@
 import { DailyHeroCard } from "@/components/daily/daily-hero-card";
+import { DailyToast } from "@/components/daily/daily-toast";
 import { TwoPathCards } from "@/components/home/two-path-cards";
 
 export default function Home() {
@@ -30,6 +31,9 @@ export default function Home() {
           <span>Progress tracking & streaks</span>
         </div>
       </section>
+
+      {/* Daily Toast for returning users */}
+      <DailyToast />
     </div>
   );
 }
