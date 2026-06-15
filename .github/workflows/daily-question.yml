@@ -1,9 +1,6 @@
 name: Generate Daily Question
 
 on:
-  schedule:
-    # 3:30 UTC = 9:00 AM IST
-    - cron: "30 3 * * *"
   workflow_dispatch:
 
 permissions:
