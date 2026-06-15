@@ -30,12 +30,14 @@ export function NodeClient({ nodeId }: { nodeId: string }) {
 
   const handleAuthPrompt = useCallback(() => {
     if (user) return;
-    const newCount = anonRunCount + 1;
-    setAnonRunCount(newCount);
-    if (newCount >= 2) {
-      setAuthOpen(true);
-    }
-  }, [user, anonRunCount]);
+    setAnonRunCount((prev) => {
+      const newCount = prev + 1;
+      if (newCount >= 2) {
+        setAuthOpen(true);
+      }
+      return newCount;
+    });
+  }, [user]);
 
   const handlePass = useCallback(() => {
     if (!activeExerciseId) return;
