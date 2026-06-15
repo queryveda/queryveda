@@ -34,19 +34,19 @@ import { useTheme } from "next-themes";
 // Custom warm light theme matching the site
 const warmLightTheme = EditorView.theme(
   {
-    "&": { backgroundColor: "#f8f5f1", color: "#1c1917" },
+    "&": { backgroundColor: "#f8f6fc", color: "#181424" },
     ".cm-content": { caretColor: "#7C3AED" },
     ".cm-cursor": { borderLeftColor: "#7C3AED" },
     "&.cm-focused .cm-selectionBackground, ::selection": {
-      backgroundColor: "#e8dcf5",
+      backgroundColor: "#e4d8f5",
     },
-    ".cm-activeLine": { backgroundColor: "#f4f0ec" },
+    ".cm-activeLine": { backgroundColor: "#f4f0fa" },
     ".cm-gutters": {
-      backgroundColor: "#f5f2ee",
-      color: "#a8a29e",
-      borderRight: "1px solid #e8e4df",
+      backgroundColor: "#f2eef8",
+      color: "#9890a8",
+      borderRight: "1px solid #e4def0",
     },
-    ".cm-activeLineGutter": { backgroundColor: "#ece8e3" },
+    ".cm-activeLineGutter": { backgroundColor: "#ece6f5" },
   },
   { dark: false }
 );
@@ -61,7 +61,7 @@ const warmLightHighlight = HighlightStyle.define([
   { tag: tags.bool, color: "#d97706" },
   { tag: tags.null, color: "#d97706", fontStyle: "italic" },
   { tag: tags.comment, color: "#a8a29e", fontStyle: "italic" },
-  { tag: tags.variableName, color: "#1c1917" },
+  { tag: tags.variableName, color: "#181424" },
   { tag: tags.propertyName, color: "#7C3AED" },
   { tag: tags.function(tags.variableName), color: "#7C3AED" },
   { tag: tags.operator, color: "#78716c" },

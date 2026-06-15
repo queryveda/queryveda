@@ -4,24 +4,24 @@
 
 @layer base {
   :root {
-    --background: 245 241 237;
-    --foreground: 28 25 23;
-    --card: 251 248 245;
-    --card-foreground: 28 25 23;
-    --popover: 251 248 245;
-    --popover-foreground: 28 25 23;
+    --background: 248 246 252;
+    --foreground: 24 20 36;
+    --card: 255 253 255;
+    --card-foreground: 24 20 36;
+    --popover: 255 253 255;
+    --popover-foreground: 24 20 36;
     --primary: 109 40 217;
     --primary-foreground: 255 255 255;
-    --secondary: 237 233 228;
-    --secondary-foreground: 28 25 23;
-    --muted: 237 233 228;
-    --muted-foreground: 120 113 108;
-    --accent: 237 233 228;
-    --accent-foreground: 28 25 23;
+    --secondary: 240 236 248;
+    --secondary-foreground: 24 20 36;
+    --muted: 240 236 248;
+    --muted-foreground: 108 100 128;
+    --accent: 240 236 248;
+    --accent-foreground: 24 20 36;
     --destructive: 220 38 38;
     --destructive-foreground: 255 255 255;
-    --border: 222 216 210;
-    --input: 222 216 210;
+    --border: 228 222 240;
+    --input: 228 222 240;
     --ring: 109 40 217;
     --radius: 0.5rem;
     --qv-success: #059669;
@@ -30,9 +30,11 @@
     --qv-warning-bg: #fffbeb;
     --qv-danger: #dc2626;
     --qv-danger-bg: #fef2f2;
-    --qv-code-bg: #eee9e3;
-    --qv-gradient-hero: linear-gradient(135deg, #ede4f7 0%, #e8ddf3 25%, #f2ebe4 50%, #faf6f2 100%);
-    --qv-gradient-card: linear-gradient(135deg, rgba(109,40,217,0.12), rgba(168,85,247,0.08), rgba(109,40,217,0.04));
+    --qv-code-bg: #f0ecf8;
+    --qv-gradient-hero: radial-gradient(ellipse at 30% 0%, rgba(109,40,217,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 0%, rgba(168,85,247,0.06) 0%, transparent 50%),
+      linear-gradient(180deg, #f0eaf8 0%, #f8f6fc 60%, #f8f6fc 100%);
+    --qv-gradient-card: linear-gradient(135deg, rgba(109,40,217,0.14), rgba(168,85,247,0.10), rgba(109,40,217,0.05));
     --qv-gradient-accent: linear-gradient(135deg, #6d28d9, #a855f7, #7c3aed);
   }
   .dark {
@@ -89,7 +91,7 @@
   /* Gradient border wrapper for cards */
   .gradient-card {
     @apply rounded-2xl p-[1px];
-    background: linear-gradient(135deg, rgba(109,40,217,0.2), rgba(168,85,247,0.15), rgba(109,40,217,0.08));
+    background: linear-gradient(135deg, rgba(109,40,217,0.22), rgba(168,85,247,0.16), rgba(109,40,217,0.08));
   }
   .dark .gradient-card {
     background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(168,85,247,0.2), rgba(139,92,246,0.1));
@@ -97,7 +99,7 @@
 
   /* Glow effect for primary actions */
   .glow-primary {
-    box-shadow: 0 0 20px rgba(109,40,217,0.15), 0 0 40px rgba(109,40,217,0.05);
+    box-shadow: 0 0 24px rgba(109,40,217,0.12), 0 0 48px rgba(109,40,217,0.04);
   }
   .dark .glow-primary {
     box-shadow: 0 0 20px rgba(139,92,246,0.2), 0 0 40px rgba(139,92,246,0.08);
