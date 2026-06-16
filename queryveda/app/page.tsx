@@ -1,10 +1,12 @@
 import { DailyHeroCard } from "@/components/daily/daily-hero-card";
 import { DailyToast } from "@/components/daily/daily-toast";
 import { TwoPathCards } from "@/components/home/two-path-cards";
+import { HomeRedirectGuard } from "@/components/home/home-client";
 
 export default function Home() {
   return (
-    <div>
+    <HomeRedirectGuard>
+      <div>
       {/* Hero */}
       <section
         className="relative overflow-hidden px-6 py-28 text-center"
@@ -45,6 +47,7 @@ export default function Home() {
 
       {/* Daily Toast for returning users */}
       <DailyToast />
-    </div>
+      </div>
+    </HomeRedirectGuard>
   );
 }
