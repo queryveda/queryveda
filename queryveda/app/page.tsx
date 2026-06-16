@@ -24,7 +24,7 @@ export default function Home() {
           to Interview Ready
         </h1>
         <p className="relative mx-auto mt-5 max-w-xl text-lg text-muted-foreground">
-          Structured lessons + 75 practice problems. No installations.
+          Structured lessons + practice problems. No installations.
         </p>
       </section>
 

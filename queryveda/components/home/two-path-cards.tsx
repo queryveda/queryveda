@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Target } from "lucide-react";
+import { BookOpen, Target, Table2 } from "lucide-react";
+import { useTrack } from "@/hooks/use-track";
 
 export function TwoPathCards() {
+  const { hasTrack } = useTrack();
   return (
     <section className="mx-auto max-w-5xl px-6 py-12">
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Learn SQL Card */}
+        {hasTrack("sql") && (
         <Link href="/learn" className="group">
           <div className="rounded-2xl p-[1px] transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/10"
             style={{ background: "var(--qv-gradient-card)" }}
@@ -45,8 +48,43 @@ export function TwoPathCards() {
             </div>
           </div>
         </Link>
+        )}
+
+        {/* Learn Excel Card */}
+        {hasTrack("excel") && (
+        <Link href="/excel" className="group">
+          <div className="rounded-2xl p-[1px] transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/10"
+            style={{ background: "var(--qv-gradient-card)" }}
+          >
+            <div className="rounded-2xl bg-card p-6 h-full flex flex-col gap-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Table2 className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold">Learn Excel</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Interactive spreadsheet exercises from basic formulas to advanced analytics.
+              </p>
+              <div className="flex items-center gap-2.5">
+                <span className="rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 text-xs font-medium border border-emerald-500/15">
+                  Basic
+                </span>
+                <span className="rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1 text-xs font-medium border border-amber-500/15">
+                  Intermediate
+                </span>
+                <span className="rounded-full bg-red-500/10 text-red-600 dark:text-red-400 px-3 py-1 text-xs font-medium border border-red-500/15">
+                  Advanced
+                </span>
+              </div>
+              <Button className="w-full mt-auto">Start Learning</Button>
+            </div>
+          </div>
+        </Link>
+        )}
 
         {/* Practice Problems Card */}
+        {hasTrack("sql") && (
         <Link href="/problems" className="group">
           <div className="rounded-2xl p-[1px] transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/10"
             style={{ background: "var(--qv-gradient-card)" }}
@@ -77,6 +115,7 @@ export function TwoPathCards() {
             </div>
           </div>
         </Link>
+        )}
       </div>
     </section>
   );
