@@ -8,10 +8,12 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useTrack } from "@/hooks/use-track";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/learn", label: "Learn" },
+  { href: "/learn", label: "Learn SQL" },
+  { href: "/excel", label: "Learn Excel" },
   { href: "/daily", label: "Daily" },
   { href: "/problems", label: "Problems" },
   { href: "/progress", label: "Progress" },
@@ -22,6 +24,13 @@ const navLinks = [
 export function MobileDrawer() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { hasTrack } = useTrack();
+
+  const filteredLinks = navLinks.filter(({ href }) => {
+    if (href === "/excel") return hasTrack("excel");
+    if (href === "/learn") return hasTrack("sql");
+    return true;
+  });
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -48,7 +57,7 @@ export function MobileDrawer() {
       </SheetTrigger>
       <SheetContent side="left" className="w-64 pt-10">
         <nav className="flex flex-col gap-1">
-          {navLinks.map(({ href, label }) => {
+          {filteredLinks.map(({ href, label }) => {
             const isActive = pathname === href;
             return (
               <Link
