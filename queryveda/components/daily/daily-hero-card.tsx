@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CountdownTimer } from "./countdown-timer";
+import { useAuth } from "@/hooks/use-auth";
 import {
   fetchDailyQuestion,
   getDailyState,
@@ -18,6 +19,7 @@ import {
 } from "@/lib/daily";
 
 export function DailyHeroCard() {
+  const { user } = useAuth();
   const [daily, setDaily] = useState<DailyQuestion | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDuration, setSelectedDuration] = useState(30);
@@ -29,6 +31,7 @@ export function DailyHeroCard() {
       setDaily(dq);
       setLoading(false);
     });
+    if (!user) return;
     const state = getDailyState();
     if (state.startedAt) {
       setStarted(true);
@@ -41,7 +44,7 @@ export function DailyHeroCard() {
         if (cloudSolved) setSolved(true);
       });
     }
-  }, []);
+  }, [user]);
 
   const getRefreshRemaining = useCallback(() => msUntilNextRefresh(), []);
   const getSolveRemaining = useCallback(() => {
