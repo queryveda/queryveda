@@ -45,3 +45,5 @@ export interface Achievement {
   icon: string;
   unlocked: boolean;
 }
+
+export type { Track } from "./track-types";
