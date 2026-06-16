@@ -88,3 +88,37 @@ CREATE POLICY "Users can insert own skill tree progress"
 
 CREATE POLICY "Users can update own skill tree progress"
   ON skill_tree_progress FOR UPDATE USING (auth.uid() = user_id);
+
+-- ============================================================
+-- Multi-track support (SQL, Excel, Python)
+-- ============================================================
+
+-- Track enum (prevents garbage values)
+DO $$ BEGIN
+  CREATE TYPE track AS ENUM ('sql', 'excel', 'python');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- User track preferences
+CREATE TABLE IF NOT EXISTS user_tracks (
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  tracks track[] NOT NULL DEFAULT '{sql}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE user_tracks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own tracks"
+  ON user_tracks FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own tracks"
+  ON user_tracks FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own tracks"
+  ON user_tracks FOR UPDATE USING (auth.uid() = user_id);
+
+-- Add track column to skill_tree_progress
+-- (existing rows default to 'sql')
+ALTER TABLE skill_tree_progress
+  ADD COLUMN IF NOT EXISTS track track NOT NULL DEFAULT 'sql';
