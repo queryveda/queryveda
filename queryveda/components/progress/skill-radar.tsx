@@ -7,11 +7,11 @@ interface SkillRadarProps {
   byTopic: { topic: Topic; total: number; solved: number }[];
 }
 
-const SIZE = 300;
+const SIZE = 360;
 const CX = SIZE / 2;
 const CY = SIZE / 2;
-const RADIUS = 100;
-const LABEL_RADIUS = 130;
+const RADIUS = 110;
+const LABEL_RADIUS = 140;
 const N = 5;
 
 function angleForAxis(i: number): number {
@@ -48,8 +48,8 @@ export function SkillRadar({ byTopic }: SkillRadarProps) {
 
   return (
     <div className="flex justify-center">
-      <div className="w-full max-w-[300px]">
-        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full">
+      <div className="w-full max-w-[360px]">
+        <svg viewBox={`-30 -10 ${SIZE + 60} ${SIZE + 20}`} className="w-full overflow-visible">
           {/* Grid polygons */}
           {[0.25, 0.5, 0.75, 1].map((f) => (
             <polygon
