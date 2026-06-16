@@ -1,72 +1,107 @@
 {
-  "date": "2026-06-15",
+  "date": "2026-06-16",
   "question": {
-    "title": "Top Sales Employees by Region",
+    "title": "Sales by Region and Product",
     "difficulty": "Medium",
-    "topic": "Advanced Analytics",
-    "desc": "Find the top sales employee for each region based on total sales. If there are multiple employees with the same highest sales in a region, return all of them.",
-    "setup": "\n      DROP TABLE IF EXISTS Employees;\n      DROP TABLE IF EXISTS Sales;\n      CREATE TABLE Employees (\n         EmployeeID INT,\n         Name VARCHAR(255),\n         Region VARCHAR(255)\n      );\n      CREATE TABLE Sales (\n         SalesID INT,\n         EmployeeID INT,\n         SalesAmount DECIMAL(10,2)\n      );\n      INSERT INTO Employees (EmployeeID, Name, Region)\n      VALUES\n         (1, 'John Doe', 'North'),\n         (2, 'Jane Doe', 'North'),\n         (3, 'Alice Smith', 'South'),\n         (4, 'Bob Johnson', 'South'),\n         (5, 'Mike Brown', 'East');\n      INSERT INTO Sales (SalesID, EmployeeID, SalesAmount)\n      VALUES\n         (1, 1, 1000.00),\n         (2, 1, 2000.00),\n         (3, 2, 1500.00),\n         (4, 3, 1200.00),\n         (5, 4, 1800.00),\n         (6, 5, 2500.00),\n         (7, 1, 3000.00),\n         (8, 3, 1000.00);\n   ",
+    "topic": "Aggregations & JOINs",
+    "desc": "Given two tables, one for sales and one for products, with the sales table containing the product id, region, and sales amount, and the products table containing the product id and product name, write a query to find the total sales for each region and product. The query should also include the overall total sales for each region and the overall total sales for each product.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INTEGER, region VARCHAR(50), sales_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, region, sales_amount) VALUES (1, 'North', 100.00), (1, 'South', 200.00), (2, 'North', 50.00), (2, 'South', 75.00), (3, 'North', 150.00), (3, 'South', 225.00); DROP TABLE IF EXISTS products; CREATE TABLE products (product_id INTEGER, product_name VARCHAR(100)); INSERT INTO products (product_id, product_name) VALUES (1, 'Product A'), (2, 'Product B'), (3, 'Product C');",
     "tables": [
-      "Employees",
-      "Sales"
+      "sales",
+      "products"
     ],
     "cols": [
-      "Region",
-      "Name",
-      "TotalSales"
+      "region",
+      "product_name",
+      "total_sales"
     ],
     "rows": [
       [
-        "East",
-        "Mike Brown",
-        2500
+        "North",
+        "Product A",
+        100
       ],
       [
         "North",
-        "John Doe",
-        6000
+        "Product B",
+        50
+      ],
+      [
+        "North",
+        "Product C",
+        150
       ],
       [
         "South",
-        "Bob Johnson",
-        1800
+        "Product A",
+        200
+      ],
+      [
+        "South",
+        "Product B",
+        75
+      ],
+      [
+        "South",
+        "Product C",
+        225
       ]
     ],
-    "solution": "\n      WITH RegionalSales AS (\n         SELECT \n            E.Region,\n            E.Name,\n            SUM(S.SalesAmount) AS TotalSales,\n            RANK() OVER (PARTITION BY E.Region ORDER BY SUM(S.SalesAmount) DESC) AS SalesRank\n         FROM \n            Employees E\n         JOIN \n            Sales S ON E.EmployeeID = S.EmployeeID\n         GROUP BY \n            E.Region, E.Name\n      )\n      SELECT \n         Region,\n         Name,\n         TotalSales\n      FROM \n         RegionalSales\n      WHERE \n         SalesRank = 1;\n   ",
-    "tips": "Use window functions to rank sales within each region.",
+    "solution": "SELECT s.region, p.product_name, SUM(s.sales_amount) AS total_sales FROM sales s JOIN products p ON s.product_id = p.product_id GROUP BY s.region, p.product_name ORDER BY s.region, p.product_name;",
+    "tips": "To improve performance, consider adding indexes on the product_id columns in both tables.",
     "hints": [
-      "You will need to join the Employees and Sales tables to calculate total sales per employee.",
-      "Use a Common Table Expression (CTE) or a subquery to calculate the rank of each employee within their region.",
-      "The RANK() function can be used with PARTITION BY to reset the ranking for each region."
+      "You will need to use an INNER JOIN to combine the sales and products tables.",
+      "Use the SUM aggregation function to calculate the total sales for each region and product.",
+      "The GROUP BY clause should include both the region and product_name columns to ensure the correct grouping of sales data."
     ],
     "tests": [
       {
-        "setup": "\n            DROP TABLE IF EXISTS Employees;\n            DROP TABLE IF EXISTS Sales;\n            CREATE TABLE Employees (\n               EmployeeID INT,\n               Name VARCHAR(255),\n               Region VARCHAR(255)\n            );\n            CREATE TABLE Sales (\n               SalesID INT,\n               EmployeeID INT,\n               SalesAmount DECIMAL(10,2)\n            );\n            INSERT INTO Employees (EmployeeID, Name, Region)\n            VALUES\n               (6, 'Sam Davis', 'West'),\n               (7, 'Tom White', 'West'),\n               (8, 'Linda Lee', 'Central');\n            INSERT INTO Sales (SalesID, EmployeeID, SalesAmount)\n            VALUES\n               (9, 6, 4000.00),\n               (10, 7, 3500.00),\n               (11, 8, 2000.00),\n               (12, 6, 1500.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INTEGER, region VARCHAR(50), sales_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, region, sales_amount) VALUES (4, 'East', 300.00), (4, 'West', 400.00), (5, 'East', 100.00), (5, 'West', 200.00); DROP TABLE IF EXISTS products; CREATE TABLE products (product_id INTEGER, product_name VARCHAR(100)); INSERT INTO products (product_id, product_name) VALUES (4, 'Product D'), (5, 'Product E');",
         "rows": [
           [
-            "Central",
-            "Linda Lee",
-            2000
+            "East",
+            "Product D",
+            300
+          ],
+          [
+            "East",
+            "Product E",
+            100
           ],
           [
             "West",
-            "Sam Davis",
-            5500
+            "Product D",
+            400
+          ],
+          [
+            "West",
+            "Product E",
+            200
           ]
         ]
       },
       {
-        "setup": "\n            DROP TABLE IF EXISTS Employees;\n            DROP TABLE IF EXISTS Sales;\n            CREATE TABLE Employees (\n               EmployeeID INT,\n               Name VARCHAR(255),\n               Region VARCHAR(255)\n            );\n            CREATE TABLE Sales (\n               SalesID INT,\n               EmployeeID INT,\n               SalesAmount DECIMAL(10,2)\n            );\n            INSERT INTO Employees (EmployeeID, Name, Region)\n            VALUES\n               (9, 'Peter Kim', 'North'),\n               (10, 'Emily Chen', 'North'),\n               (11, 'David Kim', 'South');\n            INSERT INTO Sales (SalesID, EmployeeID, SalesAmount)\n            VALUES\n               (13, 9, 5000.00),\n               (14, 10, 4000.00),\n               (15, 11, 3000.00),\n               (16, 9, 2000.00),\n               (17, 10, 1000.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INTEGER, region VARCHAR(50), sales_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, region, sales_amount) VALUES (6, 'North', 500.00), (6, 'South', 600.00), (7, 'North', 250.00), (7, 'South', 375.00); DROP TABLE IF EXISTS products; CREATE TABLE products (product_id INTEGER, product_name VARCHAR(100)); INSERT INTO products (product_id, product_name) VALUES (6, 'Product F'), (7, 'Product G');",
         "rows": [
           [
             "North",
-            "Peter Kim",
-            7000
+            "Product F",
+            500
+          ],
+          [
+            "North",
+            "Product G",
+            250
           ],
           [
             "South",
-            "David Kim",
-            3000
+            "Product F",
+            600
+          ],
+          [
+            "South",
+            "Product G",
+            375
           ]
         ]
       }
