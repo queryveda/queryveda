@@ -8,12 +8,12 @@ import type { ExcelNodeMastery } from "@/lib/excel-skill-tree-types";
 export function useExcelSkillTree() {
   const { user } = useAuth();
   const [masteries, setMasteries] = useState<ExcelNodeMastery[]>(
-    () => (user ? excelSkillTreeStorage.getAllNodeMasteries() : [])
+    () => excelSkillTreeStorage.getAllNodeMasteries()
   );
 
   const refresh = useCallback(() => {
-    setMasteries(user ? excelSkillTreeStorage.getAllNodeMasteries() : []);
-  }, [user]);
+    setMasteries(excelSkillTreeStorage.getAllNodeMasteries());
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -22,7 +22,7 @@ export function useExcelSkillTree() {
         .then(() => excelSkillTreeStorage.syncSkillTreeToCloud(user.id))
         .then(refresh);
     } else {
-      setMasteries([]);
+      refresh();
     }
   }, [user, refresh]);
 
