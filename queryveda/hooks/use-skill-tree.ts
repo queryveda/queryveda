@@ -7,7 +7,10 @@ import type { NodeMastery } from "@/lib/skill-tree-types";
 
 export function useSkillTree() {
   const { user } = useAuth();
-  const [masteries, setMasteries] = useState<NodeMastery[]>([]);
+  // Initialize synchronously from localStorage to avoid flash of "Locked"
+  const [masteries, setMasteries] = useState<NodeMastery[]>(
+    () => skillTreeStorage.getAllNodeMasteries()
+  );
 
   const refresh = useCallback(() => {
     setMasteries(skillTreeStorage.getAllNodeMasteries());
@@ -19,8 +22,6 @@ export function useSkillTree() {
       skillTreeStorage.syncSkillTreeFromCloud(user.id)
         .then(() => skillTreeStorage.syncSkillTreeToCloud(user.id))
         .then(refresh);
-    } else {
-      refresh();
     }
   }, [user, refresh]);
 
