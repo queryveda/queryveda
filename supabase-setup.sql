@@ -25,7 +25,7 @@ CREATE TABLE user_progress (
 );
 
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can read own progress" ON user_progress FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Anyone can read progress for leaderboard" ON user_progress FOR SELECT USING (true);
 CREATE POLICY "Users can insert own progress" ON user_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own progress" ON user_progress FOR UPDATE USING (auth.uid() = user_id);
 
