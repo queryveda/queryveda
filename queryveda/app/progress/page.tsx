@@ -12,6 +12,9 @@ import { Achievements } from "@/components/progress/achievements";
 import { useSkillTree } from "@/hooks/use-skill-tree";
 import { skillTreeNodes } from "@/lib/skill-tree-data";
 import { MasteryBar } from "@/components/learn/mastery-bar";
+import { useTrack } from "@/hooks/use-track";
+import { useExcelSkillTree } from "@/hooks/use-excel-skill-tree";
+import { excelSkillTreeNodes } from "@/lib/excel-skill-tree-data";
 import Link from "next/link";
 
 function ProgressContent() {
@@ -47,6 +50,28 @@ function ProgressContent() {
   const achievements = useMemo(() => storage.getAchievements(questions), []);
 
   const { getNodeMastery } = useSkillTree();
+
+  const { hasTrack } = useTrack();
+  const { getNodeMastery: getExcelNodeMastery, masteries: excelMasteries } = useExcelSkillTree();
+
+  const excelTotalCompleted = useMemo(
+    () =>
+      excelMasteries.reduce(
+        (sum, m) => sum + m.conceptualCompleted + m.exercisesCompleted,
+        0
+      ),
+    [excelMasteries]
+  );
+
+  const excelTotalItems = useMemo(
+    () =>
+      excelSkillTreeNodes.reduce(
+        (sum, node) =>
+          sum + node.conceptualQuestions.length + node.exercises.length,
+        0
+      ),
+    []
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -84,6 +109,36 @@ function ProgressContent() {
             })}
           </div>
         </div>
+        {hasTrack("excel") && (
+          <div className="rounded-xl border p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold">Excel Learning Progress</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {excelTotalCompleted} / {excelTotalItems} exercises &amp; concepts completed
+                </p>
+              </div>
+              <Link href="/excel" className="text-sm text-primary hover:underline">
+                View Excel Skill Tree
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {excelSkillTreeNodes.map((node) => {
+                const m = getExcelNodeMastery(node.id);
+                const completed = m.conceptualCompleted + m.exercisesCompleted;
+                const total = m.conceptualTotal + m.exercisesTotal;
+                return (
+                  <div key={node.id} className="flex items-center gap-3">
+                    <span className="text-sm w-48 truncate">{node.title}</span>
+                    <div className="flex-1">
+                      <MasteryBar completed={completed} total={total} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <Achievements achievements={achievements} />
       </div>
     </div>
