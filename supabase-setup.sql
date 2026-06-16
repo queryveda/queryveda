@@ -48,6 +48,26 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
+-- Daily challenge progress (cross-device sync)
+CREATE TABLE IF NOT EXISTS daily_progress (
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  solved BOOLEAN DEFAULT FALSE,
+  solved_at TIMESTAMPTZ,
+  PRIMARY KEY (user_id, date)
+);
+
+ALTER TABLE daily_progress ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own daily progress"
+  ON daily_progress FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own daily progress"
+  ON daily_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own daily progress"
+  ON daily_progress FOR UPDATE USING (auth.uid() = user_id);
+
 -- Skill tree micro-exercise progress
 CREATE TABLE IF NOT EXISTS skill_tree_progress (
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,

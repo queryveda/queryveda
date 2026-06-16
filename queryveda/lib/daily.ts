@@ -1,3 +1,4 @@
+import { supabase } from "@/lib/supabase";
 import type { Question } from "./types";
 
 /* Types */
@@ -80,6 +81,47 @@ export function markDailySolved() {
   const s = getState();
   s.solved = true;
   setState(s);
+  // Sync to Supabase (fire-and-forget)
+  syncDailySolvedToCloud(todayIST());
+}
+
+/* Supabase sync */
+async function syncDailySolvedToCloud(date: string) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("daily_progress").upsert(
+      { user_id: user.id, date, solved: true, solved_at: new Date().toISOString() },
+      { onConflict: "user_id,date" }
+    );
+  } catch {
+    // silent — localStorage is the fallback
+  }
+}
+
+/** Check Supabase if today's daily was solved on another device */
+export async function syncDailyFromCloud(): Promise<boolean> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const date = todayIST();
+    const { data } = await supabase
+      .from("daily_progress")
+      .select("solved")
+      .eq("user_id", user.id)
+      .eq("date", date)
+      .single();
+    if (data?.solved) {
+      // Update localStorage to match
+      const s = getState();
+      s.solved = true;
+      setState(s);
+      return true;
+    }
+  } catch {
+    // silent
+  }
+  return false;
 }
 
 /* Timer math */

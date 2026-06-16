@@ -10,6 +10,7 @@ import {
   fetchDailyQuestion,
   getDailyState,
   startChallenge,
+  syncDailyFromCloud,
   msUntilNextRefresh,
   solveTimerRemaining,
   todayIST,
@@ -33,7 +34,13 @@ export function DailyHeroCard() {
       setStarted(true);
       setSelectedDuration(state.duration ?? 30);
     }
-    if (state.solved) setSolved(true);
+    if (state.solved) {
+      setSolved(true);
+    } else {
+      syncDailyFromCloud().then((cloudSolved) => {
+        if (cloudSolved) setSolved(true);
+      });
+    }
   }, []);
 
   const getRefreshRemaining = useCallback(() => msUntilNextRefresh(), []);

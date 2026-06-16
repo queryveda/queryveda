@@ -22,6 +22,7 @@ import {
   startChallenge,
   saveDailySQL,
   markDailySolved,
+  syncDailyFromCloud,
   msUntilNextRefresh,
   solveTimerRemaining,
   todayIST,
@@ -54,7 +55,7 @@ export default function DailyPage() {
   const sqlRef = useRef(sqlValue);
   sqlRef.current = sqlValue;
 
-  // Fetch daily question
+  // Fetch daily question and sync cloud state
   useEffect(() => {
     fetchDailyQuestion().then((dq) => {
       setDaily(dq);
@@ -68,6 +69,12 @@ export default function DailyPage() {
     }
     if (state.solved) setSolved(true);
     if (state.sql) setSqlValue(state.sql);
+    // Sync from cloud if not solved locally
+    if (!state.solved) {
+      syncDailyFromCloud().then((cloudSolved) => {
+        if (cloudSolved) setSolved(true);
+      });
+    }
   }, []);
 
   // Build a Question object for reuse with ProblemPanel and runTests
