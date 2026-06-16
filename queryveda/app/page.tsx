@@ -17,14 +17,14 @@ export default function Home() {
         <div className="absolute bottom-0 right-1/4 w-72 h-72 rounded-full bg-primary/8 blur-3xl pointer-events-none" />
 
         <h1 className="relative mx-auto max-w-3xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-          Go from{" "}
+          Master{" "}
           <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--qv-gradient-accent)" }}>
-            SQL Zero
+            SQL & Excel
           </span>{" "}
-          to Interview Ready
+          — Interview Ready
         </h1>
         <p className="relative mx-auto mt-5 max-w-xl text-lg text-muted-foreground">
-          Structured lessons + practice problems. No installations.
+          Structured lessons + hands-on practice. No installations.
         </p>
       </section>
 
@@ -37,9 +37,9 @@ export default function Home() {
       {/* Features — subtle inline list */}
       <section className="mx-auto max-w-5xl px-6 py-10">
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-          <span>75 curated problems</span>
+          <span>75+ curated problems</span>
           <span className="hidden sm:inline" aria-hidden>·</span>
-          <span>In-browser PostgreSQL</span>
+          <span>In-browser PostgreSQL & Excel</span>
           <span className="hidden sm:inline" aria-hidden>·</span>
           <span>Progress tracking & streaks</span>
         </div>

@@ -1,19 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useDailyStatus } from "@/hooks/use-daily-status";
+import { useTrack } from "@/hooks/use-track";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileDrawer } from "./mobile-drawer";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { Button } from "@/components/ui/button";
+import { ChevronDown, BookOpen, Table2, Check } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/learn", label: "Learn" },
   { href: "/daily", label: "Daily" },
   { href: "/problems", label: "Problems" },
   { href: "/progress", label: "Progress" },
@@ -21,11 +22,33 @@ const navLinks = [
   { href: "/about", label: "About" },
 ];
 
+const learnTracks = [
+  { href: "/learn", label: "SQL", track: "sql" as const, icon: BookOpen },
+  { href: "/excel", label: "Excel", track: "excel" as const, icon: Table2 },
+];
+
 export function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { hasTrack } = useTrack();
   const { hasUnattempted } = useDailyStatus();
   const [authOpen, setAuthOpen] = useState(false);
+  const [learnOpen, setLearnOpen] = useState(false);
+  const learnRef = useRef<HTMLDivElement>(null);
+
+  const isLearnActive =
+    pathname.startsWith("/learn") || pathname.startsWith("/excel");
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (learnRef.current && !learnRef.current.contains(e.target as Node)) {
+        setLearnOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   return (
     <>
@@ -47,7 +70,70 @@ export function Navbar() {
               {/* Desktop nav links */}
               <nav className="hidden lg:flex items-center gap-1 ml-4">
                 {navLinks.map(({ href, label }) => {
-                  const isActive = pathname === href;
+                  const isActive =
+                    href === "/"
+                      ? pathname === "/"
+                      : pathname === href || pathname.startsWith(href + "/");
+
+                  // Insert Learn dropdown after Home
+                  if (href === "/") {
+                    return (
+                      <span key="home-and-learn" className="contents">
+                        <Link
+                          href="/"
+                          className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            pathname === "/"
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                          }`}
+                        >
+                          Home
+                        </Link>
+
+                        {/* Learn dropdown */}
+                        <div ref={learnRef} className="relative">
+                          <button
+                            onClick={() => setLearnOpen((o) => !o)}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                              isLearnActive
+                                ? "bg-primary text-primary-foreground"
+                                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                            }`}
+                          >
+                            Learn
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${learnOpen ? "rotate-180" : ""}`} />
+                          </button>
+                          {learnOpen && (
+                            <div className="absolute top-full left-0 mt-1 w-48 rounded-xl border bg-popover p-1 shadow-lg z-50">
+                              {learnTracks.map(({ href: trackHref, label: trackLabel, track, icon: Icon }) => {
+                                const selected = hasTrack(track);
+                                const active = pathname.startsWith(trackHref);
+                                return (
+                                  <Link
+                                    key={track}
+                                    href={trackHref}
+                                    onClick={() => setLearnOpen(false)}
+                                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                                      active
+                                        ? "bg-primary/10 text-primary font-medium"
+                                        : "text-foreground hover:bg-accent"
+                                    }`}
+                                  >
+                                    <Icon className="w-4 h-4 shrink-0" />
+                                    <span className="flex-1">{trackLabel}</span>
+                                    {selected && (
+                                      <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                                    )}
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </span>
+                    );
+                  }
+
                   return (
                     <Link
                       key={href}

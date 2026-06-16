@@ -7,23 +7,20 @@ import type { NodeMastery } from "@/lib/skill-tree-types";
 
 export function useSkillTree() {
   const { user } = useAuth();
-  // Only show progress when logged in; avoids showing stale localStorage data after logout
-  const [masteries, setMasteries] = useState<NodeMastery[]>(
-    () => user ? skillTreeStorage.getAllNodeMasteries() : []
-  );
+  const [masteries, setMasteries] = useState<NodeMastery[]>([]);
 
   const refresh = useCallback(() => {
-    setMasteries(user ? skillTreeStorage.getAllNodeMasteries() : []);
-  }, [user]);
+    setMasteries(skillTreeStorage.getAllNodeMasteries());
+  }, []);
 
+  // Populate from localStorage on mount (client-only), then sync with cloud
   useEffect(() => {
     if (user) {
-      // Pull cloud → local, then push local → cloud (catches any unsynced local progress)
       skillTreeStorage.syncSkillTreeFromCloud(user.id)
         .then(() => skillTreeStorage.syncSkillTreeToCloud(user.id))
         .then(refresh);
     } else {
-      setMasteries([]);
+      refresh();
     }
   }, [user, refresh]);
 
