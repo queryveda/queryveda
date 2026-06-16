@@ -13,7 +13,6 @@ interface ExcelExerciseListProps {
   onConceptualComplete: (questionId: string) => void;
   onExerciseComplete: (exerciseId: string) => void;
   isConceptualCompleted: (questionId: string) => boolean;
-  isExerciseCompleted: (exerciseId: string) => boolean;
 }
 
 export function ExcelExerciseList({
@@ -22,7 +21,6 @@ export function ExcelExerciseList({
   onConceptualComplete,
   onExerciseComplete,
   isConceptualCompleted,
-  isExerciseCompleted,
 }: ExcelExerciseListProps) {
   const [conceptualDone, setConceptualDone] = useState(mastery.conceptualDone);
 
