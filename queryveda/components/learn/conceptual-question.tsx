@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
+import { Check, X, ArrowRight } from "lucide-react";
 import type { ConceptualQuestion as ConceptualQuestionType } from "@/lib/excel-skill-tree-types";
 
 interface ConceptualQuestionProps {
@@ -15,6 +15,7 @@ export function ConceptualQuestion({ question, onCorrect, alreadyCompleted }: Co
   const [selected, setSelected] = useState<string>("");
   const [submitted, setSubmitted] = useState(alreadyCompleted ?? false);
   const [correct, setCorrect] = useState(alreadyCompleted ?? false);
+  const [completed, setCompleted] = useState(alreadyCompleted ?? false);
 
   const handleSubmit = () => {
     const trimmed = selected.trim();
@@ -22,8 +23,30 @@ export function ConceptualQuestion({ question, onCorrect, alreadyCompleted }: Co
     const isCorrect = trimmed.toLowerCase() === question.correctAnswer.toLowerCase();
     setCorrect(isCorrect);
     setSubmitted(true);
-    if (isCorrect) onCorrect();
+    if (isCorrect) {
+      setCompleted(true);
+      onCorrect();
+    }
   };
+
+  /** After seeing the explanation for a wrong answer, mark as reviewed and continue */
+  const handleContinue = () => {
+    setCompleted(true);
+    onCorrect();
+  };
+
+  // Show completed state for wrong answers that were reviewed
+  if (completed && !correct) {
+    return (
+      <div className="rounded-xl border border-muted-foreground/20 bg-muted/30 p-5 space-y-3 opacity-75">
+        <p className="font-medium flex items-center gap-2">
+          <Check className="w-4 h-4 text-muted-foreground" />
+          {question.question}
+        </p>
+        <p className="text-sm text-muted-foreground">Reviewed</p>
+      </div>
+    );
+  }
 
   if (question.type === "multiple-choice") {
     return (
@@ -67,6 +90,12 @@ export function ConceptualQuestion({ question, onCorrect, alreadyCompleted }: Co
             {question.explanation}
           </div>
         )}
+        {submitted && !correct && !completed && (
+          <Button onClick={handleContinue} size="sm" variant="outline" className="gap-1.5">
+            Got it, continue
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        )}
       </div>
     );
   }
@@ -96,6 +125,12 @@ export function ConceptualQuestion({ question, onCorrect, alreadyCompleted }: Co
           {correct ? "Correct! " : `The answer is "${question.correctAnswer}". `}
           {question.explanation}
         </div>
+      )}
+      {submitted && !correct && !completed && (
+        <Button onClick={handleContinue} size="sm" variant="outline" className="gap-1.5">
+          Got it, continue
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Button>
       )}
     </div>
   );

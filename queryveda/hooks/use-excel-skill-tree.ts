@@ -7,14 +7,13 @@ import type { ExcelNodeMastery } from "@/lib/excel-skill-tree-types";
 
 export function useExcelSkillTree() {
   const { user } = useAuth();
-  const [masteries, setMasteries] = useState<ExcelNodeMastery[]>(
-    () => excelSkillTreeStorage.getAllNodeMasteries()
-  );
+  const [masteries, setMasteries] = useState<ExcelNodeMastery[]>([]);
 
   const refresh = useCallback(() => {
     setMasteries(excelSkillTreeStorage.getAllNodeMasteries());
   }, []);
 
+  // Populate from localStorage on mount (client-only), then sync with cloud
   useEffect(() => {
     if (user) {
       excelSkillTreeStorage

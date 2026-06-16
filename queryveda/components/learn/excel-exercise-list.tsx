@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ConceptualQuestion } from "./conceptual-question";
 import { ExcelExerciseEditor } from "./excel-exercise-editor";
 import { MasteryBar } from "./mastery-bar";
@@ -23,6 +23,11 @@ export function ExcelExerciseList({
   isConceptualCompleted,
 }: ExcelExerciseListProps) {
   const [conceptualDone, setConceptualDone] = useState(mastery.conceptualDone);
+
+  // Sync when mastery updates from localStorage/cloud after initial render
+  useEffect(() => {
+    if (mastery.conceptualDone) setConceptualDone(true);
+  }, [mastery.conceptualDone]);
 
   const handleConceptualCorrect = (questionId: string) => {
     onConceptualComplete(questionId);

@@ -31,10 +31,18 @@ export interface ExcelExercise {
   }[];
 }
 
+export interface NodeIntro {
+  summary: string;                     // 2-3 sentence concept overview
+  keyPoints: string[];                 // bullet points of key concepts
+  externalUrl?: string;                // optional link to learn more
+  externalLabel?: string;              // label for the link
+}
+
 export interface ExcelSkillNode {
   id: string;                          // e.g., "cell-references"
   title: string;
   description: string;
+  intro?: NodeIntro;                   // brief concept guide shown before exercises
   prerequisites: string[];             // node IDs that must be at 60%+
   conceptualQuestions: ConceptualQuestion[];
   exercises: ExcelExercise[];

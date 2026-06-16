@@ -7,6 +7,18 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Cell References & Navigation",
     description:
       "The foundation of every spreadsheet. Learn A1 notation, absolute vs relative references, and working with ranges.",
+    intro: {
+      summary:
+        "Every formula in Excel refers to cells by their address. A1 means column A, row 1. Understanding how references behave when you copy formulas is the single most important Excel skill.",
+      keyPoints: [
+        "A1 is a relative reference — it shifts when you copy the formula to another cell",
+        "$A$1 is an absolute reference — it stays fixed no matter where you copy",
+        "A$1 or $A1 are mixed references — one part is locked, the other shifts",
+        "A range like A1:A10 refers to all cells from A1 through A10",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/overview-of-formulas-in-excel-ecfdc708-9162-49e8-b993-c311f47ca173",
+      externalLabel: "Microsoft: Overview of formulas",
+    },
     prerequisites: [],
     trunk: true,
     column: 0,
@@ -108,6 +120,19 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Basic Formulas",
     description:
       "Learn the most-used spreadsheet functions: SUM, AVERAGE, COUNT, MIN, and MAX. These are the building blocks of data analysis.",
+    intro: {
+      summary:
+        "Formulas always start with = and can use built-in functions to calculate results. These five functions handle 80% of everyday spreadsheet tasks.",
+      keyPoints: [
+        "SUM(range) — adds all numbers in a range",
+        "AVERAGE(range) — returns the arithmetic mean",
+        "COUNT(range) — counts cells that contain numbers",
+        "MIN(range) and MAX(range) — find the smallest and largest values",
+        "You can nest functions: =ROUND(AVERAGE(A1:A10), 2)",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/sum-function-043e1c7d-7726-4e80-8f32-07b23e057f89",
+      externalLabel: "Microsoft: SUM function",
+    },
     prerequisites: ["cell-references"],
     trunk: true,
     column: 0,
@@ -215,6 +240,19 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Text Functions",
     description:
       "Clean and transform text data with LEFT, RIGHT, MID, CONCATENATE, TRIM, and LEN. Essential for messy real-world data.",
+    intro: {
+      summary:
+        "Text functions let you extract, combine, and clean up text in your spreadsheet. Real-world data is often messy -- names in the wrong case, extra spaces, codes that need splitting -- and these functions handle all of it.",
+      keyPoints: [
+        "LEFT(text, n), RIGHT(text, n), and MID(text, start, n) extract parts of a string",
+        "LEN(text) returns the number of characters, useful for validation",
+        "TRIM removes extra spaces; CLEAN removes non-printable characters",
+        "CONCATENATE or the & operator joins strings together",
+        "UPPER, LOWER, and PROPER change text case; SUBSTITUTE replaces specific text",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/text-functions-reference-cccd86ad-547d-4ea9-a065-7bb697c2a56e",
+      externalLabel: "Microsoft: Text functions reference",
+    },
     prerequisites: ["basic-formulas"],
     trunk: true,
     column: 0,
@@ -306,6 +344,19 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Logical Functions",
     description:
       "Make decisions in your spreadsheet with IF, AND, OR, nested IFs, and IFERROR. These let you build smart, conditional calculations.",
+    intro: {
+      summary:
+        "Logical functions add decision-making to your formulas. The IF function checks a condition and returns different values depending on whether it is true or false. Combined with AND, OR, and IFERROR, you can handle complex business rules entirely in a spreadsheet.",
+      keyPoints: [
+        "IF(condition, value_if_true, value_if_false) is the core decision function",
+        "AND(cond1, cond2, ...) returns TRUE only when all conditions are true",
+        "OR(cond1, cond2, ...) returns TRUE when at least one condition is true",
+        "IFERROR(formula, fallback) catches errors like #DIV/0! or #N/A and returns a clean fallback value",
+        "Nested IFs handle multiple outcomes, but IFS(cond1, val1, cond2, val2, ...) is often cleaner",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/if-function-69aed7c9-4e8a-4755-a9bc-aa8bbff73be2",
+      externalLabel: "Microsoft: IF function",
+    },
     prerequisites: ["basic-formulas"],
     trunk: false,
     column: 1,
@@ -434,6 +485,18 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Lookup Functions",
     description:
       "Find and retrieve data from other parts of your spreadsheet with VLOOKUP, HLOOKUP, INDEX/MATCH, and XLOOKUP.",
+    intro: {
+      summary:
+        "Lookup functions search for a value in one place and return related information from another. They are the spreadsheet equivalent of joining tables in a database -- essential whenever you need to pull data from a reference table.",
+      keyPoints: [
+        "VLOOKUP(lookup_value, table, col_index, FALSE) searches the first column of a table and returns a value from another column",
+        "The last argument should almost always be FALSE for an exact match",
+        "INDEX(range, row_num) returns a value at a specific position; MATCH(value, range, 0) finds that position",
+        "INDEX+MATCH together are more flexible than VLOOKUP because the lookup column does not need to be first",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/vlookup-function-0bbc8083-26fe-4963-8ab8-93a18ad188a1",
+      externalLabel: "Microsoft: VLOOKUP function",
+    },
     prerequisites: ["logical-functions"],
     trunk: true,
     column: 0,
@@ -541,6 +604,19 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Date & Time Functions",
     description:
       "Work with dates and times using DATE, DATEDIF, EOMONTH, NETWORKDAYS, and date formatting with TEXT.",
+    intro: {
+      summary:
+        "Excel stores every date as a serial number (the number of days since January 1, 1900). This means you can add, subtract, and compare dates with simple arithmetic. Date functions help you extract components, calculate durations, and handle business-day logic.",
+      keyPoints: [
+        "Dates are serial numbers: January 1, 1900 = 1, so today's date is a number in the 40,000-50,000 range",
+        "DATE(year, month, day) builds a date from its parts; YEAR(), MONTH(), DAY() extract them",
+        "DATEDIF(start, end, unit) calculates differences in years (\"Y\"), months (\"M\"), or days (\"D\")",
+        "EOMONTH(date, months) returns the last day of a month offset from the given date",
+        "NETWORKDAYS(start, end) counts only business days (Monday through Friday)",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/date-function-e36c0c8c-4104-49da-ab83-82328b832349",
+      externalLabel: "Microsoft: DATE function",
+    },
     prerequisites: ["basic-formulas"],
     trunk: false,
     column: -1,
@@ -600,6 +676,19 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Conditional Aggregation",
     description:
       "Aggregate data with conditions using SUMIF, COUNTIF, AVERAGEIFS, and SUMPRODUCT. The Excel equivalent of SQL's WHERE + GROUP BY.",
+    intro: {
+      summary:
+        "Conditional aggregation functions combine filtering and calculation in a single formula. Instead of summing an entire column, you can sum only the rows that meet specific criteria -- like totaling sales for one region or counting orders above a threshold.",
+      keyPoints: [
+        "SUMIF(range, criteria, sum_range) adds values where a single condition is met",
+        "SUMIFS(sum_range, criteria_range1, criteria1, ...) supports multiple conditions",
+        "COUNTIF and COUNTIFS count cells that match one or more criteria",
+        "AVERAGEIF and AVERAGEIFS calculate conditional averages",
+        "Criteria can use operators as text: \">50\", \"<>0\", \"North\"",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/sumif-function-169b8c99-c05c-4483-a712-1697a653039b",
+      externalLabel: "Microsoft: SUMIF function",
+    },
     prerequisites: ["lookup-functions"],
     trunk: true,
     column: 0,
@@ -691,6 +780,19 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Data Cleaning",
     description:
       "Clean messy real-world data with SUBSTITUTE, TRIM, VALUE, TEXT, PROPER, and techniques for removing duplicates.",
+    intro: {
+      summary:
+        "Data rarely arrives in perfect shape. Data cleaning functions help you fix inconsistent casing, strip unwanted characters, convert text-that-looks-like-numbers into actual numbers, and standardize formats before analysis.",
+      keyPoints: [
+        "TRIM removes leading, trailing, and extra internal spaces; CLEAN strips non-printable characters",
+        "SUBSTITUTE(text, old, new) replaces specific characters or substrings (e.g., removing dashes from phone numbers)",
+        "VALUE(text) converts a text string that looks like a number into an actual number",
+        "TEXT(value, format) formats a number or date as text (e.g., TEXT(0.15, \"0%\") returns \"15%\")",
+        "PROPER(text) capitalizes the first letter of each word for consistent name formatting",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/clean-function-26f3d7c5-475f-4a9c-90e5-4b8ba987ba41",
+      externalLabel: "Microsoft: CLEAN function",
+    },
     prerequisites: ["text-functions"],
     trunk: false,
     column: -1,
@@ -742,6 +844,18 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Pivot Table Concepts",
     description:
       "Understand pivot table thinking — grouping, aggregating, and filtering data. The Excel equivalent of SQL GROUP BY.",
+    intro: {
+      summary:
+        "Pivot tables summarize large datasets by grouping rows and calculating totals, averages, or counts for each group. They are the spreadsheet equivalent of SQL's GROUP BY clause and are one of Excel's most powerful analysis tools.",
+      keyPoints: [
+        "A pivot table has four areas: Rows (what to group by), Columns (cross-tabulation), Values (what to aggregate), and Filters",
+        "Dragging a field to the Values area lets you choose SUM, COUNT, AVERAGE, or other aggregations",
+        "You can replicate pivot table logic with formulas like SUMIF, COUNTIF, and SUMPRODUCT",
+        "SUMPRODUCT(condition_array * value_array) is a versatile formula alternative to pivot tables",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/create-a-pivottable-to-analyze-worksheet-data-a9a84538-bfe9-40a9-a8e9-f99134456576",
+      externalLabel: "Microsoft: Create a PivotTable",
+    },
     prerequisites: ["conditional-aggregation"],
     trunk: true,
     column: 0,
@@ -846,6 +960,19 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Array Formulas & Dynamic Arrays",
     description:
       "Harness the power of array formulas with FILTER, SORT, UNIQUE, and SEQUENCE. Modern Excel's most powerful feature set.",
+    intro: {
+      summary:
+        "Array formulas operate on multiple values at once instead of a single cell. Modern Excel's dynamic array engine lets one formula return results that spill across many cells, enabling powerful operations like filtering, sorting, and generating sequences with a single formula.",
+      keyPoints: [
+        "Dynamic arrays automatically spill results into neighboring cells -- no Ctrl+Shift+Enter needed in modern Excel",
+        "SUMPRODUCT(array1, array2) multiplies arrays element-by-element and sums the result, useful for weighted calculations",
+        "TRANSPOSE(range) flips rows to columns and vice versa",
+        "FILTER, SORT, UNIQUE, and SEQUENCE are dynamic array functions that return variable-sized results",
+        "The # spill operator (e.g., A1#) references the entire spill range from a dynamic array formula",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/dynamic-array-formulas-and-spilled-array-behavior-205c6b06-03ba-4151-89a1-87a7eb36e531",
+      externalLabel: "Microsoft: Dynamic array formulas",
+    },
     prerequisites: ["pivot-concepts"],
     trunk: true,
     column: 0,
@@ -917,6 +1044,19 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Statistical Functions",
     description:
       "Analyze distributions and trends with PERCENTILE, STDEV, CORREL, FORECAST, and TREND. Essential for data analytics.",
+    intro: {
+      summary:
+        "Statistical functions go beyond simple averages to reveal how data is distributed, how variables relate to each other, and where trends are headed. These are essential for data analysis and reporting.",
+      keyPoints: [
+        "MEDIAN(range) returns the middle value, which is more robust to outliers than AVERAGE",
+        "PERCENTILE(range, k) finds the value below which k percent of the data falls (e.g., 90th percentile)",
+        "STDEV(range) measures how spread out values are from their mean -- higher means more variability",
+        "CORREL(range1, range2) returns a value from -1 to 1 showing how strongly two variables are related",
+        "FORECAST(x, known_ys, known_xs) predicts a y-value for a given x based on a linear trend",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/stdev-function-51fecaaa-231e-4bbb-9230-33571a968f36",
+      externalLabel: "Microsoft: STDEV function",
+    },
     prerequisites: ["array-formulas"],
     trunk: false,
     column: 1,
@@ -983,6 +1123,18 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     title: "Dashboard Formulas",
     description:
       "Build dynamic dashboards with INDIRECT, dynamic ranges, conditional formatting logic, and data validation techniques.",
+    intro: {
+      summary:
+        "Dashboard formulas make your spreadsheets interactive. By using functions like INDIRECT and CHOOSE, you can build reports that update dynamically based on user selections -- such as a dropdown that changes which data a chart displays.",
+      keyPoints: [
+        "INDIRECT(text_ref) converts a text string like \"A1\" into an actual cell reference, enabling dynamic lookups",
+        "CHOOSE(index, val1, val2, ...) returns one of several values based on a numeric index, useful for dropdown-driven dashboards",
+        "Combining INDIRECT with CONCATENATE or & lets you build references dynamically (e.g., referencing different sheet names)",
+        "These techniques pair with Data Validation dropdowns to create interactive, user-friendly reports",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/indirect-function-474b3a3a-8a26-4f44-b491-92b6306fa261",
+      externalLabel: "Microsoft: INDIRECT function",
+    },
     prerequisites: ["pivot-concepts", "conditional-aggregation"],
     trunk: true,
     column: 0,
