@@ -15,7 +15,10 @@ export function useSkillTree() {
 
   useEffect(() => {
     if (user) {
-      skillTreeStorage.syncSkillTreeFromCloud(user.id).then(refresh);
+      // Pull cloud → local, then push local → cloud (catches any unsynced local progress)
+      skillTreeStorage.syncSkillTreeFromCloud(user.id)
+        .then(() => skillTreeStorage.syncSkillTreeToCloud(user.id))
+        .then(refresh);
     } else {
       refresh();
     }
