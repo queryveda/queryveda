@@ -12,7 +12,6 @@ import { Achievements } from "@/components/progress/achievements";
 import { useSkillTree } from "@/hooks/use-skill-tree";
 import { skillTreeNodes } from "@/lib/skill-tree-data";
 import { MasteryBar } from "@/components/learn/mastery-bar";
-import { useTrack } from "@/hooks/use-track";
 import { useExcelSkillTree } from "@/hooks/use-excel-skill-tree";
 import { excelSkillTreeNodes } from "@/lib/excel-skill-tree-data";
 import Link from "next/link";
@@ -51,7 +50,6 @@ function ProgressContent() {
 
   const { getNodeMastery } = useSkillTree();
 
-  const { hasTrack } = useTrack();
   const { getNodeMastery: getExcelNodeMastery, masteries: excelMasteries } = useExcelSkillTree();
 
   const excelTotalCompleted = useMemo(
@@ -90,9 +88,9 @@ function ProgressContent() {
         </div>
         <div className="rounded-xl border p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Learning Progress</h2>
+            <h2 className="text-lg font-semibold">SQL Learning Progress</h2>
             <Link href="/learn" className="text-sm text-primary hover:underline">
-              View Skill Tree
+              View SQL Skill Tree
             </Link>
           </div>
           <div className="space-y-3">
@@ -109,7 +107,6 @@ function ProgressContent() {
             })}
           </div>
         </div>
-        {hasTrack("excel") && (
           <div className="rounded-xl border p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -138,7 +135,6 @@ function ProgressContent() {
               })}
             </div>
           </div>
-        )}
         <Achievements achievements={achievements} />
       </div>
     </div>
