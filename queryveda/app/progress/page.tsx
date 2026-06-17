@@ -46,7 +46,7 @@ function ProgressContent() {
     []
   );
 
-  const achievements = useMemo(() => storage.getAchievements(questions), []);
+  const sqlAchievements = useMemo(() => storage.getAchievements(questions), []);
 
   const { getNodeMastery } = useSkillTree();
 
@@ -69,6 +69,62 @@ function ProgressContent() {
         0
       ),
     []
+  );
+
+  const excelStarredCount = excelMasteries.filter((m) => m.starred).length;
+
+  const excelAchievements = useMemo(
+    () => [
+      {
+        id: "excel-first-formula",
+        name: "First Formula",
+        desc: "Complete your first Excel exercise",
+        icon: "📊",
+        unlocked: excelTotalCompleted >= 1,
+      },
+      {
+        id: "excel-warmup-king",
+        name: "Warmup King",
+        desc: "Answer 10 conceptual questions",
+        icon: "🧩",
+        unlocked:
+          excelMasteries.reduce((s, m) => s + m.conceptualCompleted, 0) >= 10,
+      },
+      {
+        id: "excel-cell-master",
+        name: "Cell Master",
+        desc: "Star the Cell References node",
+        icon: "📍",
+        unlocked: excelMasteries.find((m) => m.nodeId === "cell-references")?.starred ?? false,
+      },
+      {
+        id: "excel-halfway",
+        name: "Spreadsheet Student",
+        desc: "Complete 50% of all Excel content",
+        icon: "📈",
+        unlocked: excelTotalItems > 0 && excelTotalCompleted >= excelTotalItems / 2,
+      },
+      {
+        id: "excel-3-stars",
+        name: "Triple Star",
+        desc: "Star 3 Excel skill nodes",
+        icon: "⭐",
+        unlocked: excelStarredCount >= 3,
+      },
+      {
+        id: "excel-all-stars",
+        name: "Excel Grandmaster",
+        desc: "Star all Excel skill nodes",
+        icon: "👑",
+        unlocked: excelStarredCount >= excelSkillTreeNodes.length,
+      },
+    ],
+    [excelTotalCompleted, excelTotalItems, excelMasteries, excelStarredCount]
+  );
+
+  const achievements = useMemo(
+    () => [...sqlAchievements, ...excelAchievements],
+    [sqlAchievements, excelAchievements]
   );
 
   return (
