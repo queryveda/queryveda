@@ -479,12 +479,12 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     ],
   },
 
-  // ──────────────── NODE 5: Lookup Functions ────────────────
+  // ──────────────── NODE 5a: Lookup Basics ────────────────
   {
-    id: "lookup-functions",
-    title: "Lookup Functions",
+    id: "lookup-basics",
+    title: "Lookup Functions — Basics",
     description:
-      "Find and retrieve data from other parts of your spreadsheet with VLOOKUP, HLOOKUP, INDEX/MATCH, and XLOOKUP.",
+      "Find and retrieve data with VLOOKUP and INDEX/MATCH — the two most essential lookup techniques in Excel.",
     intro: {
       summary:
         "Lookup functions search for a value in one place and return related information from another. They are the spreadsheet equivalent of joining tables in a database -- essential whenever you need to pull data from a reference table.",
@@ -505,16 +505,15 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
       {
         id: "lookup-concept-1",
         type: "multiple-choice",
-        question: "Why is INDEX/MATCH often preferred over VLOOKUP?",
+        question: "What does the last argument of VLOOKUP (range_lookup) control?",
         options: [
-          "INDEX/MATCH is faster to type",
-          "VLOOKUP can only look right — INDEX/MATCH can look in any direction",
-          "VLOOKUP doesn't work with numbers",
-          "INDEX/MATCH automatically sorts the data",
+          "Whether to search left or right",
+          "Whether to find an exact match (FALSE) or approximate match (TRUE)",
+          "How many columns to return",
+          "Whether the result should be sorted",
         ],
-        correctAnswer: "VLOOKUP can only look right — INDEX/MATCH can look in any direction",
-        explanation:
-          "VLOOKUP searches the leftmost column and returns a value to the right. INDEX/MATCH has no such limitation — the lookup column and return column can be anywhere.",
+        correctAnswer: "Whether to find an exact match (FALSE) or approximate match (TRUE)",
+        explanation: "FALSE (or 0) forces an exact match. TRUE (or 1, or omitted) allows approximate match, which requires sorted data. Almost always use FALSE.",
       },
       {
         id: "lookup-concept-2",
@@ -547,29 +546,6 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         hints: [
           "Syntax: =VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])",
           "=VLOOKUP(D2, A1:B5, 2, FALSE)",
-        ],
-      },
-      {
-        id: "lookup-ex2",
-        type: "write-formula",
-        title: "INDEX/MATCH lookup",
-        instruction: "In E2, use INDEX and MATCH to find the department for employee ID in D2.",
-        initialData: {
-          cols: 5,
-          rows: 5,
-          cells: {
-            A1: { v: "ID" }, B1: { v: "Name" }, C1: { v: "Dept" },
-            A2: { v: 101 }, B2: { v: "Alice" }, C2: { v: "Engineering" },
-            A3: { v: 102 }, B3: { v: "Bob" }, C3: { v: "Marketing" },
-            A4: { v: 103 }, B4: { v: "Carol" }, C4: { v: "Sales" },
-            D1: { v: "Find ID" }, E1: { v: "Dept" },
-            D2: { v: 102 },
-          },
-        },
-        targetCells: [{ cell: "E2", expected: "Marketing" }],
-        hints: [
-          "MATCH finds the position: =MATCH(D2, A2:A4, 0)",
-          "INDEX returns the value: =INDEX(C2:C4, MATCH(D2, A2:A4, 0))",
         ],
       },
       {
@@ -619,6 +595,85 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
           "=VLOOKUP(D2,A1:C5,3,FALSE)",
         ],
       },
+      {
+        id: "lookup-ex2",
+        type: "write-formula",
+        title: "INDEX/MATCH lookup",
+        instruction: "In E2, use INDEX and MATCH to find the department for employee ID in D2.",
+        initialData: {
+          cols: 5,
+          rows: 5,
+          cells: {
+            A1: { v: "ID" }, B1: { v: "Name" }, C1: { v: "Dept" },
+            A2: { v: 101 }, B2: { v: "Alice" }, C2: { v: "Engineering" },
+            A3: { v: 102 }, B3: { v: "Bob" }, C3: { v: "Marketing" },
+            A4: { v: 103 }, B4: { v: "Carol" }, C4: { v: "Sales" },
+            D1: { v: "Find ID" }, E1: { v: "Dept" },
+            D2: { v: 102 },
+          },
+        },
+        targetCells: [{ cell: "E2", expected: "Marketing" }],
+        hints: [
+          "MATCH finds the position: =MATCH(D2, A2:A4, 0)",
+          "INDEX returns the value: =INDEX(C2:C4, MATCH(D2, A2:A4, 0))",
+        ],
+      },
+    ],
+  },
+
+  // ──────────────── NODE 5b: Advanced Lookups ────────────────
+  {
+    id: "advanced-lookups",
+    title: "Lookup Functions — Advanced",
+    description:
+      "Level up with XLOOKUP, reverse lookups using INDEX/MATCH, and handling missing values gracefully.",
+    intro: {
+      summary:
+        "Once you have mastered VLOOKUP and INDEX/MATCH, the next step is learning when each approach shines. XLOOKUP is the modern replacement for VLOOKUP -- it can search in any direction, return default values for missing data, and does not require counting columns.",
+      keyPoints: [
+        "XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found]) is the modern replacement for VLOOKUP",
+        "Unlike VLOOKUP, XLOOKUP can look left, right, or in any direction",
+        "XLOOKUP's 4th argument lets you specify a default value when no match is found (e.g., \"N/A\")",
+        "INDEX/MATCH can perform reverse lookups — finding a value in column A based on a match in column B",
+        "Combining IFERROR with lookup functions is another way to handle missing values",
+      ],
+      externalUrl: "https://support.microsoft.com/en-us/office/xlookup-function-b7fd680e-6d10-43e6-84f9-88eae8bf5929",
+      externalLabel: "Microsoft: XLOOKUP function",
+    },
+    prerequisites: ["lookup-basics"],
+    trunk: true,
+    column: 0,
+    row: 4,
+    conceptualQuestions: [
+      {
+        id: "adv-lookup-concept-1",
+        type: "multiple-choice",
+        question: "Why is INDEX/MATCH often preferred over VLOOKUP?",
+        options: [
+          "INDEX/MATCH is faster to type",
+          "VLOOKUP can only look right — INDEX/MATCH can look in any direction",
+          "VLOOKUP doesn't work with numbers",
+          "INDEX/MATCH automatically sorts the data",
+        ],
+        correctAnswer: "VLOOKUP can only look right — INDEX/MATCH can look in any direction",
+        explanation:
+          "VLOOKUP searches the leftmost column and returns a value to the right. INDEX/MATCH has no such limitation — the lookup column and return column can be anywhere.",
+      },
+      {
+        id: "adv-lookup-concept-2",
+        type: "multiple-choice",
+        question: "What advantage does XLOOKUP have over VLOOKUP?",
+        options: [
+          "XLOOKUP is faster at calculating",
+          "XLOOKUP can search in any direction and has a built-in default for missing values",
+          "XLOOKUP supports more data types",
+          "XLOOKUP can search multiple columns at once",
+        ],
+        correctAnswer: "XLOOKUP can search in any direction and has a built-in default for missing values",
+        explanation: "XLOOKUP removes VLOOKUP's limitations: no need to count columns, can look left, and the optional 4th argument provides a clean fallback for missing values.",
+      },
+    ],
+    exercises: [
       {
         id: "lookup-ex5",
         type: "write-formula",
@@ -688,6 +743,29 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
           "=XLOOKUP(D2,A2:A4,B2:B4,\"N/A\")",
         ],
       },
+      {
+        id: "lookup-ex8",
+        type: "write-formula",
+        title: "XLOOKUP reverse lookup",
+        instruction: "Use XLOOKUP in E2 to find the employee ID (column A) for the name in D2 (column B). This is a reverse lookup — XLOOKUP handles it naturally.",
+        initialData: {
+          cols: 5,
+          rows: 5,
+          cells: {
+            A1: { v: "ID" }, B1: { v: "Name" }, C1: { v: "Dept" },
+            A2: { v: 301 }, B2: { v: "Hana" }, C2: { v: "Design" },
+            A3: { v: 302 }, B3: { v: "Ivan" }, C3: { v: "Engineering" },
+            A4: { v: 303 }, B4: { v: "Jill" }, C4: { v: "Marketing" },
+            D1: { v: "Name" }, E1: { v: "ID" },
+            D2: { v: "Ivan" },
+          },
+        },
+        targetCells: [{ cell: "E2", expected: 302 }],
+        hints: [
+          "XLOOKUP can look in any direction — search B2:B4, return A2:A4",
+          "=XLOOKUP(D2,B2:B4,A2:A4)",
+        ],
+      },
     ],
   },
 
@@ -713,7 +791,7 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     prerequisites: ["basic-formulas"],
     trunk: false,
     column: -1,
-    row: 3,
+    row: 4,
     conceptualQuestions: [
       {
         id: "date-concept-1",
@@ -782,10 +860,10 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
       externalUrl: "https://support.microsoft.com/en-us/office/sumif-function-169b8c99-c05c-4483-a712-1697a653039b",
       externalLabel: "Microsoft: SUMIF function",
     },
-    prerequisites: ["lookup-functions"],
+    prerequisites: ["advanced-lookups"],
     trunk: true,
     column: 0,
-    row: 4,
+    row: 5,
     conceptualQuestions: [
       {
         id: "cond-agg-concept-1",
@@ -889,7 +967,7 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     prerequisites: ["text-functions"],
     trunk: false,
     column: -1,
-    row: 4,
+    row: 5,
     conceptualQuestions: [
       {
         id: "cleaning-concept-1",
@@ -952,7 +1030,7 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     prerequisites: ["conditional-aggregation"],
     trunk: true,
     column: 0,
-    row: 5,
+    row: 6,
     conceptualQuestions: [
       {
         id: "pivot-concept-1",
@@ -1069,7 +1147,7 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     prerequisites: ["pivot-concepts"],
     trunk: true,
     column: 0,
-    row: 6,
+    row: 7,
     conceptualQuestions: [
       {
         id: "array-concept-1",
@@ -1153,7 +1231,7 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     prerequisites: ["array-formulas"],
     trunk: false,
     column: 1,
-    row: 6,
+    row: 7,
     conceptualQuestions: [
       {
         id: "stats-concept-1",
@@ -1231,7 +1309,7 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
     prerequisites: ["pivot-concepts", "conditional-aggregation"],
     trunk: true,
     column: 0,
-    row: 7,
+    row: 8,
     conceptualQuestions: [
       {
         id: "dashboard-concept-1",
