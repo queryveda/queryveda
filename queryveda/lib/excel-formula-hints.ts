@@ -39,8 +39,9 @@ export const formulaHints: FormulaHint[] = [
   { name: "RANDBETWEEN", signature: "RANDBETWEEN(bottom, top)", description: "Returns a random integer between two values" },
 
   // Lookup
-  { name: "VLOOKUP", signature: "VLOOKUP(search_key, range, index, [is_sorted])", description: "Vertical lookup — searches first column, returns from another" },
-  { name: "HLOOKUP", signature: "HLOOKUP(search_key, range, index, [is_sorted])", description: "Horizontal lookup — searches first row, returns from another" },
+  { name: "VLOOKUP", signature: "VLOOKUP(lookup_value, table_array, col_index, [range_lookup])", description: "Vertical lookup — searches first column, returns from another" },
+  { name: "HLOOKUP", signature: "HLOOKUP(lookup_value, table_array, row_index, [range_lookup])", description: "Horizontal lookup — searches first row, returns from another" },
+  { name: "XLOOKUP", signature: "XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found])", description: "Flexible lookup — searches any column/row, returns from another" },
   { name: "INDEX", signature: "INDEX(reference, row_num, [col_num])", description: "Returns the value at a given row and column" },
   { name: "MATCH", signature: "MATCH(search_key, range, [match_type])", description: "Returns the position of a value in a range" },
   { name: "LOOKUP", signature: "LOOKUP(search_key, search_range, [result_range])", description: "Looks up a value in a range" },
