@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useEffect } from "react";
 import { skillTreeStorage } from "@/lib/skill-tree-storage";
+import { skillTreeNodes } from "@/lib/skill-tree-data";
 import { useAuth } from "./use-auth";
 import type { NodeMastery } from "@/lib/skill-tree-types";
 
@@ -14,13 +15,17 @@ export function useSkillTree() {
     if (user) {
       setMasteries(all);
     } else {
-      // Logged out: preserve unlock state but hide progress
-      setMasteries(all.map((m) => ({
-        ...m,
-        completed: 0,
-        percentage: 0,
-        starred: false,
-      })));
+      // Logged out: only unlock nodes with no prerequisites (first nodes)
+      setMasteries(all.map((m) => {
+        const node = skillTreeNodes.find((n) => n.id === m.nodeId);
+        return {
+          ...m,
+          completed: 0,
+          percentage: 0,
+          starred: false,
+          unlocked: node ? node.prerequisites.length === 0 : false,
+        };
+      }));
     }
   }, [user]);
 

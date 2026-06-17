@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useEffect } from "react";
 import { excelSkillTreeStorage } from "@/lib/excel-skill-tree-storage";
+import { excelSkillTreeNodes } from "@/lib/excel-skill-tree-data";
 import { useAuth } from "./use-auth";
 import type { ExcelNodeMastery } from "@/lib/excel-skill-tree-types";
 
@@ -14,15 +15,19 @@ export function useExcelSkillTree() {
     if (user) {
       setMasteries(all);
     } else {
-      // Logged out: preserve unlock state but hide progress
-      setMasteries(all.map((m) => ({
-        ...m,
-        conceptualCompleted: 0,
-        exercisesCompleted: 0,
-        percentage: 0,
-        starred: false,
-        conceptualDone: false,
-      })));
+      // Logged out: only unlock nodes with no prerequisites (first nodes)
+      setMasteries(all.map((m) => {
+        const node = excelSkillTreeNodes.find((n) => n.id === m.nodeId);
+        return {
+          ...m,
+          conceptualCompleted: 0,
+          exercisesCompleted: 0,
+          percentage: 0,
+          starred: false,
+          conceptualDone: false,
+          unlocked: node ? node.prerequisites.length === 0 : false,
+        };
+      }));
     }
   }, [user]);
 
