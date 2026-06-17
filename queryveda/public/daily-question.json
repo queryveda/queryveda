@@ -1,107 +1,157 @@
 {
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "question": {
-    "title": "Sales by Region and Product",
+    "title": "Ranking Sales by Region",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Given two tables, one for sales and one for products, with the sales table containing the product id, region, and sales amount, and the products table containing the product id and product name, write a query to find the total sales for each region and product. The query should also include the overall total sales for each region and the overall total sales for each product.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INTEGER, region VARCHAR(50), sales_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, region, sales_amount) VALUES (1, 'North', 100.00), (1, 'South', 200.00), (2, 'North', 50.00), (2, 'South', 75.00), (3, 'North', 150.00), (3, 'South', 225.00); DROP TABLE IF EXISTS products; CREATE TABLE products (product_id INTEGER, product_name VARCHAR(100)); INSERT INTO products (product_id, product_name) VALUES (1, 'Product A'), (2, 'Product B'), (3, 'Product C');",
+    "topic": "Window Functions",
+    "desc": "Write a query that ranks the sales of each product within its region. The ranking should be based on the total sales of each product within its region. Use the provided sales data to calculate the ranking.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INT, region VARCHAR(255), sales DECIMAL(10,2)); INSERT INTO sales (product_id, region, sales) VALUES (1, 'North', 100.00), (2, 'North', 200.00), (3, 'South', 50.00), (4, 'South', 150.00), (5, 'East', 75.00), (6, 'East', 125.00), (7, 'West', 225.00), (8, 'West', 300.00);",
     "tables": [
-      "sales",
-      "products"
+      "sales"
     ],
     "cols": [
       "region",
-      "product_name",
-      "total_sales"
+      "product_id",
+      "sales",
+      "rank"
     ],
     "rows": [
       [
-        "North",
-        "Product A",
-        100
+        "East",
+        6,
+        125,
+        1
+      ],
+      [
+        "East",
+        5,
+        75,
+        2
       ],
       [
         "North",
-        "Product B",
-        50
+        2,
+        200,
+        1
       ],
       [
         "North",
-        "Product C",
-        150
+        1,
+        100,
+        2
       ],
       [
         "South",
-        "Product A",
-        200
+        4,
+        150,
+        1
       ],
       [
         "South",
-        "Product B",
-        75
+        3,
+        50,
+        2
       ],
       [
-        "South",
-        "Product C",
-        225
+        "West",
+        8,
+        300,
+        1
+      ],
+      [
+        "West",
+        7,
+        225,
+        2
       ]
     ],
-    "solution": "SELECT s.region, p.product_name, SUM(s.sales_amount) AS total_sales FROM sales s JOIN products p ON s.product_id = p.product_id GROUP BY s.region, p.product_name ORDER BY s.region, p.product_name;",
-    "tips": "To improve performance, consider adding indexes on the product_id columns in both tables.",
+    "solution": "SELECT region, product_id, sales, DENSE_RANK() OVER (PARTITION BY region ORDER BY sales DESC) AS rank FROM sales;",
+    "tips": "Consider using DENSE_RANK() to avoid gaps in ranking when there are ties.",
     "hints": [
-      "You will need to use an INNER JOIN to combine the sales and products tables.",
-      "Use the SUM aggregation function to calculate the total sales for each region and product.",
-      "The GROUP BY clause should include both the region and product_name columns to ensure the correct grouping of sales data."
+      "Start by identifying the columns you need to select and the table you need to query.",
+      "Use the PARTITION BY clause to divide the data into regions.",
+      "Apply the DENSE_RANK() function to assign a ranking to each product within its region based on sales."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INTEGER, region VARCHAR(50), sales_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, region, sales_amount) VALUES (4, 'East', 300.00), (4, 'West', 400.00), (5, 'East', 100.00), (5, 'West', 200.00); DROP TABLE IF EXISTS products; CREATE TABLE products (product_id INTEGER, product_name VARCHAR(100)); INSERT INTO products (product_id, product_name) VALUES (4, 'Product D'), (5, 'Product E');",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INT, region VARCHAR(255), sales DECIMAL(10,2)); INSERT INTO sales (product_id, region, sales) VALUES (10, 'North', 500.00), (11, 'North', 250.00), (12, 'South', 100.00), (13, 'South', 200.00), (14, 'East', 300.00), (15, 'East', 400.00);",
         "rows": [
           [
             "East",
-            "Product D",
-            300
+            15,
+            400,
+            1
           ],
           [
             "East",
-            "Product E",
-            100
+            14,
+            300,
+            2
           ],
           [
-            "West",
-            "Product D",
-            400
+            "North",
+            10,
+            500,
+            1
           ],
           [
-            "West",
-            "Product E",
-            200
+            "North",
+            11,
+            250,
+            2
+          ],
+          [
+            "South",
+            13,
+            200,
+            1
+          ],
+          [
+            "South",
+            12,
+            100,
+            2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INTEGER, region VARCHAR(50), sales_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, region, sales_amount) VALUES (6, 'North', 500.00), (6, 'South', 600.00), (7, 'North', 250.00), (7, 'South', 375.00); DROP TABLE IF EXISTS products; CREATE TABLE products (product_id INTEGER, product_name VARCHAR(100)); INSERT INTO products (product_id, product_name) VALUES (6, 'Product F'), (7, 'Product G');",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INT, region VARCHAR(255), sales DECIMAL(10,2)); INSERT INTO sales (product_id, region, sales) VALUES (20, 'West', 600.00), (21, 'West', 450.00), (22, 'Central', 350.00), (23, 'Central', 550.00), (24, 'North', 700.00), (25, 'North', 650.00);",
         "rows": [
           [
-            "North",
-            "Product F",
-            500
+            "Central",
+            23,
+            550,
+            1
+          ],
+          [
+            "Central",
+            22,
+            350,
+            2
           ],
           [
             "North",
-            "Product G",
-            250
+            24,
+            700,
+            1
           ],
           [
-            "South",
-            "Product F",
-            600
+            "North",
+            25,
+            650,
+            2
           ],
           [
-            "South",
-            "Product G",
-            375
+            "West",
+            20,
+            600,
+            1
+          ],
+          [
+            "West",
+            21,
+            450,
+            2
           ]
         ]
       }
