@@ -10,8 +10,19 @@ export function useSkillTree() {
   const [masteries, setMasteries] = useState<NodeMastery[]>([]);
 
   const refresh = useCallback(() => {
-    setMasteries(skillTreeStorage.getAllNodeMasteries());
-  }, []);
+    const all = skillTreeStorage.getAllNodeMasteries();
+    if (user) {
+      setMasteries(all);
+    } else {
+      // Logged out: preserve unlock state but hide progress
+      setMasteries(all.map((m) => ({
+        ...m,
+        completed: 0,
+        percentage: 0,
+        starred: false,
+      })));
+    }
+  }, [user]);
 
   // Populate from localStorage on mount (client-only), then sync with cloud
   useEffect(() => {

@@ -10,8 +10,21 @@ export function useExcelSkillTree() {
   const [masteries, setMasteries] = useState<ExcelNodeMastery[]>([]);
 
   const refresh = useCallback(() => {
-    setMasteries(excelSkillTreeStorage.getAllNodeMasteries());
-  }, []);
+    const all = excelSkillTreeStorage.getAllNodeMasteries();
+    if (user) {
+      setMasteries(all);
+    } else {
+      // Logged out: preserve unlock state but hide progress
+      setMasteries(all.map((m) => ({
+        ...m,
+        conceptualCompleted: 0,
+        exercisesCompleted: 0,
+        percentage: 0,
+        starred: false,
+        conceptualDone: false,
+      })));
+    }
+  }, [user]);
 
   // Populate from localStorage on mount (client-only), then sync with cloud
   useEffect(() => {
