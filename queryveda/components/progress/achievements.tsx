@@ -4,13 +4,14 @@ import { Card } from "@/components/ui/card";
 import type { Achievement } from "@/lib/types";
 
 interface AchievementsProps {
+  title?: string;
   achievements: Achievement[];
 }
 
-export function Achievements({ achievements }: AchievementsProps) {
+export function Achievements({ title = "Achievements", achievements }: AchievementsProps) {
   return (
     <div>
-      <h3 className="mb-4 font-semibold">Achievements</h3>
+      <h3 className="mb-4 font-semibold">{title}</h3>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {achievements.map((a) => (
           <Card

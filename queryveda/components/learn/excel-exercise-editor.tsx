@@ -38,11 +38,141 @@ function buildGrid(exercise: ExcelExercise) {
 }
 
 /** Evaluate a formula against cell data using the formula parser */
+/** Resolve a cell ref or literal value */
+function resolveValue(
+  token: string,
+  cells: Record<string, { v: string | number; f?: string }>
+): string | number {
+  const trimmed = token.trim();
+  // Cell reference like A1, D2
+  if (/^[A-Z]+\d+$/i.test(trimmed)) {
+    const cell = cells[trimmed.toUpperCase()];
+    return cell ? cell.v : 0;
+  }
+  // Quoted string
+  if (/^".*"$/.test(trimmed)) return trimmed.slice(1, -1);
+  // Number
+  const n = Number(trimmed);
+  if (!isNaN(n)) return n;
+  // Boolean
+  if (trimmed.toUpperCase() === "TRUE") return 1;
+  if (trimmed.toUpperCase() === "FALSE") return 0;
+  return trimmed;
+}
+
+/** Expand a range like A1:C3 into a 2D array of values */
+function resolveRange(
+  range: string,
+  cells: Record<string, { v: string | number; f?: string }>
+): (string | number)[][] {
+  const m = range.trim().match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/i);
+  if (!m) return [];
+  const c1 = m[1].toUpperCase().charCodeAt(0) - 65;
+  const r1 = parseInt(m[2], 10);
+  const c2 = m[3].toUpperCase().charCodeAt(0) - 65;
+  const r2 = parseInt(m[4], 10);
+  const result: (string | number)[][] = [];
+  for (let r = r1; r <= r2; r++) {
+    const row: (string | number)[] = [];
+    for (let c = c1; c <= c2; c++) {
+      const addr = colLabel(c) + r;
+      const cell = cells[addr];
+      row.push(cell ? cell.v : 0);
+    }
+    result.push(row);
+  }
+  return result;
+}
+
+/** Split top-level comma-separated arguments (respects nested parens) */
+function splitArgs(s: string): string[] {
+  const args: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (const ch of s) {
+    if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    if (ch === "," && depth === 0) {
+      args.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  if (current) args.push(current);
+  return args;
+}
+
+/** Manual VLOOKUP implementation */
+function manualVlookup(
+  expr: string,
+  cells: Record<string, { v: string | number; f?: string }>
+): { result: number | string | null; error: string | null } | null {
+  const m = expr.match(/^VLOOKUP\s*\((.+)\)$/i);
+  if (!m) return null;
+  const args = splitArgs(m[1]);
+  if (args.length < 3) return { result: null, error: "Formula error: #VALUE!" };
+
+  const lookupVal = resolveValue(args[0], cells);
+  const table = resolveRange(args[1], cells);
+  const colIdx = Number(resolveValue(args[2], cells));
+  const exactMatch = args.length >= 4
+    ? resolveValue(args[3], cells) === 0 || String(resolveValue(args[3], cells)).toUpperCase() === "FALSE"
+    : false;
+
+  if (table.length === 0 || colIdx < 1) return { result: null, error: "Formula error: #VALUE!" };
+
+  for (const row of table) {
+    const cellVal = row[0];
+    const match = exactMatch
+      ? String(cellVal).toLowerCase() === String(lookupVal).toLowerCase()
+      : cellVal === lookupVal;
+    if (match) {
+      if (colIdx > row.length) return { result: null, error: "Formula error: #REF!" };
+      return { result: row[colIdx - 1], error: null };
+    }
+  }
+  return { result: null, error: "Formula error: #N/A" };
+}
+
+/** Manual XLOOKUP implementation */
+function manualXlookup(
+  expr: string,
+  cells: Record<string, { v: string | number; f?: string }>
+): { result: number | string | null; error: string | null } | null {
+  const m = expr.match(/^XLOOKUP\s*\((.+)\)$/i);
+  if (!m) return null;
+  const args = splitArgs(m[1]);
+  if (args.length < 3) return { result: null, error: "Formula error: #VALUE!" };
+
+  const lookupVal = resolveValue(args[0], cells);
+  const lookupArr = resolveRange(args[1], cells).flat();
+  const returnArr = resolveRange(args[2], cells).flat();
+  const notFound = args.length >= 4 ? resolveValue(args[3], cells) : null;
+
+  const idx = lookupArr.findIndex(
+    (v) => String(v).toLowerCase() === String(lookupVal).toLowerCase()
+  );
+  if (idx === -1) {
+    if (notFound !== null) return { result: notFound, error: null };
+    return { result: null, error: "Formula error: #N/A" };
+  }
+  return { result: idx < returnArr.length ? returnArr[idx] : 0, error: null };
+}
+
 async function evaluateFormula(
   formula: string,
   cells: Record<string, { v: string | number; f?: string }>
 ): Promise<{ result: number | string | null; error: string | null }> {
   try {
+    const expr = formula.startsWith("=") ? formula.slice(1) : formula;
+
+    // Manual implementations for functions the grammar parser doesn't handle
+    const vlookupResult = manualVlookup(expr, cells);
+    if (vlookupResult) return vlookupResult;
+    const xlookupResult = manualXlookup(expr, cells);
+    if (xlookupResult) return xlookupResult;
+
     const { Parser } = await import(
       /* webpackChunkName: "formula-parser" */
       "@fortune-sheet/formula-parser"
@@ -82,8 +212,6 @@ async function evaluateFormula(
         done(result);
       }
     );
-
-    const expr = formula.startsWith("=") ? formula.slice(1) : formula;
 
     // Known error strings the parser returns as "success" results
     const ERROR_STRINGS = new Set([

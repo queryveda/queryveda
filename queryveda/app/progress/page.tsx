@@ -122,11 +122,6 @@ function ProgressContent() {
     [excelTotalCompleted, excelTotalItems, excelMasteries, excelStarredCount]
   );
 
-  const achievements = useMemo(
-    () => [...sqlAchievements, ...excelAchievements],
-    [sqlAchievements, excelAchievements]
-  );
-
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="mb-8 text-3xl font-bold">My Progress</h1>
@@ -191,7 +186,8 @@ function ProgressContent() {
               })}
             </div>
           </div>
-        <Achievements achievements={achievements} />
+        <Achievements title="SQL Achievements" achievements={sqlAchievements} />
+        <Achievements title="Excel Achievements" achievements={excelAchievements} />
       </div>
     </div>
   );
