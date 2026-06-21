@@ -1,82 +1,77 @@
 {
-  "date": "2026-06-20",
+  "date": "2026-06-21",
   "question": {
-    "title": "Ranking Sales by Region",
+    "title": "Sales by Region and Product",
     "difficulty": "Medium",
-    "topic": "Advanced Analytics",
-    "desc": "Write a query to rank sales by region. You have two tables: 'sales' with sales data and 'regions' with region information. Use the 'region_id' to join these tables and calculate the total sales for each region, then rank them in descending order of sales.",
-    "setup": "\n      DROP TABLE IF EXISTS sales;\n      DROP TABLE IF EXISTS regions;\n      CREATE TABLE sales (\n         id SERIAL PRIMARY KEY,\n         region_id INTEGER,\n         sales_amount DECIMAL(10, 2)\n      );\n      CREATE TABLE regions (\n         id SERIAL PRIMARY KEY,\n         region_name VARCHAR(255)\n      );\n      INSERT INTO sales (region_id, sales_amount)\n      VALUES\n         (1, 100.00),\n         (1, 200.00),\n         (2, 50.00),\n         (3, 300.00),\n         (1, 150.00);\n      INSERT INTO regions (id, region_name)\n      VALUES\n         (1, 'North'),\n         (2, 'South'),\n         (3, 'East');\n   ",
+    "topic": "Aggregations & JOINs",
+    "desc": "You are given two tables: 'regions' and 'sales'. The 'regions' table has columns 'region_id' and 'region_name', while the 'sales' table has columns 'sale_id', 'region_id', 'product_name', and 'sale_amount'. You need to write a query that will return the total sales amount for each region and product, along with the region name and product name.",
+    "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(255)); INSERT INTO regions (region_id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, product_name VARCHAR(255), sale_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, product_name, sale_amount) VALUES (1, 1, 'Product A', 100.00), (2, 1, 'Product B', 200.00), (3, 2, 'Product A', 50.00), (4, 3, 'Product C', 300.00), (5, 1, 'Product A', 150.00);",
     "tables": [
-      "sales",
-      "regions"
+      "regions",
+      "sales"
     ],
     "cols": [
       "region_name",
-      "total_sales",
-      "rank"
+      "product_name",
+      "total_sales"
     ],
     "rows": [
       [
         "North",
-        450,
-        1
+        "Product A",
+        250
       ],
       [
-        "East",
-        300,
-        2
+        "North",
+        "Product B",
+        200
       ],
       [
         "South",
-        50,
-        3
+        "Product A",
+        50
+      ],
+      [
+        "East",
+        "Product C",
+        300
       ]
     ],
-    "solution": "\n      WITH ranked_sales AS (\n         SELECT \n            r.region_name, \n            SUM(s.sales_amount) AS total_sales,\n            DENSE_RANK() OVER (ORDER BY SUM(s.sales_amount) DESC) AS rank\n         FROM sales s\n         JOIN regions r ON s.region_id = r.id\n         GROUP BY r.region_name\n      )\n      SELECT region_name, total_sales, rank FROM ranked_sales;\n   ",
-    "tips": "Use DENSE_RANK() to avoid gaps in ranking when there are ties.",
+    "solution": "SELECT r.region_name, s.product_name, SUM(s.sale_amount) AS total_sales FROM sales s JOIN regions r ON s.region_id = r.region_id GROUP BY r.region_name, s.product_name ORDER BY r.region_name, s.product_name;",
+    "tips": "Using indexes on the join columns can improve performance.",
     "hints": [
-      "Start by joining the two tables based on the common column.",
-      "Use a window function to calculate the rank of each region based on total sales.",
-      "Consider using a Common Table Expression (CTE) to simplify your query and improve readability."
+      "You will need to use a JOIN to combine data from the two tables.",
+      "Use the GROUP BY clause to group the results by region and product.",
+      "You can use the SUM aggregation function to calculate the total sales amount for each group."
     ],
     "tests": [
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            DROP TABLE IF EXISTS regions;\n            CREATE TABLE sales (\n               id SERIAL PRIMARY KEY,\n               region_id INTEGER,\n               sales_amount DECIMAL(10, 2)\n            );\n            CREATE TABLE regions (\n               id SERIAL PRIMARY KEY,\n               region_name VARCHAR(255)\n            );\n            INSERT INTO sales (region_id, sales_amount)\n            VALUES\n               (1, 500.00),\n               (2, 200.00),\n               (3, 100.00);\n            INSERT INTO regions (id, region_name)\n            VALUES\n               (1, 'West'),\n               (2, 'Central'),\n               (3, 'North');\n         ",
+        "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(255)); INSERT INTO regions (region_id, region_name) VALUES (1, 'North'), (2, 'South'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, product_name VARCHAR(255), sale_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, product_name, sale_amount) VALUES (1, 1, 'Product X', 500.00), (2, 2, 'Product Y', 250.00);",
         "rows": [
           [
-            "West",
-            500,
-            1
-          ],
-          [
-            "Central",
-            200,
-            2
-          ],
-          [
             "North",
-            100,
-            3
+            "Product X",
+            500
+          ],
+          [
+            "South",
+            "Product Y",
+            250
           ]
         ]
       },
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            DROP TABLE IF EXISTS regions;\n            CREATE TABLE sales (\n               id SERIAL PRIMARY KEY,\n               region_id INTEGER,\n               sales_amount DECIMAL(10, 2)\n            );\n            CREATE TABLE regions (\n               id SERIAL PRIMARY KEY,\n               region_name VARCHAR(255)\n            );\n            INSERT INTO sales (region_id, sales_amount)\n            VALUES\n               (1, 750.00),\n               (1, 250.00),\n               (2, 300.00),\n               (3, 400.00);\n            INSERT INTO regions (id, region_name)\n            VALUES\n               (1, 'South'),\n               (2, 'East'),\n               (3, 'North');\n         ",
+        "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(255)); INSERT INTO regions (region_id, region_name) VALUES (1, 'West'), (2, 'East'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, product_name VARCHAR(255), sale_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, product_name, sale_amount) VALUES (1, 1, 'Product Z', 750.00), (2, 2, 'Product W', 375.00), (3, 1, 'Product Z', 225.00);",
         "rows": [
           [
-            "South",
-            1000,
-            1
-          ],
-          [
-            "North",
-            400,
-            2
+            "West",
+            "Product Z",
+            975
           ],
           [
             "East",
-            300,
-            3
+            "Product W",
+            375
           ]
         ]
       }
