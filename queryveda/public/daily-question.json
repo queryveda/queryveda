@@ -1,77 +1,128 @@
 {
-  "date": "2026-06-21",
+  "date": "2026-06-22",
   "question": {
-    "title": "Sales by Region and Product",
+    "title": "Ranking Employee Salaries by Department",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "You are given two tables: 'regions' and 'sales'. The 'regions' table has columns 'region_id' and 'region_name', while the 'sales' table has columns 'sale_id', 'region_id', 'product_name', and 'sale_amount'. You need to write a query that will return the total sales amount for each region and product, along with the region name and product name.",
-    "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(255)); INSERT INTO regions (region_id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, product_name VARCHAR(255), sale_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, product_name, sale_amount) VALUES (1, 1, 'Product A', 100.00), (2, 1, 'Product B', 200.00), (3, 2, 'Product A', 50.00), (4, 3, 'Product C', 300.00), (5, 1, 'Product A', 150.00);",
+    "topic": "Window Functions",
+    "desc": "You are given two tables, 'employees' and 'departments'. Write a query to rank employee salaries within each department. The output should include the department name, employee name, salary, and a rank based on the salary within the department.",
+    "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO employees (name, department_id, salary) VALUES ('John Doe', 1, 50000.00), ('Jane Doe', 1, 60000.00), ('Bob Smith', 2, 70000.00), ('Alice Johnson', 2, 55000.00), ('Mike Brown', 3, 45000.00), ('Emily Davis', 3, 52000.00), ('Sarah Taylor', 1, 58000.00);",
     "tables": [
-      "regions",
-      "sales"
+      "employees",
+      "departments"
     ],
     "cols": [
-      "region_name",
-      "product_name",
-      "total_sales"
+      "department_name",
+      "employee_name",
+      "salary",
+      "rank"
     ],
     "rows": [
       [
-        "North",
-        "Product A",
-        250
+        "Sales",
+        "Jane Doe",
+        60000,
+        1
       ],
       [
-        "North",
-        "Product B",
-        200
+        "Sales",
+        "Sarah Taylor",
+        58000,
+        2
       ],
       [
-        "South",
-        "Product A",
-        50
+        "Sales",
+        "John Doe",
+        50000,
+        3
       ],
       [
-        "East",
-        "Product C",
-        300
+        "Marketing",
+        "Bob Smith",
+        70000,
+        1
+      ],
+      [
+        "Marketing",
+        "Alice Johnson",
+        55000,
+        2
+      ],
+      [
+        "IT",
+        "Emily Davis",
+        52000,
+        1
+      ],
+      [
+        "IT",
+        "Mike Brown",
+        45000,
+        2
       ]
     ],
-    "solution": "SELECT r.region_name, s.product_name, SUM(s.sale_amount) AS total_sales FROM sales s JOIN regions r ON s.region_id = r.region_id GROUP BY r.region_name, s.product_name ORDER BY r.region_name, s.product_name;",
-    "tips": "Using indexes on the join columns can improve performance.",
+    "solution": "SELECT d.name AS department_name, e.name AS employee_name, e.salary, DENSE_RANK() OVER (PARTITION BY d.id ORDER BY e.salary DESC) AS rank FROM employees e JOIN departments d ON e.department_id = d.id ORDER BY d.name, e.salary DESC;",
+    "tips": "Using DENSE_RANK() ensures that if two employees have the same salary, they will have the same rank and the next rank will not be skipped.",
     "hints": [
-      "You will need to use a JOIN to combine data from the two tables.",
-      "Use the GROUP BY clause to group the results by region and product.",
-      "You can use the SUM aggregation function to calculate the total sales amount for each group."
+      "You will need to use a window function to rank the salaries within each department.",
+      "Join the 'employees' and 'departments' tables on the 'department_id' to access the department name for each employee.",
+      "Use the DENSE_RANK() function with PARTITION BY to rank the salaries within each department and ORDER BY to sort the salaries in descending order."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(255)); INSERT INTO regions (region_id, region_name) VALUES (1, 'North'), (2, 'South'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, product_name VARCHAR(255), sale_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, product_name, sale_amount) VALUES (1, 1, 'Product X', 500.00), (2, 2, 'Product Y', 250.00);",
+        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO employees (name, department_id, salary) VALUES ('David Lee', 1, 65000.00), ('Kevin White', 1, 62000.00), ('Lisa Nguyen', 2, 58000.00), ('Peter Kim', 2, 60000.00);",
         "rows": [
           [
-            "North",
-            "Product X",
-            500
+            "HR",
+            "David Lee",
+            65000,
+            1
           ],
           [
-            "South",
-            "Product Y",
-            250
+            "HR",
+            "Kevin White",
+            62000,
+            2
+          ],
+          [
+            "Finance",
+            "Peter Kim",
+            60000,
+            1
+          ],
+          [
+            "Finance",
+            "Lisa Nguyen",
+            58000,
+            2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(255)); INSERT INTO regions (region_id, region_name) VALUES (1, 'West'), (2, 'East'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, product_name VARCHAR(255), sale_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, product_name, sale_amount) VALUES (1, 1, 'Product Z', 750.00), (2, 2, 'Product W', 375.00), (3, 1, 'Product Z', 225.00);",
+        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('Research'), ('Development'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO employees (name, department_id, salary) VALUES ('Tom Harris', 1, 70000.00), ('Samantha Martin', 1, 68000.00), ('Daniel Garcia', 2, 62000.00), ('Rebecca Hall', 2, 64000.00);",
         "rows": [
           [
-            "West",
-            "Product Z",
-            975
+            "Research",
+            "Tom Harris",
+            70000,
+            1
           ],
           [
-            "East",
-            "Product W",
-            375
+            "Research",
+            "Samantha Martin",
+            68000,
+            2
+          ],
+          [
+            "Development",
+            "Rebecca Hall",
+            64000,
+            1
+          ],
+          [
+            "Development",
+            "Daniel Garcia",
+            62000,
+            2
           ]
         ]
       }
