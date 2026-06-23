@@ -25,6 +25,9 @@ export function useExcelSkillTree() {
           percentage: 0,
           starred: false,
           conceptualDone: false,
+          bonusConceptualCompleted: 0,
+          bonusExercisesCompleted: 0,
+          allExercisesDone: false,
           unlocked: node ? node.prerequisites.length === 0 : false,
         };
       }));
@@ -81,6 +84,11 @@ export function useExcelSkillTree() {
         unlocked: false,
         starred: false,
         conceptualDone: false,
+        bonusConceptualCompleted: 0,
+        bonusConceptualTotal: 0,
+        bonusExercisesCompleted: 0,
+        bonusExercisesTotal: 0,
+        allExercisesDone: false,
       },
     [masteries]
   );

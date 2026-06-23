@@ -54,6 +54,20 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         correctAnswer: "$",
         explanation: "A$1 is a mixed reference — the column (A) is relative and will shift, but the row (1) is locked with $.",
       },
+      {
+        id: "cell-refs-concept-4",
+        type: "multiple-choice",
+        question: "What does the range A1:A3 refer to?",
+        options: [
+          "Only cells A1 and A3",
+          "All cells from A1 through A3 (A1, A2, A3)",
+          "The entire column A",
+          "A named range called A1A3",
+        ],
+        correctAnswer: "All cells from A1 through A3 (A1, A2, A3)",
+        explanation:
+          "The colon (:) creates a range — A1:A3 includes every cell from A1 to A3. Functions like SUM use ranges to operate on multiple cells at once.",
+      },
     ],
     exercises: [
       {
@@ -112,6 +126,46 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         ],
       },
     ],
+    bonusConceptualQuestions: [
+      {
+        id: "cell-refs-bonus-concept-1",
+        type: "multiple-choice",
+        question: "What does the mixed reference $A1 mean?",
+        options: [
+          "Column A is locked, row shifts when copied",
+          "Row 1 is locked, column shifts when copied",
+          "Both column and row are locked",
+          "Neither column nor row is locked",
+        ],
+        correctAnswer: "Column A is locked, row shifts when copied",
+        explanation:
+          "In $A1, the $ before A locks the column. When copied horizontally, it stays on column A. When copied vertically, the row number shifts.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "cell-refs-bonus-ex1",
+        type: "write-formula",
+        title: "Mixed reference multiplication table",
+        instruction:
+          "In B2, write a formula using mixed references =B$1*$A2 to multiply the column header by the row header, creating a multiplication table.",
+        initialData: {
+          cols: 4,
+          rows: 4,
+          cells: {
+            A1: { v: "\u00d7" },
+            B1: { v: 1 }, C1: { v: 2 }, D1: { v: 3 },
+            A2: { v: 1 }, A3: { v: 2 }, A4: { v: 3 },
+          },
+        },
+        targetCells: [{ cell: "B2", expected: 1, expectedFormula: "=B$1*$A2" }],
+        hints: [
+          "B$1 locks the row so the header stays in row 1 when copied down",
+          "$A2 locks the column so the multiplier stays in column A when copied right",
+          "=B$1*$A2",
+        ],
+      },
+    ],
   },
 
   // ──────────────── NODE 2: Basic Formulas ────────────────
@@ -158,6 +212,29 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         question: "The function _______(A1:A10) returns the smallest value in the range A1 to A10.",
         correctAnswer: "MIN",
         explanation: "MIN returns the smallest (minimum) value in a range. MAX returns the largest.",
+      },
+      {
+        id: "basic-formulas-concept-3",
+        type: "multiple-choice",
+        question: "What does =SUM(B1:B5) do?",
+        options: [
+          "Returns the largest value in B1 through B5",
+          "Counts how many cells in B1 through B5 have values",
+          "Adds up all the values in B1 through B5",
+          "Returns the average of B1 through B5",
+        ],
+        correctAnswer: "Adds up all the values in B1 through B5",
+        explanation:
+          "SUM adds all numeric values in the specified range. It is the most commonly used function in Excel.",
+      },
+      {
+        id: "basic-formulas-concept-4",
+        type: "multiple-choice",
+        question: "If cells B1:B4 contain 10, 20, 30, and 40, what does =AVERAGE(B1:B4) return?",
+        options: ["10", "25", "40", "100"],
+        correctAnswer: "25",
+        explanation:
+          "AVERAGE calculates the arithmetic mean: (10+20+30+40)/4 = 100/4 = 25.",
       },
     ],
     exercises: [
@@ -232,6 +309,41 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         ],
       },
     ],
+    bonusConceptualQuestions: [
+      {
+        id: "basic-formulas-bonus-concept-1",
+        type: "fill-blank",
+        question: "What does =MAX(3, 7, 2, 9, 1) return?",
+        correctAnswer: "9",
+        explanation:
+          "MAX returns the largest value from its arguments. Among 3, 7, 2, 9, and 1, the largest is 9.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "basic-formulas-bonus-ex1",
+        type: "write-formula",
+        title: "Range statistics",
+        instruction:
+          "In B7, write a MIN formula to find the lowest score in B1:B5.",
+        initialData: {
+          cols: 2,
+          rows: 7,
+          cells: {
+            A1: { v: "Test 1" }, B1: { v: 78 },
+            A2: { v: "Test 2" }, B2: { v: 92 },
+            A3: { v: "Test 3" }, B3: { v: 65 },
+            A4: { v: "Test 4" }, B4: { v: 88 },
+            A5: { v: "Test 5" }, B5: { v: 71 },
+          },
+        },
+        targetCells: [{ cell: "B7", expected: 65, expectedFormula: "=MIN(B1:B5)" }],
+        hints: [
+          "MIN returns the smallest value in a range",
+          "=MIN(B1:B5)",
+        ],
+      },
+    ],
   },
 
   // ──────────────── NODE 3: Text Functions ────────────────
@@ -278,6 +390,27 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         question: "The function _______(\"Hello World\", 5) returns \"Hello\".",
         correctAnswer: "LEFT",
         explanation: "LEFT(text, num_chars) extracts the specified number of characters from the beginning of a string.",
+      },
+      {
+        id: "text-concept-3",
+        type: "multiple-choice",
+        question: "What does FIND(\" \", \"Alice Johnson\") return?",
+        options: [
+          "The word \"Alice\"",
+          "6 — the position of the space character",
+          "TRUE — because a space exists",
+          "0 — because spaces are not characters",
+        ],
+        correctAnswer: "6 — the position of the space character",
+        explanation:
+          "FIND returns the position number of the search text within a string. The space is the 6th character in \"Alice Johnson\".",
+      },
+      {
+        id: "text-concept-4",
+        type: "fill-blank",
+        question: "To join cells A1 and B1 with a space, you can write =A1&\" \"&B1. The _______ operator concatenates text values.",
+        correctAnswer: "&",
+        explanation: "The & operator concatenates text values. =A1&\" \"&B1 joins A1 and B1 with a space in between, just like CONCATENATE(A1, \" \", B1).",
       },
     ],
     exercises: [
@@ -336,6 +469,46 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         hints: ["TRIM removes extra spaces from text"],
       },
     ],
+    bonusConceptualQuestions: [
+      {
+        id: "text-bonus-concept-1",
+        type: "fill-blank",
+        question: "What does =LEN(\"Excel\") return?",
+        correctAnswer: "5",
+        explanation:
+          "LEN returns the number of characters in a text string. \"Excel\" has 5 characters.",
+      },
+      {
+        id: "text-bonus-concept-2",
+        type: "fill-blank",
+        question: "MID(\"Spreadsheet\", 7, 5) returns _______.",
+        correctAnswer: "sheet",
+        explanation:
+          "MID extracts characters from the middle of a string. Starting at position 7 and taking 5 characters from \"Spreadsheet\" gives \"sheet\".",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "text-bonus-ex1",
+        type: "write-formula",
+        title: "Extract last name",
+        instruction:
+          "In B1, extract the last name from \"Alice Johnson\" in A1 using MID, FIND, and LEN.",
+        initialData: {
+          cols: 2,
+          rows: 2,
+          cells: {
+            A1: { v: "Alice Johnson" },
+          },
+        },
+        targetCells: [{ cell: "B1", expected: "Johnson" }],
+        hints: [
+          "FIND(\" \", A1) finds the space position",
+          "MID starts after the space: MID(A1, FIND(\" \",A1)+1, LEN(A1))",
+          "LEN(A1) ensures you capture all remaining characters",
+        ],
+      },
+    ],
   },
 
   // ──────────────── NODE 4: Logical Functions ────────────────
@@ -390,6 +563,27 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         question: "=AND(TRUE, FALSE) returns _______.",
         correctAnswer: "FALSE",
         explanation: "AND returns TRUE only when ALL arguments are TRUE. Since one argument is FALSE, the result is FALSE.",
+      },
+      {
+        id: "logical-concept-4",
+        type: "multiple-choice",
+        question: "In a nested IF like =IF(A1>=90,\"A\",IF(A1>=80,\"B\",\"C\")), why must the highest threshold come first?",
+        options: [
+          "Excel requires conditions in alphabetical order",
+          "Lower thresholds first would match too early — a score of 95 would get \"B\" instead of \"A\"",
+          "It doesn't matter — the order has no effect",
+          "Nested IFs always run from inside out",
+        ],
+        correctAnswer: "Lower thresholds first would match too early — a score of 95 would get \"B\" instead of \"A\"",
+        explanation:
+          "IF evaluates top-down. If you check >=80 first, a score of 95 matches that condition and returns \"B\" without ever checking >=90. Always check the most restrictive condition first.",
+      },
+      {
+        id: "logical-concept-5",
+        type: "fill-blank",
+        question: "=OR(FALSE, TRUE, FALSE) returns _______.",
+        correctAnswer: "TRUE",
+        explanation: "OR returns TRUE when at least one argument is TRUE. Since the second argument is TRUE, the result is TRUE.",
       },
     ],
     exercises: [
@@ -477,6 +671,39 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         ],
       },
     ],
+    bonusConceptualQuestions: [
+      {
+        id: "logical-bonus-concept-1",
+        type: "multiple-choice",
+        question: "What does =IF(OR(A1>90, B1>90), \"Star\", \"Regular\") return when A1=85 and B1=95?",
+        options: ["Star", "Regular", "TRUE", "#VALUE!"],
+        correctAnswer: "Star",
+        explanation:
+          "OR returns TRUE when at least one condition is true. B1>90 is TRUE (95>90), so OR returns TRUE, and IF returns \"Star\".",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "logical-bonus-ex1",
+        type: "write-formula",
+        title: "Tiered discount with IF+AND",
+        instruction:
+          "In C1, write a formula: if quantity in A1 >=100 AND unit price in B1 >=50, show \"20% off\"; if A1>=50, show \"10% off\"; otherwise \"No discount\".",
+        initialData: {
+          cols: 3,
+          rows: 2,
+          cells: {
+            A1: { v: 75 },
+            B1: { v: 30 },
+          },
+        },
+        targetCells: [{ cell: "C1", expected: "10% off" }],
+        hints: [
+          "Use nested IF: the first condition checks AND(A1>=100, B1>=50)",
+          "=IF(AND(A1>=100,B1>=50),\"20% off\",IF(A1>=50,\"10% off\",\"No discount\"))",
+        ],
+      },
+    ],
   },
 
   // ──────────────── NODE 5a: Lookup Basics ────────────────
@@ -521,6 +748,34 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         question: "The last argument of VLOOKUP is range_lookup. To find an exact match, set it to _______.",
         correctAnswer: "FALSE",
         explanation: "FALSE (or 0) forces an exact match. TRUE (or 1, or omitted) allows approximate match, which requires sorted data.",
+      },
+      {
+        id: "lookup-concept-3",
+        type: "multiple-choice",
+        question: "What does MATCH(\"Bob\", A1:A5, 0) return?",
+        options: [
+          "The value in the cell where \"Bob\" is found",
+          "The row number of \"Bob\" in the spreadsheet",
+          "The relative position of \"Bob\" within the range A1:A5",
+          "TRUE if \"Bob\" exists in the range",
+        ],
+        correctAnswer: "The relative position of \"Bob\" within the range A1:A5",
+        explanation:
+          "MATCH returns the position of a value within a range (1 for first, 2 for second, etc.), not the cell value or row number. The 0 means exact match.",
+      },
+      {
+        id: "lookup-concept-4",
+        type: "multiple-choice",
+        question: "In =VLOOKUP(D2, A1:C5, 3, FALSE), what does the number 3 represent?",
+        options: [
+          "The row to return the value from",
+          "The column number in the table to return (column C)",
+          "The number of matches to find",
+          "The maximum number of results",
+        ],
+        correctAnswer: "The column number in the table to return (column C)",
+        explanation:
+          "The col_index_num (3) tells VLOOKUP which column of the table_array to return. Column 1 is A, column 2 is B, column 3 is C.",
       },
     ],
     exercises: [
@@ -619,6 +874,49 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         ],
       },
     ],
+    bonusConceptualQuestions: [
+      {
+        id: "lookup-bonus-concept-1",
+        type: "multiple-choice",
+        question: "In INDEX(C2:C5, 3), what does the number 3 mean?",
+        options: [
+          "Return the value from the 3rd row of the range C2:C5",
+          "Return the value from cell C3",
+          "Return the 3rd column of the range",
+          "Search for the number 3 in the range",
+        ],
+        correctAnswer: "Return the value from the 3rd row of the range C2:C5",
+        explanation:
+          "INDEX returns the value at the given row position within the range. The 3rd row of C2:C5 is C4.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "lookup-bonus-ex1",
+        type: "write-formula",
+        title: "Two-column lookup",
+        instruction:
+          "In F2, use INDEX/MATCH to find the department for the employee name in E2. Look up by name (col B) and return department (col C).",
+        initialData: {
+          cols: 6,
+          rows: 5,
+          cells: {
+            A1: { v: "ID" }, B1: { v: "Name" }, C1: { v: "Dept" }, D1: { v: "Salary" },
+            A2: { v: 1 }, B2: { v: "Alice" }, C2: { v: "Engineering" }, D2: { v: 95000 },
+            A3: { v: 2 }, B3: { v: "Bob" }, C3: { v: "Sales" }, D3: { v: 72000 },
+            A4: { v: 3 }, B4: { v: "Carol" }, C4: { v: "Marketing" }, D4: { v: 68000 },
+            E1: { v: "Find Name" }, F1: { v: "Dept" },
+            E2: { v: "Bob" },
+          },
+        },
+        targetCells: [{ cell: "F2", expected: "Sales", expectedFormula: "=INDEX(C2:C4,MATCH(E2,B2:B4,0))" }],
+        hints: [
+          "MATCH finds the position of E2 in B2:B4",
+          "INDEX returns the value at that position from C2:C4",
+          "=INDEX(C2:C4,MATCH(E2,B2:B4,0))",
+        ],
+      },
+    ],
   },
 
   // ──────────────── NODE 5b: Advanced Lookups ────────────────
@@ -671,6 +969,13 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         ],
         correctAnswer: "XLOOKUP can search in any direction and has a built-in default for missing values",
         explanation: "XLOOKUP removes VLOOKUP's limitations: no need to count columns, can look left, and the optional 4th argument provides a clean fallback for missing values.",
+      },
+      {
+        id: "adv-lookup-concept-3",
+        type: "fill-blank",
+        question: "In =XLOOKUP(D2, A2:A4, B2:B4, \"Not Found\"), the 4th argument \"Not Found\" is returned when the lookup value is _______.",
+        correctAnswer: "not found",
+        explanation: "XLOOKUP's optional 4th argument (if_not_found) specifies what to return when no match exists. Without it, XLOOKUP returns #N/A.",
       },
     ],
     exercises: [
@@ -767,6 +1072,48 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         ],
       },
     ],
+    bonusConceptualQuestions: [
+      {
+        id: "adv-lookup-bonus-concept-1",
+        type: "multiple-choice",
+        question: "What happens if XLOOKUP finds no match and no if_not_found argument is given?",
+        options: [
+          "It returns #N/A",
+          "It returns 0",
+          "It returns an empty string",
+          "It returns FALSE",
+        ],
+        correctAnswer: "It returns #N/A",
+        explanation:
+          "Without the optional if_not_found argument, XLOOKUP returns the #N/A error when no match is found, just like VLOOKUP.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "adv-lookup-bonus-ex1",
+        type: "write-formula",
+        title: "XLOOKUP with multiple return columns",
+        instruction:
+          "Use XLOOKUP in E2 to find the department for the employee name in D2. Search B2:B4, return C2:C4.",
+        initialData: {
+          cols: 5,
+          rows: 4,
+          cells: {
+            A1: { v: "ID" }, B1: { v: "Name" }, C1: { v: "Dept" },
+            A2: { v: 101 }, B2: { v: "Alice" }, C2: { v: "Engineering" },
+            A3: { v: 102 }, B3: { v: "Bob" }, C3: { v: "Sales" },
+            A4: { v: 103 }, B4: { v: "Carol" }, C4: { v: "Marketing" },
+            D1: { v: "Find" }, E1: { v: "Dept" },
+            D2: { v: "Carol" },
+          },
+        },
+        targetCells: [{ cell: "E2", expected: "Marketing", expectedFormula: "=XLOOKUP(D2,B2:B4,C2:C4)" }],
+        hints: [
+          "XLOOKUP(lookup_value, lookup_array, return_array)",
+          "=XLOOKUP(D2,B2:B4,C2:C4)",
+        ],
+      },
+    ],
   },
 
   // ──────────────── NODE 6: Date & Time Functions ────────────────
@@ -806,6 +1153,27 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         correctAnswer: "As serial numbers (days since a starting date)",
         explanation: "Excel stores dates as numbers — 1 = Jan 1, 1900. This is why you can add/subtract dates to get differences in days.",
       },
+      {
+        id: "date-concept-2",
+        type: "multiple-choice",
+        question: "What does EOMONTH(date, 2) return?",
+        options: [
+          "The date 2 days after the given date",
+          "The last day of the month, 2 months after the given date",
+          "The first day of the month, 2 months after the given date",
+          "The same date, 2 months later",
+        ],
+        correctAnswer: "The last day of the month, 2 months after the given date",
+        explanation:
+          "EOMONTH stands for End Of Month. EOMONTH(date, n) returns the last day of the month that is n months after the given date.",
+      },
+      {
+        id: "date-concept-3",
+        type: "fill-blank",
+        question: "The function _______(start_date, end_date) counts only business days (Monday through Friday) between two dates.",
+        correctAnswer: "NETWORKDAYS",
+        explanation: "NETWORKDAYS counts working days (Mon-Fri) between two dates, excluding weekends. It can also exclude holidays if you provide a third argument.",
+      },
     ],
     exercises: [
       {
@@ -837,6 +1205,45 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         initialData: { cols: 3, rows: 2, cells: { A1: { v: 45292 }, B1: { v: 45296 } } },
         targetCells: [{ cell: "C1", expected: 5 }],
         hints: ["=NETWORKDAYS(A1, B1)"],
+      },
+    ],
+    bonusConceptualQuestions: [
+      {
+        id: "date-bonus-concept-1",
+        type: "multiple-choice",
+        question: "What does DATEDIF(start, end, \"M\") calculate?",
+        options: [
+          "The number of complete months between two dates",
+          "The number of minutes between two dates",
+          "The month number of the end date",
+          "The difference in milliseconds",
+        ],
+        correctAnswer: "The number of complete months between two dates",
+        explanation:
+          "DATEDIF with the \"M\" unit calculates the number of complete calendar months between the start and end dates.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "date-bonus-ex1",
+        type: "write-formula",
+        title: "Build a date",
+        instruction:
+          "In B1, use DATE to create a date from year in A1 (2024), month in A2 (6), and day in A3 (15).",
+        initialData: {
+          cols: 2,
+          rows: 3,
+          cells: {
+            A1: { v: 2024 },
+            A2: { v: 6 },
+            A3: { v: 15 },
+          },
+        },
+        targetCells: [{ cell: "B1", expected: 45458, expectedFormula: "=DATE(A1,A2,A3)" }],
+        hints: [
+          "DATE(year, month, day) builds a date serial number",
+          "=DATE(A1,A2,A3)",
+        ],
       },
     ],
   },
@@ -884,6 +1291,20 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         question: "=COUNTIF(A1:A10, \">50\") counts how many cells in A1:A10 contain values _______ than 50.",
         correctAnswer: "greater",
         explanation: "The criteria \">50\" means greater than 50.",
+      },
+      {
+        id: "cond-agg-concept-3",
+        type: "multiple-choice",
+        question: "How does AVERAGEIFS differ from AVERAGEIF?",
+        options: [
+          "AVERAGEIFS is faster",
+          "AVERAGEIFS can apply multiple criteria across different columns",
+          "AVERAGEIFS returns a rounded average",
+          "There is no difference",
+        ],
+        correctAnswer: "AVERAGEIFS can apply multiple criteria across different columns",
+        explanation:
+          "AVERAGEIF takes a single condition. AVERAGEIFS allows multiple criteria_range/criteria pairs, so you can filter on multiple columns simultaneously.",
       },
     ],
     exercises: [
@@ -943,6 +1364,47 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         hints: ["=AVERAGEIFS(C1:C5, A1:A5, \"North\", B1:B5, \"Widget\")"],
       },
     ],
+    bonusConceptualQuestions: [
+      {
+        id: "cond-agg-bonus-concept-1",
+        type: "multiple-choice",
+        question: "In SUMIF, can the criteria include wildcards?",
+        options: [
+          "Yes — use * for any characters and ? for a single character",
+          "No — SUMIF only accepts exact values",
+          "Only with SUMIFS",
+          "Only for numeric criteria",
+        ],
+        correctAnswer: "Yes — use * for any characters and ? for a single character",
+        explanation:
+          "SUMIF supports wildcard characters in text criteria: * matches any sequence of characters and ? matches any single character.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "cond-agg-bonus-ex1",
+        type: "write-formula",
+        title: "SUMIFS with multiple criteria",
+        instruction:
+          "In F1, use SUMIFS to sum sales (col C) where region (col A) is \"North\" AND product (col B) is \"Widget\".",
+        initialData: {
+          cols: 6,
+          rows: 6,
+          cells: {
+            A1: { v: "North" }, B1: { v: "Widget" }, C1: { v: 100 },
+            A2: { v: "South" }, B2: { v: "Widget" }, C2: { v: 150 },
+            A3: { v: "North" }, B3: { v: "Gadget" }, C3: { v: 200 },
+            A4: { v: "North" }, B4: { v: "Widget" }, C4: { v: 140 },
+            A5: { v: "South" }, B5: { v: "Gadget" }, C5: { v: 90 },
+          },
+        },
+        targetCells: [{ cell: "F1", expected: 240, expectedFormula: "=SUMIFS(C1:C5,A1:A5,\"North\",B1:B5,\"Widget\")" }],
+        hints: [
+          "SUMIFS(sum_range, criteria_range1, criteria1, criteria_range2, criteria2)",
+          "=SUMIFS(C1:C5,A1:A5,\"North\",B1:B5,\"Widget\")",
+        ],
+      },
+    ],
   },
 
   // ──────────────── NODE 8: Data Cleaning ────────────────
@@ -977,6 +1439,21 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         correctAnswer: "VALUE",
         explanation: "VALUE converts a text string that looks like a number into an actual numeric value.",
       },
+      {
+        id: "cleaning-concept-2",
+        type: "multiple-choice",
+        question: "What does PROPER(\"john DOE\") return?",
+        options: ["john DOE", "JOHN DOE", "john doe", "John Doe"],
+        correctAnswer: "John Doe",
+        explanation: "PROPER capitalizes the first letter of each word and converts the rest to lowercase.",
+      },
+      {
+        id: "cleaning-concept-3",
+        type: "fill-blank",
+        question: "=SUBSTITUTE(\"555-123-4567\", \"-\", \"\") returns _______.",
+        correctAnswer: "5551234567",
+        explanation: "SUBSTITUTE replaces all occurrences of the old text (\"-\") with the new text (\"\"). Removing all dashes gives \"5551234567\".",
+      },
     ],
     exercises: [
       {
@@ -1005,6 +1482,37 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         initialData: { cols: 2, rows: 2, cells: { A1: { v: "1,234" } } },
         targetCells: [{ cell: "B1", expected: 1234 }],
         hints: ["=VALUE(SUBSTITUTE(A1, \",\", \"\"))"],
+      },
+    ],
+    bonusConceptualQuestions: [
+      {
+        id: "cleaning-bonus-concept-1",
+        type: "fill-blank",
+        question: "What does =TEXT(0.15, \"0%\") return?",
+        correctAnswer: "15%",
+        explanation:
+          "TEXT formats a value according to the given format string. The format \"0%\" multiplies by 100 and appends a percent sign.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "cleaning-bonus-ex1",
+        type: "write-formula",
+        title: "Format a date as text",
+        instruction:
+          "In B1, use TEXT to display the date serial number in A1 as \"YYYY-MM-DD\" formatted text.",
+        initialData: {
+          cols: 2,
+          rows: 2,
+          cells: {
+            A1: { v: 45292 },
+          },
+        },
+        targetCells: [{ cell: "B1", expected: "2024-01-15", expectedFormula: "=TEXT(A1,\"YYYY-MM-DD\")" }],
+        hints: [
+          "TEXT(value, format_text) formats values as text",
+          "=TEXT(A1,\"YYYY-MM-DD\")",
+        ],
       },
     ],
   },
@@ -1057,6 +1565,13 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         ],
         correctAnswer: "SELECT region, SUM(amount) FROM sales GROUP BY region",
         explanation: "A pivot table with 'region' as a row field and SUM of 'amount' as the value is equivalent to GROUP BY region with SUM aggregation.",
+      },
+      {
+        id: "pivot-concept-3",
+        type: "fill-blank",
+        question: "To calculate the average of column B where column A equals \"Electronics\", you use the function _______.",
+        correctAnswer: "AVERAGEIF",
+        explanation: "AVERAGEIF(criteria_range, criteria, average_range) calculates the average of cells that meet a single condition — the formula equivalent of a pivot table's average aggregation.",
       },
     ],
     exercises: [
@@ -1123,6 +1638,46 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         hints: ["=AVERAGEIF(A2:A5, D2, B2:B5)"],
       },
     ],
+    bonusConceptualQuestions: [
+      {
+        id: "pivot-bonus-concept-1",
+        type: "multiple-choice",
+        question: "What is SUMPRODUCT(A1:A3, B1:B3) equivalent to?",
+        options: [
+          "A1*B1 + A2*B2 + A3*B3",
+          "SUM(A1:A3) * SUM(B1:B3)",
+          "A1+B1 + A2+B2 + A3+B3",
+          "The count of matching values",
+        ],
+        correctAnswer: "A1*B1 + A2*B2 + A3*B3",
+        explanation:
+          "SUMPRODUCT multiplies corresponding elements of the given arrays and returns the sum of those products.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "pivot-bonus-ex1",
+        type: "write-formula",
+        title: "SUMPRODUCT for weighted average",
+        instruction:
+          "In D1, use SUMPRODUCT to calculate total revenue (units * price) from the data in B2:B4 and C2:C4.",
+        initialData: {
+          cols: 4,
+          rows: 4,
+          cells: {
+            A1: { v: "Product" }, B1: { v: "Units" }, C1: { v: "Price" },
+            A2: { v: "A" }, B2: { v: 10 }, C2: { v: 5 },
+            A3: { v: "B" }, B3: { v: 20 }, C3: { v: 3 },
+            A4: { v: "C" }, B4: { v: 15 }, C4: { v: 4 },
+          },
+        },
+        targetCells: [{ cell: "D1", expected: 170, expectedFormula: "=SUMPRODUCT(B2:B4,C2:C4)" }],
+        hints: [
+          "SUMPRODUCT multiplies corresponding elements and sums the results",
+          "=SUMPRODUCT(B2:B4,C2:C4)",
+        ],
+      },
+    ],
   },
 
   // ──────────────── NODE 10: Array Formulas & Dynamic Arrays ────────────────
@@ -1161,6 +1716,39 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         ],
         correctAnswer: "The area where a dynamic array formula automatically outputs multiple results",
         explanation: "Dynamic array formulas can return multiple values that 'spill' into adjacent cells automatically.",
+      },
+      {
+        id: "array-concept-2",
+        type: "multiple-choice",
+        question: "What does =UNIQUE(A1:A6) do when A1:A6 contains repeated values?",
+        options: [
+          "Counts how many unique values exist",
+          "Returns a list of distinct values, removing duplicates",
+          "Highlights duplicate cells in red",
+          "Deletes rows with duplicate values",
+        ],
+        correctAnswer: "Returns a list of distinct values, removing duplicates",
+        explanation: "UNIQUE extracts distinct values from a range and spills them into adjacent cells. It does not modify the original data.",
+      },
+      {
+        id: "array-concept-3",
+        type: "multiple-choice",
+        question: "What does =FILTER(A1:A5, B1:B5>=80) return?",
+        options: [
+          "The count of values in B1:B5 that are 80 or above",
+          "TRUE or FALSE for each row",
+          "Only the values from A1:A5 where the corresponding B value is 80 or above",
+          "The sum of values in A1:A5 where B is 80 or above",
+        ],
+        correctAnswer: "Only the values from A1:A5 where the corresponding B value is 80 or above",
+        explanation: "FILTER returns rows from the first range that match the condition in the second range. Results spill into adjacent cells.",
+      },
+      {
+        id: "array-concept-4",
+        type: "fill-blank",
+        question: "=SEQUENCE(10) generates a column of numbers from 1 to _______.",
+        correctAnswer: "10",
+        explanation: "SEQUENCE(rows) generates a vertical list of sequential numbers starting at 1. SEQUENCE(10) produces 1, 2, 3, ..., 10.",
       },
     ],
     exercises: [
@@ -1205,6 +1793,47 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         initialData: { cols: 2, rows: 10, cells: {} },
         targetCells: [{ cell: "A1", expected: 1 }],
         hints: ["=SEQUENCE(10)"],
+      },
+    ],
+    bonusConceptualQuestions: [
+      {
+        id: "array-bonus-concept-1",
+        type: "multiple-choice",
+        question: "What does =SORT(A1:A5, 1, -1) do differently from =SORT(A1:A5)?",
+        options: [
+          "It sorts in descending order instead of ascending",
+          "It sorts by the second column",
+          "It reverses the row order without sorting",
+          "It sorts text before numbers",
+        ],
+        correctAnswer: "It sorts in descending order instead of ascending",
+        explanation:
+          "The third argument of SORT controls sort order: 1 (or omitted) = ascending, -1 = descending.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "array-bonus-ex1",
+        type: "write-formula",
+        title: "FILTER with multiple conditions",
+        instruction:
+          "In D1, use FILTER to return names from A1:A5 where the score in B1:B5 is >= 80 AND the department in C1:C5 is \"Sales\".",
+        initialData: {
+          cols: 4,
+          rows: 5,
+          cells: {
+            A1: { v: "Alice" }, B1: { v: 85 }, C1: { v: "Sales" },
+            A2: { v: "Bob" }, B2: { v: 72 }, C2: { v: "Sales" },
+            A3: { v: "Carol" }, B3: { v: 91 }, C3: { v: "Engineering" },
+            A4: { v: "Dave" }, B4: { v: 88 }, C4: { v: "Sales" },
+            A5: { v: "Eve" }, B5: { v: 65 }, C5: { v: "Sales" },
+          },
+        },
+        targetCells: [{ cell: "D1", expected: "Alice" }],
+        hints: [
+          "Multiply conditions with * for AND logic in FILTER",
+          "=FILTER(A1:A5,(B1:B5>=80)*(C1:C5=\"Sales\"))",
+        ],
       },
     ],
   },
@@ -1286,6 +1915,47 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         hints: ["=FORECAST(6, B1:B5, A1:A5)"],
       },
     ],
+    bonusConceptualQuestions: [
+      {
+        id: "stats-bonus-concept-1",
+        type: "multiple-choice",
+        question: "What does MEDIAN do that AVERAGE doesn't?",
+        options: [
+          "It returns the middle value, which is not affected by extreme outliers",
+          "It ignores text values",
+          "It rounds to the nearest integer",
+          "It only works with sorted data",
+        ],
+        correctAnswer: "It returns the middle value, which is not affected by extreme outliers",
+        explanation:
+          "MEDIAN finds the middle value when data is sorted, making it resistant to extreme values. AVERAGE is pulled toward outliers.",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "stats-bonus-ex1",
+        type: "write-formula",
+        title: "Calculate CORREL",
+        instruction:
+          "In C1, use CORREL to find the correlation between hours studied (A1:A5) and test scores (B1:B5).",
+        initialData: {
+          cols: 3,
+          rows: 5,
+          cells: {
+            A1: { v: 2 }, B1: { v: 65 },
+            A2: { v: 4 }, B2: { v: 78 },
+            A3: { v: 6 }, B3: { v: 85 },
+            A4: { v: 8 }, B4: { v: 92 },
+            A5: { v: 10 }, B5: { v: 96 },
+          },
+        },
+        targetCells: [{ cell: "C1", expected: 0.99, expectedFormula: "=CORREL(A1:A5,B1:B5)" }],
+        hints: [
+          "CORREL returns a value from -1 to 1",
+          "=CORREL(A1:A5,B1:B5)",
+        ],
+      },
+    ],
   },
 
   // ──────────────── NODE 12: Dashboard Formulas ────────────────
@@ -1331,6 +2001,20 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         correctAnswer: "TRUE",
         explanation: "Conditional formatting rules apply the format when the formula evaluates to TRUE.",
       },
+      {
+        id: "dashboard-concept-3",
+        type: "multiple-choice",
+        question: "What does =SUM(INDIRECT(\"A1:A\"&D1)) do when D1 contains 5?",
+        options: [
+          "Sums cells D1 through D5",
+          "Returns the value in cell A5",
+          "Sums cells A1 through A5 by building the range reference dynamically",
+          "Counts cells from A1 to A5",
+        ],
+        correctAnswer: "Sums cells A1 through A5 by building the range reference dynamically",
+        explanation:
+          "The & operator joins \"A1:A\" with the value in D1 (5) to create the text \"A1:A5\". INDIRECT converts this text into an actual range reference, which SUM then totals.",
+      },
     ],
     exercises: [
       {
@@ -1362,6 +2046,37 @@ export const excelSkillTreeNodes: ExcelSkillNode[] = [
         },
         targetCells: [{ cell: "E1", expected: 60 }],
         hints: ["=SUM(INDIRECT(\"A1:A\"&D1))"],
+      },
+    ],
+    bonusConceptualQuestions: [
+      {
+        id: "dashboard-bonus-concept-1",
+        type: "fill-blank",
+        question: "What does =CHOOSE(2, \"Red\", \"Blue\", \"Green\") return?",
+        correctAnswer: "Blue",
+        explanation:
+          "CHOOSE returns the value at the given index position. Index 2 returns the second value, \"Blue\".",
+      },
+    ],
+    bonusExercises: [
+      {
+        id: "dashboard-bonus-ex1",
+        type: "write-formula",
+        title: "CHOOSE for dynamic selection",
+        instruction:
+          "In C1, use CHOOSE with the index in A1 to return one of three department names: 1=\"Engineering\", 2=\"Marketing\", 3=\"Sales\".",
+        initialData: {
+          cols: 3,
+          rows: 2,
+          cells: {
+            A1: { v: 2 },
+          },
+        },
+        targetCells: [{ cell: "C1", expected: "Marketing", expectedFormula: "=CHOOSE(A1,\"Engineering\",\"Marketing\",\"Sales\")" }],
+        hints: [
+          "CHOOSE(index, val1, val2, ...) returns the value at the given position",
+          "=CHOOSE(A1,\"Engineering\",\"Marketing\",\"Sales\")",
+        ],
       },
     ],
   },

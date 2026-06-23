@@ -14,6 +14,7 @@ export function ExcelNodeClient({ nodeId }: { nodeId: string }) {
     markExerciseCompleted,
     markConceptualCompleted,
     isConceptualCompleted,
+    isExerciseCompleted,
     getNodeMastery,
   } = useExcelSkillTree();
 
@@ -103,6 +104,7 @@ export function ExcelNodeClient({ nodeId }: { nodeId: string }) {
           onConceptualComplete={markConceptualCompleted}
           onExerciseComplete={markExerciseCompleted}
           isConceptualCompleted={isConceptualCompleted}
+          isExerciseCompleted={isExerciseCompleted}
         />
       </div>
     </div>

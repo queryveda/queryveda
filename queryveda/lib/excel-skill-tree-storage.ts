@@ -35,7 +35,8 @@ export const excelSkillTreeStorage = {
 
     if (userId) {
       const node = excelSkillTreeNodes.find((n) =>
-        n.exercises.some((e) => e.id === exerciseId)
+        n.exercises.some((e) => e.id === exerciseId) ||
+        n.bonusExercises?.some((e) => e.id === exerciseId)
       );
       if (node) {
         supabase.from("skill_tree_progress").upsert(
@@ -60,7 +61,8 @@ export const excelSkillTreeStorage = {
 
     if (userId) {
       const node = excelSkillTreeNodes.find((n) =>
-        n.conceptualQuestions.some((q) => q.id === questionId)
+        n.conceptualQuestions.some((q) => q.id === questionId) ||
+        n.bonusConceptualQuestions?.some((q) => q.id === questionId)
       );
       if (node) {
         supabase.from("skill_tree_progress").upsert(
@@ -99,10 +101,21 @@ export const excelSkillTreeStorage = {
         (e) => progress[e.id]?.completed
       ).length;
       const exercisesTotal = node.exercises.length;
+      // Bonus items excluded from core percentage
+      const bonusConceptualCompleted = (node.bonusConceptualQuestions ?? []).filter(
+        (q) => conceptual[q.id]?.completed
+      ).length;
+      const bonusConceptualTotal = (node.bonusConceptualQuestions ?? []).length;
+      const bonusExercisesCompleted = (node.bonusExercises ?? []).filter(
+        (e) => progress[e.id]?.completed
+      ).length;
+      const bonusExercisesTotal = (node.bonusExercises ?? []).length;
+
       const total = conceptualTotal + exercisesTotal;
       const completed = conceptualCompleted + exercisesCompleted;
       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
       const conceptualDone = conceptualCompleted >= conceptualTotal;
+      const allExercisesDone = exercisesCompleted >= exercisesTotal;
 
       const unlocked =
         node.prerequisites.length === 0 ||
@@ -126,6 +139,11 @@ export const excelSkillTreeStorage = {
         unlocked,
         starred: percentage === 100,
         conceptualDone,
+        bonusConceptualCompleted,
+        bonusConceptualTotal,
+        bonusExercisesCompleted,
+        bonusExercisesTotal,
+        allExercisesDone,
       };
     });
   },
@@ -145,7 +163,8 @@ export const excelSkillTreeStorage = {
     for (const row of data) {
       if (!row.completed) continue;
       const isConceptual = excelSkillTreeNodes.some((n) =>
-        n.conceptualQuestions.some((q) => q.id === row.exercise_id)
+        n.conceptualQuestions.some((q) => q.id === row.exercise_id) ||
+        n.bonusConceptualQuestions?.some((q) => q.id === row.exercise_id)
       );
       const map = isConceptual ? conceptual : progress;
       if (!map[row.exercise_id]?.completed) {
@@ -178,7 +197,9 @@ export const excelSkillTreeStorage = {
       const node = excelSkillTreeNodes.find(
         (n) =>
           n.exercises.some((e) => e.id === exId) ||
-          n.conceptualQuestions.some((q) => q.id === exId)
+          n.bonusExercises?.some((e) => e.id === exId) ||
+          n.conceptualQuestions.some((q) => q.id === exId) ||
+          n.bonusConceptualQuestions?.some((q) => q.id === exId)
       );
       if (!node) continue;
       upserts.push({

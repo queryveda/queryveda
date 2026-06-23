@@ -46,6 +46,8 @@ export interface ExcelSkillNode {
   prerequisites: string[];             // node IDs that must be at 60%+
   conceptualQuestions: ConceptualQuestion[];
   exercises: ExcelExercise[];
+  bonusConceptualQuestions?: ConceptualQuestion[];
+  bonusExercises?: ExcelExercise[];
   trunk: boolean;
   column: number;                      // 0 = center, -1 = left, 1 = right
   row: number;
@@ -61,4 +63,9 @@ export interface ExcelNodeMastery {
   unlocked: boolean;
   starred: boolean;                    // 100% mastery
   conceptualDone: boolean;             // all warmups passed — hands-on unlocked
+  bonusConceptualCompleted: number;
+  bonusConceptualTotal: number;
+  bonusExercisesCompleted: number;
+  bonusExercisesTotal: number;
+  allExercisesDone: boolean;           // all core exercises done — bonus unlocked
 }
