@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { ProtectionWrapper } from "@/components/layout/protection-wrapper";
 import "./globals.css";
 
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Navbar />
             <main className="min-h-[calc(100vh-8rem)]">{children}</main>
             <Footer />
+            <ScrollToTop />
           </AuthProvider>
         </ThemeProvider>
       </body>
