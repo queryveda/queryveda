@@ -11,7 +11,8 @@ import { ThemeToggle } from "./theme-toggle";
 import { MobileDrawer } from "./mobile-drawer";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, BookOpen, Table2, Check } from "lucide-react";
+import { ChevronDown, BookOpen, Table2, Check, HelpCircle } from "lucide-react";
+import { useTourState } from "@/hooks/use-tour-state";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -32,6 +33,7 @@ export function Navbar() {
   const { user, logout } = useAuth();
   const { hasTrack } = useTrack();
   const { hasUnattempted } = useDailyStatus();
+  const { reset: resetTour } = useTourState();
   const [authOpen, setAuthOpen] = useState(false);
   const [learnOpen, setLearnOpen] = useState(false);
   const learnRef = useRef<HTMLDivElement>(null);
@@ -91,7 +93,7 @@ export function Navbar() {
                         </Link>
 
                         {/* Learn dropdown */}
-                        <div ref={learnRef} className="relative">
+                        <div ref={learnRef} className="relative" data-tour="learn">
                           <button
                             onClick={() => setLearnOpen((o) => !o)}
                             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -138,6 +140,7 @@ export function Navbar() {
                     <Link
                       key={href}
                       href={href}
+                      data-tour={label.toLowerCase()}
                       className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive
                           ? "bg-primary text-primary-foreground"
@@ -159,7 +162,24 @@ export function Navbar() {
 
             {/* Right section */}
             <div className="flex items-center gap-2">
-              <ThemeToggle />
+              <div data-tour="theme-toggle">
+                <ThemeToggle />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-9 h-9 text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  resetTour();
+                  // Small delay so state resets before PlatformTour picks it up
+                  setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent("queryveda:start-tour"));
+                  }, 100);
+                }}
+                aria-label="Take a tour"
+              >
+                <HelpCircle className="w-4 h-4" />
+              </Button>
 
               {user ? (
                 <div className="flex items-center gap-2">

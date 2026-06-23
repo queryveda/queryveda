@@ -6,7 +6,7 @@ import { BookOpen, Target, Table2 } from "lucide-react";
 
 export function TwoPathCards() {
   return (
-    <section className="mx-auto max-w-5xl px-6 py-12">
+    <section className="mx-auto max-w-5xl px-6 py-12" data-tour="learning-paths">
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {/* Learn SQL Card */}
         <Link href="/learn" className="group h-full">

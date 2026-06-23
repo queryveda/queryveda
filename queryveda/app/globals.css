@@ -104,4 +104,66 @@
   .dark .glow-primary {
     box-shadow: 0 0 20px rgba(139,92,246,0.2), 0 0 40px rgba(139,92,246,0.08);
   }
+
+  /* Platform tour (driver.js) theme */
+  .qv-tour-popover.driver-popover {
+    background: rgb(var(--card));
+    color: rgb(var(--card-foreground));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 16px rgba(139, 92, 246, 0.1);
+    padding: 1rem 1.25rem;
+  }
+  .qv-tour-popover .driver-popover-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: rgb(var(--foreground));
+  }
+  .qv-tour-popover .driver-popover-description {
+    font-size: 0.875rem;
+    color: rgb(var(--muted-foreground));
+    margin-top: 0.25rem;
+  }
+  .qv-tour-popover .driver-popover-progress-text {
+    font-size: 0.75rem;
+    color: rgb(var(--muted-foreground));
+  }
+  .qv-tour-popover .driver-popover-navigation-btns {
+    gap: 0.5rem;
+  }
+  .qv-tour-popover .driver-popover-next-btn,
+  .qv-tour-popover .driver-popover-prev-btn {
+    background: rgb(109, 40, 217);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-shadow: none;
+  }
+  .qv-tour-popover .driver-popover-prev-btn {
+    background: transparent;
+    color: rgb(var(--muted-foreground));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+  }
+  .qv-tour-popover .driver-popover-prev-btn:hover {
+    background: rgba(139, 92, 246, 0.1);
+    color: rgb(var(--foreground));
+  }
+  .qv-tour-popover .driver-popover-next-btn:hover {
+    background: rgb(126, 58, 232);
+  }
+  .qv-tour-popover .driver-popover-close-btn {
+    color: rgb(var(--muted-foreground));
+  }
+  .qv-tour-popover .driver-popover-close-btn:hover {
+    color: rgb(var(--foreground));
+  }
+  .qv-tour-popover .driver-popover-arrow-side-left .driver-popover-arrow,
+  .qv-tour-popover .driver-popover-arrow-side-right .driver-popover-arrow,
+  .qv-tour-popover .driver-popover-arrow-side-top .driver-popover-arrow,
+  .qv-tour-popover .driver-popover-arrow-side-bottom .driver-popover-arrow {
+    border-color: rgba(139, 92, 246, 0.3);
+  }
 }
