@@ -1,128 +1,127 @@
 {
-  "date": "2026-06-22",
+  "date": "2026-06-23",
   "question": {
-    "title": "Ranking Employee Salaries by Department",
+    "title": "Cumulative Sales by Product",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "You are given two tables, 'employees' and 'departments'. Write a query to rank employee salaries within each department. The output should include the department name, employee name, salary, and a rank based on the salary within the department.",
-    "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO employees (name, department_id, salary) VALUES ('John Doe', 1, 50000.00), ('Jane Doe', 1, 60000.00), ('Bob Smith', 2, 70000.00), ('Alice Johnson', 2, 55000.00), ('Mike Brown', 3, 45000.00), ('Emily Davis', 3, 52000.00), ('Sarah Taylor', 1, 58000.00);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Write a SQL query to calculate the cumulative sales for each product over the last 3 days. Use the 'sales' table to find the daily sales and the 'products' table to get the product names.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INT, sales_date DATE, amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sales_date, amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-02', 120.00), (1, '2022-01-03', 110.00), (2, '2022-01-01', 50.00), (2, '2022-01-02', 60.00), (2, '2022-01-03', 70.00); DROP TABLE IF EXISTS products; CREATE TABLE products (id INT, name VARCHAR(255)); INSERT INTO products (id, name) VALUES (1, 'Product A'), (2, 'Product B');",
     "tables": [
-      "employees",
-      "departments"
+      "sales",
+      "products"
     ],
     "cols": [
-      "department_name",
-      "employee_name",
-      "salary",
-      "rank"
+      "product_name",
+      "sales_date",
+      "cumulative_sales"
     ],
     "rows": [
       [
-        "Sales",
-        "Jane Doe",
-        60000,
-        1
+        "Product A",
+        "2022-01-01",
+        100
       ],
       [
-        "Sales",
-        "Sarah Taylor",
-        58000,
-        2
+        "Product A",
+        "2022-01-02",
+        220
       ],
       [
-        "Sales",
-        "John Doe",
-        50000,
-        3
+        "Product A",
+        "2022-01-03",
+        330
       ],
       [
-        "Marketing",
-        "Bob Smith",
-        70000,
-        1
+        "Product B",
+        "2022-01-01",
+        50
       ],
       [
-        "Marketing",
-        "Alice Johnson",
-        55000,
-        2
+        "Product B",
+        "2022-01-02",
+        110
       ],
       [
-        "IT",
-        "Emily Davis",
-        52000,
-        1
-      ],
-      [
-        "IT",
-        "Mike Brown",
-        45000,
-        2
+        "Product B",
+        "2022-01-03",
+        180
       ]
     ],
-    "solution": "SELECT d.name AS department_name, e.name AS employee_name, e.salary, DENSE_RANK() OVER (PARTITION BY d.id ORDER BY e.salary DESC) AS rank FROM employees e JOIN departments d ON e.department_id = d.id ORDER BY d.name, e.salary DESC;",
-    "tips": "Using DENSE_RANK() ensures that if two employees have the same salary, they will have the same rank and the next rank will not be skipped.",
+    "solution": "WITH daily_sales AS (SELECT p.name AS product_name, s.sales_date, SUM(s.amount) AS daily_amount FROM sales s JOIN products p ON s.product_id = p.id GROUP BY p.name, s.sales_date) SELECT product_name, sales_date, SUM(daily_amount) OVER (PARTITION BY product_name ORDER BY sales_date) AS cumulative_sales FROM daily_sales ORDER BY product_name, sales_date;",
+    "tips": "Using a Common Table Expression (CTE) can simplify complex queries.",
     "hints": [
-      "You will need to use a window function to rank the salaries within each department.",
-      "Join the 'employees' and 'departments' tables on the 'department_id' to access the department name for each employee.",
-      "Use the DENSE_RANK() function with PARTITION BY to rank the salaries within each department and ORDER BY to sort the salaries in descending order."
+      "Start by joining the 'sales' and 'products' tables on the 'product_id' column.",
+      "Use a window function to calculate the cumulative sales for each product.",
+      "You'll need to partition the results by 'product_name' and order by 'sales_date' to get the correct cumulative sales."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO employees (name, department_id, salary) VALUES ('David Lee', 1, 65000.00), ('Kevin White', 1, 62000.00), ('Lisa Nguyen', 2, 58000.00), ('Peter Kim', 2, 60000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INT, sales_date DATE, amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sales_date, amount) VALUES (1, '2022-02-01', 200.00), (1, '2022-02-02', 220.00), (1, '2022-02-03', 230.00), (2, '2022-02-01', 80.00), (2, '2022-02-02', 90.00), (2, '2022-02-03', 100.00); DROP TABLE IF EXISTS products; CREATE TABLE products (id INT, name VARCHAR(255)); INSERT INTO products (id, name) VALUES (1, 'Product C'), (2, 'Product D');",
         "rows": [
           [
-            "HR",
-            "David Lee",
-            65000,
-            1
+            "Product C",
+            "2022-02-01",
+            200
           ],
           [
-            "HR",
-            "Kevin White",
-            62000,
-            2
+            "Product C",
+            "2022-02-02",
+            420
           ],
           [
-            "Finance",
-            "Peter Kim",
-            60000,
-            1
+            "Product C",
+            "2022-02-03",
+            650
           ],
           [
-            "Finance",
-            "Lisa Nguyen",
-            58000,
-            2
+            "Product D",
+            "2022-02-01",
+            80
+          ],
+          [
+            "Product D",
+            "2022-02-02",
+            170
+          ],
+          [
+            "Product D",
+            "2022-02-03",
+            270
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('Research'), ('Development'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO employees (name, department_id, salary) VALUES ('Tom Harris', 1, 70000.00), ('Samantha Martin', 1, 68000.00), ('Daniel Garcia', 2, 62000.00), ('Rebecca Hall', 2, 64000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INT, sales_date DATE, amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sales_date, amount) VALUES (1, '2022-03-01', 300.00), (1, '2022-03-02', 320.00), (1, '2022-03-03', 330.00), (2, '2022-03-01', 120.00), (2, '2022-03-02', 130.00), (2, '2022-03-03', 140.00); DROP TABLE IF EXISTS products; CREATE TABLE products (id INT, name VARCHAR(255)); INSERT INTO products (id, name) VALUES (1, 'Product E'), (2, 'Product F');",
         "rows": [
           [
-            "Research",
-            "Tom Harris",
-            70000,
-            1
+            "Product E",
+            "2022-03-01",
+            300
           ],
           [
-            "Research",
-            "Samantha Martin",
-            68000,
-            2
+            "Product E",
+            "2022-03-02",
+            620
           ],
           [
-            "Development",
-            "Rebecca Hall",
-            64000,
-            1
+            "Product E",
+            "2022-03-03",
+            950
           ],
           [
-            "Development",
-            "Daniel Garcia",
-            62000,
-            2
+            "Product F",
+            "2022-03-01",
+            120
+          ],
+          [
+            "Product F",
+            "2022-03-02",
+            250
+          ],
+          [
+            "Product F",
+            "2022-03-03",
+            390
           ]
         ]
       }
