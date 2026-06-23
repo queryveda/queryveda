@@ -64,9 +64,15 @@ export function PlatformTour() {
   const hasAutoStarted = useRef(false);
 
   const startTour = useCallback(() => {
+    // Only include steps whose target element exists on the current page
+    const activeSteps = tourSteps.filter(
+      (step) => document.querySelector(step.element) !== null
+    );
+    if (activeSteps.length === 0) return;
+
     const d = driver({
       showProgress: true,
-      steps: tourSteps,
+      steps: activeSteps,
       popoverClass: "qv-tour-popover",
       nextBtnText: "Next",
       prevBtnText: "Previous",
