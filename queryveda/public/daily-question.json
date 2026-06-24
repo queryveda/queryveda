@@ -1,127 +1,56 @@
 {
-  "date": "2026-06-23",
+  "date": "2026-06-24",
   "question": {
-    "title": "Cumulative Sales by Product",
+    "title": "Identify Consecutive Logins",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "Write a SQL query to calculate the cumulative sales for each product over the last 3 days. Use the 'sales' table to find the daily sales and the 'products' table to get the product names.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INT, sales_date DATE, amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sales_date, amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-02', 120.00), (1, '2022-01-03', 110.00), (2, '2022-01-01', 50.00), (2, '2022-01-02', 60.00), (2, '2022-01-03', 70.00); DROP TABLE IF EXISTS products; CREATE TABLE products (id INT, name VARCHAR(255)); INSERT INTO products (id, name) VALUES (1, 'Product A'), (2, 'Product B');",
+    "topic": "Consecutive Sequences",
+    "desc": "Given a table of user logins, identify users who have logged in consecutively for at least 3 days.",
+    "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (3, '2022-01-01'), (3, '2022-01-02'), (3, '2022-01-03'), (3, '2022-01-04');",
     "tables": [
-      "sales",
-      "products"
+      "logins"
     ],
     "cols": [
-      "product_name",
-      "sales_date",
-      "cumulative_sales"
+      "user_id",
+      "start_date",
+      "end_date"
     ],
     "rows": [
       [
-        "Product A",
+        1,
         "2022-01-01",
-        100
+        "2022-01-03"
       ],
       [
-        "Product A",
-        "2022-01-02",
-        220
-      ],
-      [
-        "Product A",
-        "2022-01-03",
-        330
-      ],
-      [
-        "Product B",
+        3,
         "2022-01-01",
-        50
-      ],
-      [
-        "Product B",
-        "2022-01-02",
-        110
-      ],
-      [
-        "Product B",
-        "2022-01-03",
-        180
+        "2022-01-04"
       ]
     ],
-    "solution": "WITH daily_sales AS (SELECT p.name AS product_name, s.sales_date, SUM(s.amount) AS daily_amount FROM sales s JOIN products p ON s.product_id = p.id GROUP BY p.name, s.sales_date) SELECT product_name, sales_date, SUM(daily_amount) OVER (PARTITION BY product_name ORDER BY sales_date) AS cumulative_sales FROM daily_sales ORDER BY product_name, sales_date;",
-    "tips": "Using a Common Table Expression (CTE) can simplify complex queries.",
+    "solution": "WITH consecutive_logins AS ( SELECT user_id, login_date, DATEADD('day', -ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date), login_date) AS group_id FROM logins ) SELECT user_id, MIN(login_date) AS start_date, MAX(login_date) AS end_date FROM consecutive_logins GROUP BY user_id, group_id HAVING COUNT(*) >= 3;",
+    "tips": "Consider using window functions to efficiently handle sequences.",
     "hints": [
-      "Start by joining the 'sales' and 'products' tables on the 'product_id' column.",
-      "Use a window function to calculate the cumulative sales for each product.",
-      "You'll need to partition the results by 'product_name' and order by 'sales_date' to get the correct cumulative sales."
+      "Consider using window functions to identify consecutive sequences",
+      "Look into using ROW_NUMBER() or RANK() to assign a sequence identifier to each row",
+      "Use a Common Table Expression (CTE) to break down the problem into manageable parts"
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INT, sales_date DATE, amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sales_date, amount) VALUES (1, '2022-02-01', 200.00), (1, '2022-02-02', 220.00), (1, '2022-02-03', 230.00), (2, '2022-02-01', 80.00), (2, '2022-02-02', 90.00), (2, '2022-02-03', 100.00); DROP TABLE IF EXISTS products; CREATE TABLE products (id INT, name VARCHAR(255)); INSERT INTO products (id, name) VALUES (1, 'Product C'), (2, 'Product D');",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (4, '2023-02-01'), (4, '2023-02-02'), (4, '2023-02-03'), (5, '2023-02-01'), (5, '2023-02-02');",
         "rows": [
           [
-            "Product C",
-            "2022-02-01",
-            200
-          ],
-          [
-            "Product C",
-            "2022-02-02",
-            420
-          ],
-          [
-            "Product C",
-            "2022-02-03",
-            650
-          ],
-          [
-            "Product D",
-            "2022-02-01",
-            80
-          ],
-          [
-            "Product D",
-            "2022-02-02",
-            170
-          ],
-          [
-            "Product D",
-            "2022-02-03",
-            270
+            4,
+            "2023-02-01",
+            "2023-02-03"
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INT, sales_date DATE, amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sales_date, amount) VALUES (1, '2022-03-01', 300.00), (1, '2022-03-02', 320.00), (1, '2022-03-03', 330.00), (2, '2022-03-01', 120.00), (2, '2022-03-02', 130.00), (2, '2022-03-03', 140.00); DROP TABLE IF EXISTS products; CREATE TABLE products (id INT, name VARCHAR(255)); INSERT INTO products (id, name) VALUES (1, 'Product E'), (2, 'Product F');",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (6, '2024-03-01'), (6, '2024-03-02'), (6, '2024-03-03'), (6, '2024-03-04'), (7, '2024-03-01'), (7, '2024-03-03');",
         "rows": [
           [
-            "Product E",
-            "2022-03-01",
-            300
-          ],
-          [
-            "Product E",
-            "2022-03-02",
-            620
-          ],
-          [
-            "Product E",
-            "2022-03-03",
-            950
-          ],
-          [
-            "Product F",
-            "2022-03-01",
-            120
-          ],
-          [
-            "Product F",
-            "2022-03-02",
-            250
-          ],
-          [
-            "Product F",
-            "2022-03-03",
-            390
+            6,
+            "2024-03-01",
+            "2024-03-04"
           ]
         ]
       }
