@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { getAnonymousName } from "@/lib/profile";
 
 type TimePeriod = "all" | "month" | "week";
 
@@ -15,36 +16,6 @@ interface LeaderboardRow {
 }
 
 const TOTAL_QUESTIONS = 75;
-
-// Deterministic random username from user_id
-const ADJECTIVES = [
-  "Swift", "Clever", "Bold", "Quiet", "Bright", "Cosmic", "Lucky", "Nimble",
-  "Witty", "Calm", "Daring", "Epic", "Fierce", "Grand", "Happy", "Jolly",
-  "Keen", "Lively", "Mighty", "Noble", "Plucky", "Radiant", "Savvy", "Vivid",
-  "Zesty", "Agile", "Brave", "Crisp", "Eager", "Fresh", "Gentle", "Hardy",
-];
-const ANIMALS = [
-  "Falcon", "Panda", "Otter", "Fox", "Eagle", "Wolf", "Dolphin", "Lynx",
-  "Hawk", "Bear", "Cobra", "Raven", "Tiger", "Owl", "Heron", "Bison",
-  "Crane", "Deer", "Gecko", "Koala", "Moose", "Parrot", "Quail", "Seal",
-  "Turtle", "Viper", "Whale", "Yak", "Zebra", "Lemur", "Marten", "Newt",
-];
-
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
-}
-
-function getUsername(userId: string): string {
-  const h = hashCode(userId);
-  const adj = ADJECTIVES[h % ADJECTIVES.length];
-  const animal = ANIMALS[(h >> 8) % ANIMALS.length];
-  const num = (h % 100).toString().padStart(2, "0");
-  return `${adj}${animal}${num}`;
-}
 
 function getDateCutoff(period: TimePeriod): string | null {
   if (period === "all") return null;
@@ -175,7 +146,7 @@ export default function LeaderboardPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="font-medium">
-                        {getUsername(row.user_id)}
+                        {getAnonymousName(row.user_id)}
                         {isCurrentUser && (
                           <span className="ml-2 text-xs text-primary">(you)</span>
                         )}
