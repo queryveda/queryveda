@@ -13,6 +13,7 @@ interface LeaderboardRow {
   solved: number;
   active_days: number;
   completion: number;
+  displayName: string;
 }
 
 const TOTAL_QUESTIONS = 75;
@@ -65,12 +66,23 @@ export default function LeaderboardPage() {
         }
       }
 
+      // Fetch display names from user_profiles
+      const userIds = Array.from(map.keys());
+      const { data: profiles } = await supabase
+        .from("user_profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
+      const nameMap = new Map(
+        (profiles || []).map((p) => [p.user_id, p.display_name as string | null])
+      );
+
       const leaderboard: LeaderboardRow[] = Array.from(map.entries())
         .map(([user_id, { solved, days }]) => ({
           user_id,
           solved,
           active_days: days.size,
           completion: Math.round((solved / TOTAL_QUESTIONS) * 100),
+          displayName: nameMap.get(user_id) || getAnonymousName(user_id),
         }))
         .sort((a, b) => b.solved - a.solved);
 
@@ -146,7 +158,7 @@ export default function LeaderboardPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="font-medium">
-                        {getAnonymousName(row.user_id)}
+                        {row.displayName}
                         {isCurrentUser && (
                           <span className="ml-2 text-xs text-primary">(you)</span>
                         )}
