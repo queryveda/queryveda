@@ -12,15 +12,9 @@ import {
   type ProfileStats,
 } from "@/lib/profile";
 import { questions } from "@/lib/questions";
-import { ProfileHeader } from "@/components/profile/profile-header";
 import { ShareControls } from "@/components/profile/share-controls";
 import { ShareCardButton } from "@/components/profile/share-card";
 import { EditDisplayName } from "@/components/profile/edit-display-name";
-import { StatsCards } from "@/components/progress/stats-cards";
-import { ProgressBars } from "@/components/progress/progress-bars";
-import { SkillRadar } from "@/components/progress/skill-radar";
-import { Achievements } from "@/components/progress/achievements";
-import { MasteryBar } from "@/components/learn/mastery-bar";
 import Link from "next/link";
 
 type PageState =
@@ -135,17 +129,39 @@ export function ProfileClient() {
   const name = displayName || getAnonymousName(state.profile.user_id);
   const totalQuestions = questions.length;
 
+  const sqlUnlocked = stats.achievements.filter((a) => a.unlocked);
+  const excelUnlocked = stats.excelStats.achievements.filter((a) => a.unlocked);
+  const allUnlocked = [...sqlUnlocked, ...excelUnlocked];
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="flex flex-col gap-8">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <ProfileHeader
-            displayName={name}
-            avatarUrl={avatarUrl}
-            memberSince={stats.memberSince}
-            isOwner={isOwner}
-          />
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      {/* Hero card */}
+      <div className="rounded-2xl border bg-gradient-to-br from-background to-muted/30 p-6 sm:p-8 mb-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-4">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="h-20 w-20 rounded-full object-cover ring-2 ring-primary/20" />
+            ) : (
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
+                {name.charAt(0)}
+              </div>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold">{name}</h1>
+              {stats.memberSince && (
+                <p className="text-sm text-muted-foreground">
+                  Member since {new Date(stats.memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                </p>
+              )}
+              {isOwner && (
+                <EditDisplayName
+                  userId={state.profile.user_id}
+                  currentName={displayName}
+                  onSave={setDisplayName}
+                />
+              )}
+            </div>
+          </div>
           <div className="flex flex-col gap-2 sm:items-end">
             {isOwner && (
               <ShareControls
@@ -158,59 +174,134 @@ export function ProfileClient() {
           </div>
         </div>
 
-        {/* Edit display name (owner only) */}
-        {isOwner && (
-          <EditDisplayName
-            userId={state.profile.user_id}
-            currentName={displayName}
-            onSave={setDisplayName}
-          />
-        )}
-
-        {/* Stats */}
-        <StatsCards
-          totalSolved={stats.totalSolved}
-          totalQuestions={totalQuestions}
-          completionPercent={stats.completionPercent}
-          streak={stats.streak}
-        />
-
-        <ProgressBars
-          byDifficulty={stats.byDifficulty}
-          byTopic={stats.byTopic}
-        />
-
-        <div>
-          <h3 className="mb-4 font-semibold">Skill Radar</h3>
-          <SkillRadar byTopic={stats.byTopic} />
+        {/* Inline stat pills */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <StatPill label="Solved" value={`${stats.totalSolved}/${totalQuestions}`} />
+          <StatPill label="Completion" value={`${stats.completionPercent}%`} />
+          <StatPill label="Streak" value={`${stats.streak}d`} />
+          <StatPill label="Active Days" value={`${stats.activeDays}`} />
+          <StatPill label="Achievements" value={`${allUnlocked.length}`} />
         </div>
+      </div>
 
-        <Achievements title="SQL Achievements" achievements={stats.achievements} />
-
-        {/* Excel Progress */}
-        <div className="rounded-xl border p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-semibold">Excel Learning Progress</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {stats.excelStats.totalCompleted} / {stats.excelStats.totalItems} exercises &amp; concepts completed
-              </p>
+      {/* Two-column: SQL + Excel summaries */}
+      <div className="grid gap-6 sm:grid-cols-2 mb-6">
+        {/* SQL Summary */}
+        <div className="rounded-xl border p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">SQL Practice</h2>
+          <div className="mb-4">
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-2xl font-bold">{stats.totalSolved}</span>
+              <span className="text-sm text-muted-foreground">/ {totalQuestions} problems</span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${stats.completionPercent}%` }} />
             </div>
           </div>
-          <div className="space-y-3">
-            {stats.excelStats.nodeMasteries.map((m) => (
-              <div key={m.nodeId} className="flex items-center gap-3">
-                <span className="text-sm w-48 truncate">{m.title}</span>
-                <div className="flex-1">
-                  <MasteryBar completed={m.completed} total={m.total} />
+          <div className="space-y-2">
+            {(["Easy", "Medium", "Hard"] as const).map((d) => {
+              const { solved, total } = stats.byDifficulty[d];
+              const pct = total > 0 ? (solved / total) * 100 : 0;
+              const colors = { Easy: "bg-green-500", Medium: "bg-yellow-500", Hard: "bg-red-500" };
+              return (
+                <div key={d} className="flex items-center gap-2 text-sm">
+                  <span className="w-16 text-muted-foreground">{d}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className={`h-full rounded-full ${colors[d]}`} style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">{solved}/{total}</span>
                 </div>
-              </div>
+              );
+            })}
+          </div>
+          {stats.byTopic.length > 0 && (
+            <div className="mt-4 pt-4 border-t space-y-2">
+              {stats.byTopic.map((t) => {
+                const pct = t.total > 0 ? (t.solved / t.total) * 100 : 0;
+                const short: Record<string, string> = {
+                  "Aggregations & JOINs": "JOINs",
+                  "Window Functions": "Windows",
+                  "Cumulative & Sliding Windows": "Cumulative",
+                  "Consecutive Sequences": "Sequences",
+                  "Advanced Analytics": "Analytics",
+                };
+                return (
+                  <div key={t.topic} className="flex items-center gap-2 text-sm">
+                    <span className="w-20 text-muted-foreground truncate">{short[t.topic] ?? t.topic}</span>
+                    <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full bg-violet-500" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">{t.solved}/{t.total}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Excel Summary */}
+        <div className="rounded-xl border p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Excel Skills</h2>
+          <div className="mb-4">
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-2xl font-bold">{stats.excelStats.totalCompleted}</span>
+              <span className="text-sm text-muted-foreground">/ {stats.excelStats.totalItems} items</span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-emerald-500 transition-all"
+                style={{ width: `${stats.excelStats.totalItems > 0 ? Math.round((stats.excelStats.totalCompleted / stats.excelStats.totalItems) * 100) : 0}%` }}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            {stats.excelStats.nodeMasteries.map((m) => {
+              const pct = m.total > 0 ? (m.completed / m.total) * 100 : 0;
+              return (
+                <div key={m.nodeId} className="flex items-center gap-2 text-sm">
+                  <span className="w-20 text-muted-foreground truncate" title={m.title}>
+                    {m.title.split("&")[0].trim()}
+                  </span>
+                  <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">{m.completed}/{m.total}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Achievements — compact grid */}
+      {allUnlocked.length > 0 && (
+        <div className="rounded-xl border p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            Achievements Earned ({allUnlocked.length})
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {allUnlocked.map((a) => (
+              <span
+                key={a.id}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm"
+                title={a.desc}
+              >
+                <span>{a.icon}</span>
+                <span className="font-medium">{a.name}</span>
+              </span>
             ))}
           </div>
         </div>
+      )}
+    </div>
+  );
+}
 
-        <Achievements title="Excel Achievements" achievements={stats.excelStats.achievements} />
-      </div>
+function StatPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-full bg-muted/60 px-4 py-1.5">
+      <span className="text-sm font-semibold">{value}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   );
 }
