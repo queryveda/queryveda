@@ -11,6 +11,7 @@ import {
   type UserProfile,
   type ProfileStats,
 } from "@/lib/profile";
+import { questions } from "@/lib/questions";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { ShareControls } from "@/components/profile/share-controls";
 import { EditDisplayName } from "@/components/profile/edit-display-name";
@@ -22,7 +23,6 @@ import Link from "next/link";
 
 type PageState =
   | { kind: "loading" }
-  | { kind: "private" }
   | { kind: "invalid" }
   | { kind: "not-logged-in" }
   | { kind: "ready"; profile: UserProfile; stats: ProfileStats; isOwner: boolean; avatarUrl: string | null };
@@ -76,7 +76,7 @@ export function ProfileClient() {
         profile: p,
         stats,
         isOwner: true,
-        avatarUrl: user.avatar,
+        avatarUrl: user.avatar ?? null,
       });
     }
 
@@ -103,15 +103,6 @@ export function ProfileClient() {
     );
   }
 
-  if (state.kind === "private") {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center px-4">
-        <h1 className="text-2xl font-bold">This profile is private</h1>
-        <Link href="/" className="text-primary hover:underline">Go home</Link>
-      </div>
-    );
-  }
-
   if (state.kind === "invalid") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center px-4">
@@ -124,7 +115,7 @@ export function ProfileClient() {
 
   const { stats, isOwner, avatarUrl } = state;
   const name = displayName || getAnonymousName(state.profile.user_id);
-  const totalQuestions = 75;
+  const totalQuestions = questions.length;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
