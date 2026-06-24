@@ -15,6 +15,7 @@ import { SQLEditor } from "@/components/practice/sql-editor";
 import { HintsPanel } from "@/components/practice/hints-panel";
 import { SolutionPanel } from "@/components/practice/solution-panel";
 import { ResultTable } from "@/components/practice/result-table";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PlanViewer } from "@/components/practice/plan-viewer";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { StruggleBanner } from "@/components/practice/struggle-banner";
@@ -288,35 +289,18 @@ export function PracticeClient({ id }: { id: string }) {
 
           {/* Output tabs */}
           {userResult && (
-            <div>
-              <div className="flex gap-1 mb-2">
-                <button
-                  onClick={() => setOutputTab("results")}
-                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                    outputTab === "results"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Results
-                </button>
-                <button
-                  onClick={() => setOutputTab("plan")}
-                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                    outputTab === "plan"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Plan
-                </button>
-              </div>
-              {outputTab === "results" ? (
+            <Tabs value={outputTab} onValueChange={(v) => setOutputTab(v as "results" | "plan")}>
+              <TabsList>
+                <TabsTrigger value="results">Results</TabsTrigger>
+                <TabsTrigger value="plan">Plan</TabsTrigger>
+              </TabsList>
+              <TabsContent value="results">
                 <ResultTable cols={userResult.cols} rows={userResult.rows} />
-              ) : (
+              </TabsContent>
+              <TabsContent value="plan">
                 <PlanViewer plan={planResult} />
-              )}
-            </div>
+              </TabsContent>
+            </Tabs>
           )}
 
           {/* Hints */}
