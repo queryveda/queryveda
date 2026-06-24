@@ -85,6 +85,39 @@ export async function executeQuery(
   return { cols, rows };
 }
 
+// --- EXPLAIN query plan ---
+
+export interface PlanNode {
+  "Node Type": string;
+  "Relation Name"?: string;
+  "Alias"?: string;
+  "Join Type"?: string;
+  "Index Name"?: string;
+  "Hash Cond"?: string;
+  "Filter"?: string;
+  "Sort Key"?: string[];
+  "Startup Cost": number;
+  "Total Cost": number;
+  "Plan Rows": number;
+  "Plan Width": number;
+  Plans?: PlanNode[];
+  [key: string]: unknown;
+}
+
+export async function explainQuery(
+  db: { query: (sql: string) => Promise<{ fields: { name: string }[]; rows: Record<string, unknown>[] }> },
+  sql: string
+): Promise<PlanNode | null> {
+  try {
+    const res = await db.query(`EXPLAIN (FORMAT JSON) ${sql}`);
+    const raw = res.rows[0]?.["QUERY PLAN"];
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    return (parsed as { Plan: PlanNode }[])[0]?.Plan ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // --- Run visible + hidden tests ---
 
 export interface TestRunResult {
