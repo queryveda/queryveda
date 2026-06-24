@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getQuestionById, getSortedQuestions } from "@/lib/questions";
-import { runTests, executeQuery, type QueryResult } from "@/lib/pglite";
+import { runTests, executeQuery, explainQuery, type QueryResult, type PlanNode } from "@/lib/pglite";
 import { usePGlite } from "@/hooks/use-pglite";
 import { useStorage } from "@/hooks/use-storage";
 import { useAuth } from "@/hooks/use-auth";
@@ -15,6 +15,7 @@ import { SQLEditor } from "@/components/practice/sql-editor";
 import { HintsPanel } from "@/components/practice/hints-panel";
 import { SolutionPanel } from "@/components/practice/solution-panel";
 import { ResultTable } from "@/components/practice/result-table";
+import { PlanViewer } from "@/components/practice/plan-viewer";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { StruggleBanner } from "@/components/practice/struggle-banner";
 
@@ -40,6 +41,8 @@ export function PracticeClient({ id }: { id: string }) {
     message: "",
   });
   const [userResult, setUserResult] = useState<QueryResult | null>(null);
+  const [planResult, setPlanResult] = useState<PlanNode | null>(null);
+  const [outputTab, setOutputTab] = useState<"results" | "plan">("results");
   const [schemaTables, setSchemaTables] = useState<
     Record<string, QueryResult>
   >({});
@@ -64,6 +67,8 @@ export function PracticeClient({ id }: { id: string }) {
     setSqlValue(saved);
     setVerdict({ type: "idle", message: "" });
     setUserResult(null);
+    setPlanResult(null);
+    setOutputTab("results");
 
     async function setupSchema() {
       try {
@@ -107,6 +112,10 @@ export function PracticeClient({ id }: { id: string }) {
         message: result.message,
       });
       setUserResult(result.userResult);
+
+      // Run EXPLAIN in parallel (non-blocking — failure is silent)
+      explainQuery(db, trimmed).then(setPlanResult);
+
       if (result.passed) {
         markSolved(questionId);
       } else {
@@ -277,11 +286,36 @@ export function PracticeClient({ id }: { id: string }) {
             </div>
           )}
 
-          {/* User result */}
+          {/* Output tabs */}
           {userResult && (
             <div>
-              <h4 className="text-sm font-semibold mb-1">Your Output</h4>
-              <ResultTable cols={userResult.cols} rows={userResult.rows} />
+              <div className="flex gap-1 mb-2">
+                <button
+                  onClick={() => setOutputTab("results")}
+                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                    outputTab === "results"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Results
+                </button>
+                <button
+                  onClick={() => setOutputTab("plan")}
+                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                    outputTab === "plan"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Plan
+                </button>
+              </div>
+              {outputTab === "results" ? (
+                <ResultTable cols={userResult.cols} rows={userResult.rows} />
+              ) : (
+                <PlanViewer plan={planResult} />
+              )}
             </div>
           )}
 
