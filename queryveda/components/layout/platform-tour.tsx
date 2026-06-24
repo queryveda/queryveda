@@ -43,6 +43,13 @@ const tourSteps = [
     },
   },
   {
+    element: "[data-tour='profile']",
+    popover: {
+      title: "Profile",
+      description: "View your stats showcase, share your profile, and download a stats card.",
+    },
+  },
+  {
     element: "[data-tour='theme-toggle']",
     popover: {
       title: "Theme",

@@ -167,7 +167,8 @@ export function ProfileClient() {
 
       {/* Actions bar — edit, share, download */}
       {isOwner && (
-        <div className="rounded-xl border p-4 mb-6 flex flex-col gap-3">
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 flex flex-col gap-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Settings &amp; Sharing</h2>
           <EditDisplayName
             userId={state.profile.user_id}
             currentName={displayName}
