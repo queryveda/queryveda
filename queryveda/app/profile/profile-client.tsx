@@ -135,47 +135,28 @@ export function ProfileClient() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      {/* Hero card */}
-      <div className="rounded-2xl border bg-gradient-to-br from-background to-muted/30 p-6 sm:p-8 mb-6">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-center gap-4">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="h-20 w-20 rounded-full object-cover ring-2 ring-primary/20" />
-            ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
-                {name.charAt(0)}
-              </div>
-            )}
-            <div>
-              <h1 className="text-2xl font-bold">{name}</h1>
-              {stats.memberSince && (
-                <p className="text-sm text-muted-foreground">
-                  Member since {new Date(stats.memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-                </p>
-              )}
-              {isOwner && (
-                <EditDisplayName
-                  userId={state.profile.user_id}
-                  currentName={displayName}
-                  onSave={setDisplayName}
-                />
-              )}
+      {/* Hero card — identity + stats only */}
+      <div className="rounded-2xl border bg-gradient-to-br from-background to-muted/30 p-6 sm:p-8 mb-4">
+        <div className="flex items-center gap-4 mb-6">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="h-16 w-16 rounded-full object-cover ring-2 ring-primary/20" />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary text-xl font-bold">
+              {name.charAt(0)}
             </div>
-          </div>
-          <div className="flex flex-col gap-2 sm:items-end">
-            {isOwner && (
-              <ShareControls
-                userId={state.profile.user_id}
-                shareToken={currentToken}
-                onTokenChange={setCurrentToken}
-              />
+          )}
+          <div>
+            <h1 className="text-2xl font-bold">{name}</h1>
+            {stats.memberSince && (
+              <p className="text-sm text-muted-foreground">
+                Member since {new Date(stats.memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              </p>
             )}
-            <ShareCardButton displayName={name} stats={stats} />
           </div>
         </div>
 
-        {/* Inline stat pills */}
-        <div className="mt-6 flex flex-wrap gap-3">
+        {/* Stat pills */}
+        <div className="flex flex-wrap gap-3">
           <StatPill label="Solved" value={`${stats.totalSolved}/${totalQuestions}`} />
           <StatPill label="Completion" value={`${stats.completionPercent}%`} />
           <StatPill label="Streak" value={`${stats.streak}d`} />
@@ -183,6 +164,30 @@ export function ProfileClient() {
           <StatPill label="Achievements" value={`${allUnlocked.length}`} />
         </div>
       </div>
+
+      {/* Actions bar — edit, share, download */}
+      {isOwner && (
+        <div className="rounded-xl border p-4 mb-6 flex flex-col gap-3">
+          <EditDisplayName
+            userId={state.profile.user_id}
+            currentName={displayName}
+            onSave={setDisplayName}
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <ShareControls
+              userId={state.profile.user_id}
+              shareToken={currentToken}
+              onTokenChange={setCurrentToken}
+            />
+            <ShareCardButton displayName={name} stats={stats} />
+          </div>
+        </div>
+      )}
+      {!isOwner && (
+        <div className="mb-6 flex justify-end">
+          <ShareCardButton displayName={name} stats={stats} />
+        </div>
+      )}
 
       {/* Two-column: SQL + Excel summaries */}
       <div className="grid gap-6 sm:grid-cols-2 mb-6">
