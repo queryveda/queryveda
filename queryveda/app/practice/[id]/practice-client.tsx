@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getQuestionById, getSortedQuestions } from "@/lib/questions";
 import { runTests, executeQuery, explainQuery, type QueryResult, type PlanNode } from "@/lib/pglite";
@@ -57,6 +57,12 @@ export function PracticeClient({ id }: { id: string }) {
   // Ref to avoid stale closure in onRun callback
   const sqlRef = useRef(sqlValue);
   sqlRef.current = sqlValue;
+
+  // Compute next question suggestion only when verdict changes to pass
+  const suggestion = useMemo(
+    () => verdict.type === "pass" && question ? getNextSuggestion(question, storage.isSolved) : null,
+    [verdict.type, question]
+  );
 
   // Access control
   const isEasy = question?.difficulty === "Easy";
@@ -291,51 +297,46 @@ export function PracticeClient({ id }: { id: string }) {
           )}
 
           {/* Next question suggestion */}
-          {verdict.type === "pass" && (() => {
-            const suggestion = getNextSuggestion(question, storage.isSolved);
-            if (!suggestion) {
-              return (
-                <div className="rounded-xl bg-muted/30 border border-primary/20 p-3 text-sm text-muted-foreground">
-                  You&apos;ve solved all 75 questions! Congratulations!
-                </div>
-              );
-            }
-            return (
-              <div className="rounded-xl bg-muted/30 border border-primary/20 p-3 space-y-1.5">
-                <p className="text-xs text-muted-foreground font-medium">Up Next</p>
-                <p className="text-sm font-medium">
-                  Q{suggestion.id} &middot; {suggestion.title}
-                </p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full font-medium"
-                    style={{
-                      backgroundColor: DIFFICULTY_COLORS[suggestion.difficulty] + "1a",
-                      color: DIFFICULTY_COLORS[suggestion.difficulty],
-                    }}
-                  >
-                    {suggestion.difficulty}
-                  </span>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full font-medium"
-                    style={{
-                      backgroundColor: TOPIC_COLORS[suggestion.topic] + "1a",
-                      color: TOPIC_COLORS[suggestion.topic],
-                    }}
-                  >
-                    {suggestion.topic}
-                  </span>
-                  <Button
-                    size="sm"
-                    className="rounded-full ml-auto h-7 text-xs"
-                    onClick={() => navigateTo(suggestion)}
-                  >
-                    Go &rarr;
-                  </Button>
-                </div>
+          {verdict.type === "pass" && !suggestion && (
+            <div className="rounded-xl bg-muted/30 border border-primary/20 p-3 text-sm text-muted-foreground">
+              You&apos;ve solved all {sorted.length} questions! Congratulations!
+            </div>
+          )}
+          {verdict.type === "pass" && suggestion && (
+            <div className="rounded-xl bg-muted/30 border border-primary/20 p-3 space-y-1.5">
+              <p className="text-xs text-muted-foreground font-medium">Up Next</p>
+              <p className="text-sm font-medium">
+                Q{suggestion.id} &middot; {suggestion.title}
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full font-medium"
+                  style={{
+                    backgroundColor: DIFFICULTY_COLORS[suggestion.difficulty] + "1a",
+                    color: DIFFICULTY_COLORS[suggestion.difficulty],
+                  }}
+                >
+                  {suggestion.difficulty}
+                </span>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full font-medium"
+                  style={{
+                    backgroundColor: TOPIC_COLORS[suggestion.topic] + "1a",
+                    color: TOPIC_COLORS[suggestion.topic],
+                  }}
+                >
+                  {suggestion.topic}
+                </span>
+                <Button
+                  size="sm"
+                  className="rounded-full ml-auto h-7 text-xs"
+                  onClick={() => navigateTo(suggestion)}
+                >
+                  Go &rarr;
+                </Button>
               </div>
-            );
-          })()}
+            </div>
+          )}
 
           {/* Output tabs */}
           {userResult && (
