@@ -189,7 +189,7 @@ export function PracticeClient({ id }: { id: string }) {
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full border-primary/40"
+            className="rounded-full border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary"
             disabled={!prevQ}
             onClick={() => prevQ && navigateTo(prevQ)}
           >
@@ -201,7 +201,7 @@ export function PracticeClient({ id }: { id: string }) {
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full border-primary/40"
+            className="rounded-full border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary"
             disabled={!nextQ}
             onClick={() => nextQ && navigateTo(nextQ)}
           >
@@ -306,7 +306,7 @@ export function PracticeClient({ id }: { id: string }) {
             <div className="rounded-xl bg-muted/30 border border-primary/20 p-3 space-y-1.5">
               <p className="text-xs text-muted-foreground font-medium">Up Next</p>
               <p className="text-sm font-medium">
-                Q{suggestion.id} &middot; {suggestion.title}
+                {suggestion.title}
               </p>
               <div className="flex items-center gap-2 flex-wrap">
                 <span
@@ -373,7 +373,7 @@ export function PracticeClient({ id }: { id: string }) {
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full border-primary/40"
+          className="rounded-full border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary"
           disabled={!prevQ}
           onClick={() => prevQ && navigateTo(prevQ)}
         >
@@ -385,7 +385,7 @@ export function PracticeClient({ id }: { id: string }) {
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full border-primary/40"
+          className="rounded-full border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary"
           disabled={!nextQ}
           onClick={() => nextQ && navigateTo(nextQ)}
           data-tour="next-question"
