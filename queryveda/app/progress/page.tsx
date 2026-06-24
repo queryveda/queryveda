@@ -124,7 +124,12 @@ function ProgressContent() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="mb-8 text-3xl font-bold">My Progress</h1>
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">My Progress</h1>
+        <Link href="/profile/" className="text-sm text-primary hover:underline">
+          View My Profile
+        </Link>
+      </div>
       <div className="flex flex-col gap-8">
         <StatsCards
           totalSolved={totalSolved}

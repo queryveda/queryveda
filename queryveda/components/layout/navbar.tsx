@@ -20,6 +20,7 @@ const navLinks = [
   { href: "/problems", label: "Problems" },
   { href: "/progress", label: "Progress" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/profile", label: "Profile" },
   { href: "/about", label: "About" },
 ];
 
