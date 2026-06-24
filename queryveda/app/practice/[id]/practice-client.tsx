@@ -328,7 +328,7 @@ export function PracticeClient({ id }: { id: string }) {
                   <Button
                     size="sm"
                     className="rounded-full ml-auto h-7 text-xs"
-                    onClick={() => router.push(`/practice/${suggestion.id}/`)}
+                    onClick={() => navigateTo(suggestion)}
                   >
                     Go &rarr;
                   </Button>
