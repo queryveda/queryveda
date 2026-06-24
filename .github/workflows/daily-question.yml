@@ -40,8 +40,4 @@ jobs:
             echo "pushed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Trigger deploy
-        if: steps.push.outputs.pushed == 'true'
-        run: gh workflow run deploy.yml
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Deploy is triggered automatically by the push-to-main trigger in deploy.yml

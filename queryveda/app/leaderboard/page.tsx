@@ -132,7 +132,7 @@ export default function LeaderboardPage() {
           <p className="text-muted-foreground">No data for this time period.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border">
+        <div className="overflow-x-auto rounded-2xl border border-primary/20">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50 text-left">

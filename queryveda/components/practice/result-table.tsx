@@ -13,7 +13,7 @@ export function ResultTable({ cols, rows }: ResultTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border">
+    <div className="overflow-x-auto rounded-xl border border-primary/20">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/50">

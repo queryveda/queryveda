@@ -594,7 +594,7 @@ export function ExcelExerciseEditor({
   const { rows, cols } = exercise.initialData;
 
   return (
-    <div className="rounded-xl border bg-card">
+    <div className="rounded-xl border border-primary/20 bg-card">
       {/* Header */}
       <div className="p-4 border-b">
         <h4 className="font-semibold">{exercise.title}</h4>

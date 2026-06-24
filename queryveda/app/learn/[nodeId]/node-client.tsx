@@ -110,7 +110,7 @@ export function NodeClient({ nodeId }: { nodeId: string }) {
       {/* Two-column layout: exercise list + active exercise */}
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
         {/* Left: exercise list */}
-        <div className="rounded-xl border p-3">
+        <div className="rounded-xl border border-primary/20 p-3">
           <ExerciseList
             exercises={node.exercises}
             isCompleted={isExerciseCompleted}
@@ -120,7 +120,7 @@ export function NodeClient({ nodeId }: { nodeId: string }) {
         </div>
 
         {/* Right: active exercise editor */}
-        <div className="rounded-xl border p-4">
+        <div className="rounded-xl border border-primary/20 p-4">
           {!ready || !db ? (
             <p className="text-sm text-muted-foreground">Loading SQL engine...</p>
           ) : activeExercise ? (

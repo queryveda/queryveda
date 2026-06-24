@@ -50,7 +50,7 @@ export function ConceptualQuestion({ question, onCorrect, alreadyCompleted }: Co
 
   if (question.type === "multiple-choice") {
     return (
-      <div className="rounded-xl border bg-card p-5 space-y-4">
+      <div className="rounded-xl border border-primary/20 bg-card p-5 space-y-4">
         <p className="font-medium">{question.question}</p>
         <div className="space-y-2">
           {question.options!.map((opt) => {
@@ -102,7 +102,7 @@ export function ConceptualQuestion({ question, onCorrect, alreadyCompleted }: Co
 
   // fill-blank type
   return (
-    <div className="rounded-xl border bg-card p-5 space-y-4">
+    <div className="rounded-xl border border-primary/20 bg-card p-5 space-y-4">
       <p className="font-medium">{question.question}</p>
       <div className="flex items-center gap-2">
         <input

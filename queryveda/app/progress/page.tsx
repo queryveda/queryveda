@@ -142,7 +142,7 @@ function ProgressContent() {
           <h3 className="mb-4 font-semibold">Skill Radar</h3>
           <SkillRadar byTopic={byTopic} />
         </div>
-        <div className="rounded-xl border p-6">
+        <div className="rounded-xl border border-primary/20 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">SQL Learning Progress</h2>
             <Link href="/learn" className="text-sm text-primary hover:underline">
@@ -163,7 +163,7 @@ function ProgressContent() {
             })}
           </div>
         </div>
-          <div className="rounded-xl border p-6">
+          <div className="rounded-xl border border-primary/20 p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-semibold">Excel Learning Progress</h2>

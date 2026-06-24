@@ -253,7 +253,7 @@ export function SQLEditor({
           ))}
         </select>
       </div>
-      <div className="rounded-xl border overflow-hidden" ref={containerRef} />
+      <div className="rounded-xl border border-primary/20 overflow-hidden" ref={containerRef} />
     </div>
   );
 }

@@ -165,7 +165,7 @@ export function MicroExerciseEditor({ exercise, db, onPass, onAuthPrompt }: Micr
       )}
 
       {/* Template context + editor */}
-      <div className="rounded-xl border bg-muted/30 p-4 font-mono text-sm">
+      <div className="rounded-xl border border-primary/20 bg-muted/30 p-4 font-mono text-sm">
         {templateParts[0] && (
           <pre className="text-muted-foreground whitespace-pre-wrap mb-1">
             {templateParts[0].trimEnd()}

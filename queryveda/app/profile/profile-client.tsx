@@ -136,7 +136,7 @@ export function ProfileClient() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Hero card — identity + stats only */}
-      <div className="rounded-2xl border bg-gradient-to-br from-background to-muted/30 p-6 sm:p-8 mb-4">
+      <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-background to-muted/30 p-6 sm:p-8 mb-4">
         <div className="flex items-center gap-4 mb-6">
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="h-16 w-16 rounded-full object-cover ring-2 ring-primary/20" />
@@ -193,7 +193,7 @@ export function ProfileClient() {
       {/* Two-column: SQL + Excel summaries */}
       <div className="grid gap-6 sm:grid-cols-2 mb-6">
         {/* SQL Summary */}
-        <div className="rounded-xl border p-5">
+        <div className="rounded-xl border border-primary/20 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">SQL Practice</h2>
           <div className="mb-4">
             <div className="flex items-baseline justify-between mb-1">
@@ -246,7 +246,7 @@ export function ProfileClient() {
         </div>
 
         {/* Excel Summary */}
-        <div className="rounded-xl border p-5">
+        <div className="rounded-xl border border-primary/20 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Excel Skills</h2>
           <div className="mb-4">
             <div className="flex items-baseline justify-between mb-1">
@@ -281,7 +281,7 @@ export function ProfileClient() {
 
       {/* Achievements — compact grid */}
       {allUnlocked.length > 0 && (
-        <div className="rounded-xl border p-5">
+        <div className="rounded-xl border border-primary/20 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
             Achievements Earned ({allUnlocked.length})
           </h2>

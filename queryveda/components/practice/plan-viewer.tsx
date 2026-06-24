@@ -82,7 +82,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
   const maxCost = findMaxCost(plan);
 
   return (
-    <div className="rounded-xl border p-3 text-sm font-mono overflow-x-auto">
+    <div className="rounded-xl border border-primary/20 p-3 text-sm font-mono overflow-x-auto">
       <NodeRow node={plan} maxCost={maxCost} depth={0} />
     </div>
   );

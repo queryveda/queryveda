@@ -67,7 +67,7 @@ export function ExcelNodeClient({ nodeId }: { nodeId: string }) {
       <p className="mt-2 text-muted-foreground">{node.description}</p>
 
       {node.intro && (
-        <div className="mt-6 rounded-xl border bg-card p-5 space-y-3">
+        <div className="mt-6 rounded-xl border border-primary/20 bg-card p-5 space-y-3">
           <div className="flex items-center gap-2 text-primary">
             <Lightbulb className="w-5 h-5" />
             <span className="font-semibold text-sm">Before you start</span>
