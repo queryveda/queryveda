@@ -25,6 +25,7 @@ import Link from "next/link";
 type PageState =
   | { kind: "loading" }
   | { kind: "invalid" }
+  | { kind: "error" }
   | { kind: "not-logged-in" }
   | { kind: "ready"; profile: UserProfile; stats: ProfileStats; isOwner: boolean; avatarUrl: string | null };
 
@@ -41,48 +42,53 @@ export function ProfileClient() {
     if (authLoading) return;
 
     async function load() {
-      // Case 1: Shared profile via token
-      if (shareToken) {
-        const result = await getProfileByToken(shareToken);
-        if (!result) {
-          setState({ kind: "invalid" });
+      try {
+        // Case 1: Shared profile via token
+        if (shareToken) {
+          const result = await getProfileByToken(shareToken);
+          if (!result) {
+            setState({ kind: "invalid" });
+            return;
+          }
+          const isOwner = user?.id === result.profile.user_id;
+          setDisplayName(result.profile.display_name);
+          setCurrentToken(result.profile.share_token);
+          setState({
+            kind: "ready",
+            profile: result.profile,
+            stats: result.stats,
+            isOwner,
+            avatarUrl: isOwner ? user?.avatar ?? null : null,
+          });
           return;
         }
-        const isOwner = user?.id === result.profile.user_id;
-        setDisplayName(result.profile.display_name);
-        setCurrentToken(result.profile.share_token);
+
+        // Case 2: Own profile (no share token)
+        if (!user) {
+          setState({ kind: "not-logged-in" });
+          return;
+        }
+
+        const profile = await getProfileByUserId(user.id);
+        const stats = await computeProfileStats(user.id);
+        const p = profile || { user_id: user.id, display_name: null, share_token: null, created_at: "", updated_at: "" };
+        setDisplayName(p.display_name);
+        setCurrentToken(p.share_token);
         setState({
           kind: "ready",
-          profile: result.profile,
-          stats: result.stats,
-          isOwner,
-          avatarUrl: isOwner ? user?.avatar ?? null : null,
+          profile: p,
+          stats,
+          isOwner: true,
+          avatarUrl: user.avatar ?? null,
         });
-        return;
+      } catch {
+        setState({ kind: "error" });
       }
-
-      // Case 2: Own profile (no share token)
-      if (!user) {
-        setState({ kind: "not-logged-in" });
-        return;
-      }
-
-      const profile = await getProfileByUserId(user.id);
-      const stats = await computeProfileStats(user.id);
-      const p = profile || { user_id: user.id, display_name: null, share_token: null, created_at: "", updated_at: "" };
-      setDisplayName(p.display_name);
-      setCurrentToken(p.share_token);
-      setState({
-        kind: "ready",
-        profile: p,
-        stats,
-        isOwner: true,
-        avatarUrl: user.avatar ?? null,
-      });
     }
 
     load();
-  }, [authLoading, user, shareToken]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id, user?.avatar, shareToken]);
 
   if (state.kind === "loading") {
     return (
@@ -109,6 +115,16 @@ export function ProfileClient() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center px-4">
         <h1 className="text-2xl font-bold">This link is no longer valid</h1>
         <p className="text-muted-foreground">The profile owner may have revoked sharing.</p>
+        <Link href="/" className="text-primary hover:underline">Go home</Link>
+      </div>
+    );
+  }
+
+  if (state.kind === "error") {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center px-4">
+        <h1 className="text-2xl font-bold">Something went wrong</h1>
+        <p className="text-muted-foreground">Something went wrong. Please try again later.</p>
         <Link href="/" className="text-primary hover:underline">Go home</Link>
       </div>
     );

@@ -4,6 +4,9 @@ import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import type { ProfileStats } from "@/lib/profile";
+import { questions } from "@/lib/questions";
+import { DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
+import type { Topic } from "@/lib/types";
 
 interface ShareCardButtonProps {
   displayName: string;
@@ -65,7 +68,7 @@ function drawCard(canvas: HTMLCanvasElement, displayName: string, stats: Profile
 
   // Big stats row
   const statItems = [
-    { label: "Solved", value: `${stats.totalSolved}/75` },
+    { label: "Solved", value: `${stats.totalSolved}/${questions.length}` },
     { label: "Completion", value: `${stats.completionPercent}%` },
     { label: "Streak", value: `${stats.streak} days` },
     { label: "Active Days", value: `${stats.activeDays}` },
@@ -83,9 +86,9 @@ function drawCard(canvas: HTMLCanvasElement, displayName: string, stats: Profile
 
   // Difficulty bars
   const diffs = [
-    { label: "Easy", ...stats.byDifficulty.Easy, color: "#22c55e" },
-    { label: "Medium", ...stats.byDifficulty.Medium, color: "#f59e0b" },
-    { label: "Hard", ...stats.byDifficulty.Hard, color: "#ef4444" },
+    { label: "Easy", ...stats.byDifficulty.Easy, color: DIFFICULTY_COLORS.Easy },
+    { label: "Medium", ...stats.byDifficulty.Medium, color: DIFFICULTY_COLORS.Medium },
+    { label: "Hard", ...stats.byDifficulty.Hard, color: DIFFICULTY_COLORS.Hard },
   ];
   let dy = 310;
   ctx.font = "bold 16px system-ui, sans-serif";
@@ -107,13 +110,6 @@ function drawCard(canvas: HTMLCanvasElement, displayName: string, stats: Profile
   }
 
   // Topic mastery bars
-  const topicColors: Record<string, string> = {
-    "Aggregations & JOINs": "#7C3AED",
-    "Window Functions": "#8b5cf6",
-    "Cumulative & Sliding Windows": "#06b6d4",
-    "Consecutive Sequences": "#f59e0b",
-    "Advanced Analytics": "#ec4899",
-  };
   const shortLabels: Record<string, string> = {
     "Aggregations & JOINs": "JOINs",
     "Window Functions": "Windows",
@@ -133,7 +129,7 @@ function drawCard(canvas: HTMLCanvasElement, displayName: string, stats: Profile
     ctx.fillStyle = "#334155";
     ctx.fillRect(800, ty - 12, 300, 14);
     const pct = t.total > 0 ? t.solved / t.total : 0;
-    ctx.fillStyle = topicColors[t.topic] ?? "#8b5cf6";
+    ctx.fillStyle = TOPIC_COLORS[t.topic as Topic] ?? "#8b5cf6";
     ctx.fillRect(800, ty - 12, 300 * pct, 14);
     ty += 30;
   }

@@ -19,7 +19,9 @@ export function EditDisplayName({ userId, currentName, onSave }: EditDisplayName
     setSaving(true);
     try {
       await upsertDisplayName(userId, name);
-      onSave(name.trim().slice(0, 30));
+      const trimmed = name.trim().slice(0, 30);
+      setName(trimmed);
+      onSave(trimmed);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } finally {
@@ -36,6 +38,7 @@ export function EditDisplayName({ userId, currentName, onSave }: EditDisplayName
         onChange={(e) => setName(e.target.value)}
         maxLength={30}
         placeholder="Anonymous"
+        disabled={saving}
         className="rounded-lg border bg-background px-3 py-1.5 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-ring"
       />
       <Button onClick={handleSave} disabled={saving} size="sm" variant="outline" className="rounded-full">
