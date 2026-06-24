@@ -14,6 +14,7 @@ import {
 import { questions } from "@/lib/questions";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { ShareControls } from "@/components/profile/share-controls";
+import { ShareCardButton } from "@/components/profile/share-card";
 import { EditDisplayName } from "@/components/profile/edit-display-name";
 import { StatsCards } from "@/components/progress/stats-cards";
 import { ProgressBars } from "@/components/progress/progress-bars";
@@ -128,13 +129,16 @@ export function ProfileClient() {
             memberSince={stats.memberSince}
             isOwner={isOwner}
           />
-          {isOwner && (
-            <ShareControls
-              userId={state.profile.user_id}
-              shareToken={currentToken}
-              onTokenChange={setCurrentToken}
-            />
-          )}
+          <div className="flex flex-col gap-2 sm:items-end">
+            {isOwner && (
+              <ShareControls
+                userId={state.profile.user_id}
+                shareToken={currentToken}
+                onTokenChange={setCurrentToken}
+              />
+            )}
+            <ShareCardButton displayName={name} stats={stats} />
+          </div>
         </div>
 
         {/* Edit display name (owner only) */}
