@@ -19,6 +19,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PlanViewer } from "@/components/practice/plan-viewer";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { StruggleBanner } from "@/components/practice/struggle-banner";
+import { getNextSuggestion } from "@/lib/next-question";
+import { DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
+import { storage } from "@/lib/storage";
 
 interface Verdict {
   type: "pass" | "fail" | "idle";
@@ -180,7 +183,7 @@ export function PracticeClient({ id }: { id: string }) {
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full"
+            className="rounded-full border-primary/40"
             disabled={!prevQ}
             onClick={() => prevQ && navigateTo(prevQ)}
           >
@@ -192,7 +195,7 @@ export function PracticeClient({ id }: { id: string }) {
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full"
+            className="rounded-full border-primary/40"
             disabled={!nextQ}
             onClick={() => nextQ && navigateTo(nextQ)}
           >
@@ -287,6 +290,53 @@ export function PracticeClient({ id }: { id: string }) {
             </div>
           )}
 
+          {/* Next question suggestion */}
+          {verdict.type === "pass" && (() => {
+            const suggestion = getNextSuggestion(question, storage.isSolved);
+            if (!suggestion) {
+              return (
+                <div className="rounded-xl bg-muted/30 border border-primary/20 p-3 text-sm text-muted-foreground">
+                  You&apos;ve solved all 75 questions! Congratulations!
+                </div>
+              );
+            }
+            return (
+              <div className="rounded-xl bg-muted/30 border border-primary/20 p-3 space-y-1.5">
+                <p className="text-xs text-muted-foreground font-medium">Up Next</p>
+                <p className="text-sm font-medium">
+                  Q{suggestion.id} &middot; {suggestion.title}
+                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full font-medium"
+                    style={{
+                      backgroundColor: DIFFICULTY_COLORS[suggestion.difficulty] + "1a",
+                      color: DIFFICULTY_COLORS[suggestion.difficulty],
+                    }}
+                  >
+                    {suggestion.difficulty}
+                  </span>
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full font-medium"
+                    style={{
+                      backgroundColor: TOPIC_COLORS[suggestion.topic] + "1a",
+                      color: TOPIC_COLORS[suggestion.topic],
+                    }}
+                  >
+                    {suggestion.topic}
+                  </span>
+                  <Button
+                    size="sm"
+                    className="rounded-full ml-auto h-7 text-xs"
+                    onClick={() => router.push(`/practice/${suggestion.id}/`)}
+                  >
+                    Go &rarr;
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Output tabs */}
           {userResult && (
             <Tabs value={outputTab} onValueChange={(v) => setOutputTab(v as "results" | "plan")}>
@@ -322,7 +372,7 @@ export function PracticeClient({ id }: { id: string }) {
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full"
+          className="rounded-full border-primary/40"
           disabled={!prevQ}
           onClick={() => prevQ && navigateTo(prevQ)}
         >
@@ -334,9 +384,10 @@ export function PracticeClient({ id }: { id: string }) {
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full"
+          className="rounded-full border-primary/40"
           disabled={!nextQ}
           onClick={() => nextQ && navigateTo(nextQ)}
+          data-tour="next-question"
         >
           Next
         </Button>

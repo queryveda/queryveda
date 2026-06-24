@@ -29,6 +29,13 @@ const tourSteps = [
     },
   },
   {
+    element: "[data-tour='next-question']",
+    popover: {
+      title: "Next Question",
+      description: "Navigate between questions using these buttons.",
+    },
+  },
+  {
     element: "[data-tour='progress']",
     popover: {
       title: "Progress",
