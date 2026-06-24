@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { questions } from "@/lib/questions";
 import { TOPICS } from "@/lib/constants";
+import { excelSkillTreeNodes } from "@/lib/excel-skill-tree-data";
 import type { Topic, Achievement } from "@/lib/types";
 
 // --- Types ---
@@ -26,6 +27,22 @@ export interface ProfileStats {
   byTopic: { topic: Topic; total: number; solved: number }[];
   achievements: Achievement[];
   memberSince: string | null;
+  excelStats: ExcelProfileStats;
+}
+
+export interface ExcelNodeProgress {
+  nodeId: string;
+  title: string;
+  completed: number;
+  total: number;
+}
+
+export interface ExcelProfileStats {
+  totalCompleted: number;
+  totalItems: number;
+  starredCount: number;
+  nodeMasteries: ExcelNodeProgress[];
+  achievements: Achievement[];
 }
 
 // --- Anonymous name generation (extracted from leaderboard) ---
@@ -115,6 +132,51 @@ export async function revokeShareToken(userId: string): Promise<void> {
     .eq("user_id", userId);
 }
 
+// --- Excel stats from Supabase ---
+
+async function computeExcelStats(userId: string): Promise<ExcelProfileStats> {
+  const { data } = await supabase
+    .from("skill_tree_progress")
+    .select("exercise_id, completed")
+    .eq("user_id", userId)
+    .eq("track", "excel");
+
+  const completedIds = new Set(
+    (data || []).filter((r) => r.completed).map((r) => r.exercise_id as string)
+  );
+
+  const nodeMasteries: ExcelNodeProgress[] = excelSkillTreeNodes.map((node) => {
+    const conceptualCompleted = node.conceptualQuestions.filter((q) => completedIds.has(q.id)).length;
+    const exercisesCompleted = node.exercises.filter((e) => completedIds.has(e.id)).length;
+    const completed = conceptualCompleted + exercisesCompleted;
+    const total = node.conceptualQuestions.length + node.exercises.length;
+    return { nodeId: node.id, title: node.title, completed, total };
+  });
+
+  const totalCompleted = nodeMasteries.reduce((s, m) => s + m.completed, 0);
+  const totalItems = nodeMasteries.reduce((s, m) => s + m.total, 0);
+  const starredCount = nodeMasteries.filter((m) => m.total > 0 && m.completed === m.total).length;
+
+  const conceptualCompleted = excelSkillTreeNodes.reduce(
+    (s, node) => s + node.conceptualQuestions.filter((q) => completedIds.has(q.id)).length,
+    0
+  );
+
+  const cellRefNode = nodeMasteries.find((m) => m.nodeId === "cell-references");
+  const cellRefStarred = cellRefNode ? cellRefNode.total > 0 && cellRefNode.completed === cellRefNode.total : false;
+
+  const achievements: Achievement[] = [
+    { id: "excel-first-formula", name: "First Formula", desc: "Complete your first Excel exercise", icon: "📊", unlocked: totalCompleted >= 1 },
+    { id: "excel-warmup-king", name: "Warmup King", desc: "Answer 10 conceptual questions", icon: "🧩", unlocked: conceptualCompleted >= 10 },
+    { id: "excel-cell-master", name: "Cell Master", desc: "Star the Cell References node", icon: "📍", unlocked: cellRefStarred },
+    { id: "excel-halfway", name: "Spreadsheet Student", desc: "Complete 50% of all Excel content", icon: "📈", unlocked: totalItems > 0 && totalCompleted >= totalItems / 2 },
+    { id: "excel-3-stars", name: "Triple Star", desc: "Star 3 Excel skill nodes", icon: "⭐", unlocked: starredCount >= 3 },
+    { id: "excel-all-stars", name: "Excel Grandmaster", desc: "Star all Excel skill nodes", icon: "👑", unlocked: starredCount >= excelSkillTreeNodes.length },
+  ];
+
+  return { totalCompleted, totalItems, starredCount, nodeMasteries, achievements };
+}
+
 // --- Stats computation from Supabase ---
 
 export async function computeProfileStats(userId: string): Promise<ProfileStats> {
@@ -189,6 +251,8 @@ export async function computeProfileStats(userId: string): Promise<ProfileStats>
     ? [...solvedDates].sort()[0]
     : null;
 
+  const excelStats = await computeExcelStats(userId);
+
   return {
     totalSolved,
     completionPercent,
@@ -202,5 +266,6 @@ export async function computeProfileStats(userId: string): Promise<ProfileStats>
     byTopic,
     achievements,
     memberSince,
+    excelStats,
   };
 }

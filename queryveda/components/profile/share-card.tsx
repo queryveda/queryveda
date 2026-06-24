@@ -134,6 +134,20 @@ function drawCard(canvas: HTMLCanvasElement, displayName: string, stats: Profile
     ty += 30;
   }
 
+  // Excel stats summary
+  ctx.font = "bold 16px system-ui, sans-serif";
+  ctx.fillStyle = "#94a3b8";
+  ctx.fillText("Excel", 620, ty + 10);
+  ctx.font = "14px system-ui, sans-serif";
+  const excelPct = stats.excelStats.totalItems > 0
+    ? Math.round((stats.excelStats.totalCompleted / stats.excelStats.totalItems) * 100)
+    : 0;
+  ctx.fillText(
+    `${stats.excelStats.totalCompleted}/${stats.excelStats.totalItems} completed (${excelPct}%)`,
+    700,
+    ty + 10
+  );
+
   // Achievements (bottom row — top 4 unlocked)
   const unlocked = stats.achievements.filter((a) => a.unlocked).slice(0, 4);
   if (unlocked.length > 0) {

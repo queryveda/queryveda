@@ -20,6 +20,7 @@ import { StatsCards } from "@/components/progress/stats-cards";
 import { ProgressBars } from "@/components/progress/progress-bars";
 import { SkillRadar } from "@/components/progress/skill-radar";
 import { Achievements } from "@/components/progress/achievements";
+import { MasteryBar } from "@/components/learn/mastery-bar";
 import Link from "next/link";
 
 type PageState =
@@ -184,7 +185,31 @@ export function ProfileClient() {
           <SkillRadar byTopic={stats.byTopic} />
         </div>
 
-        <Achievements achievements={stats.achievements} />
+        <Achievements title="SQL Achievements" achievements={stats.achievements} />
+
+        {/* Excel Progress */}
+        <div className="rounded-xl border p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold">Excel Learning Progress</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {stats.excelStats.totalCompleted} / {stats.excelStats.totalItems} exercises &amp; concepts completed
+              </p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {stats.excelStats.nodeMasteries.map((m) => (
+              <div key={m.nodeId} className="flex items-center gap-3">
+                <span className="text-sm w-48 truncate">{m.title}</span>
+                <div className="flex-1">
+                  <MasteryBar completed={m.completed} total={m.total} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Achievements title="Excel Achievements" achievements={stats.excelStats.achievements} />
       </div>
     </div>
   );
