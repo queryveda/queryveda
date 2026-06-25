@@ -1,56 +1,72 @@
 {
-  "date": "2026-06-24",
+  "date": "2026-06-25",
   "question": {
-    "title": "Identify Consecutive Logins",
+    "title": "Ranking Product Sales",
     "difficulty": "Medium",
-    "topic": "Consecutive Sequences",
-    "desc": "Given a table of user logins, identify users who have logged in consecutively for at least 3 days.",
-    "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (3, '2022-01-01'), (3, '2022-01-02'), (3, '2022-01-03'), (3, '2022-01-04');",
+    "topic": "Advanced Analytics",
+    "desc": "Write a query that ranks products by their total sales in descending order. If two products have the same total sales, they should be ranked based on their average price in descending order.",
+    "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255), price DECIMAL(10, 2)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, quantity INTEGER, FOREIGN KEY (product_id) REFERENCES products (id)); INSERT INTO products (name, price) VALUES ('Product A', 10.99), ('Product B', 9.99), ('Product C', 12.99); INSERT INTO sales (product_id, quantity) VALUES (1, 5), (1, 3), (2, 4), (3, 2), (3, 6);",
     "tables": [
-      "logins"
+      "products",
+      "sales"
     ],
     "cols": [
-      "user_id",
-      "start_date",
-      "end_date"
+      "name",
+      "rank"
     ],
     "rows": [
       [
-        1,
-        "2022-01-01",
-        "2022-01-03"
+        "Product C",
+        1
       ],
       [
-        3,
-        "2022-01-01",
-        "2022-01-04"
+        "Product A",
+        2
+      ],
+      [
+        "Product B",
+        3
       ]
     ],
-    "solution": "WITH consecutive_logins AS ( SELECT user_id, login_date, DATEADD('day', -ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date), login_date) AS group_id FROM logins ) SELECT user_id, MIN(login_date) AS start_date, MAX(login_date) AS end_date FROM consecutive_logins GROUP BY user_id, group_id HAVING COUNT(*) >= 3;",
-    "tips": "Consider using window functions to efficiently handle sequences.",
+    "solution": "WITH product_sales AS (SELECT p.name, SUM(s.quantity) AS total_sales, AVG(p.price) AS avg_price FROM products p JOIN sales s ON p.id = s.product_id GROUP BY p.name, p.price) SELECT name, DENSE_RANK() OVER (ORDER BY total_sales DESC, avg_price DESC) AS rank FROM product_sales;",
+    "tips": "Using DENSE_RANK() instead of RANK() ensures that if two rows have the same total sales and average price, they will have the same rank and the next rank will not be skipped.",
     "hints": [
-      "Consider using window functions to identify consecutive sequences",
-      "Look into using ROW_NUMBER() or RANK() to assign a sequence identifier to each row",
-      "Use a Common Table Expression (CTE) to break down the problem into manageable parts"
+      "You need to join the two tables based on the product_id to get the total sales for each product.",
+      "You should use a window function to rank the products based on their total sales and average price.",
+      "Use a Common Table Expression (CTE) to calculate the total sales and average price for each product before ranking them."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (4, '2023-02-01'), (4, '2023-02-02'), (4, '2023-02-03'), (5, '2023-02-01'), (5, '2023-02-02');",
+        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255), price DECIMAL(10, 2)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, quantity INTEGER, FOREIGN KEY (product_id) REFERENCES products (id)); INSERT INTO products (name, price) VALUES ('Product X', 5.99), ('Product Y', 7.99), ('Product Z', 8.99); INSERT INTO sales (product_id, quantity) VALUES (1, 2), (2, 3), (3, 4);",
         "rows": [
           [
-            4,
-            "2023-02-01",
-            "2023-02-03"
+            "Product Z",
+            1
+          ],
+          [
+            "Product Y",
+            2
+          ],
+          [
+            "Product X",
+            3
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (6, '2024-03-01'), (6, '2024-03-02'), (6, '2024-03-03'), (6, '2024-03-04'), (7, '2024-03-01'), (7, '2024-03-03');",
+        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255), price DECIMAL(10, 2)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, quantity INTEGER, FOREIGN KEY (product_id) REFERENCES products (id)); INSERT INTO products (name, price) VALUES ('Product 1', 10.99), ('Product 2', 9.99), ('Product 3', 12.99); INSERT INTO sales (product_id, quantity) VALUES (1, 5), (2, 5), (3, 3);",
         "rows": [
           [
-            6,
-            "2024-03-01",
-            "2024-03-04"
+            "Product 1",
+            1
+          ],
+          [
+            "Product 2",
+            1
+          ],
+          [
+            "Product 3",
+            3
           ]
         ]
       }
