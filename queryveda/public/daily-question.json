@@ -1,164 +1,163 @@
 {
   "date": "2026-06-27",
   "question": {
-    "title": "Employee Salary Ranking",
+    "title": "Ranking Sales by Region",
     "difficulty": "Medium",
     "topic": "Window Functions",
-    "desc": "Rank employees based on their salary within their respective departments. The ranking should be based on the highest salary first. If two employees have the same salary, they should have the same rank.",
-    "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments (id)); INSERT INTO employees (name, department_id, salary) VALUES ('John Doe', 1, 50000.00), ('Jane Doe', 1, 60000.00), ('Bob Smith', 2, 40000.00), ('Alice Johnson', 2, 55000.00), ('Mike Brown', 3, 70000.00), ('Emily Davis', 3, 65000.00), ('Tom White', 1, 45000.00), ('Linda Lee', 2, 35000.00), ('David Kim', 3, 58000.00);",
+    "desc": "Given the sales data for different regions, rank the sales within each region from highest to lowest. The sales data includes the region name, the product name, and the sales amount. The output should include the region name, the product name, the sales amount, and the rank of the sales within the region.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(50), product VARCHAR(50), sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, product, sales_amount) VALUES ('North', 'Product A', 1000.00), ('North', 'Product B', 800.00), ('North', 'Product C', 1200.00), ('South', 'Product A', 900.00), ('South', 'Product B', 700.00), ('South', 'Product C', 1100.00), ('East', 'Product A', 1300.00), ('East', 'Product B', 600.00), ('East', 'Product C', 1000.00);",
     "tables": [
-      "employees",
-      "departments"
+      "sales"
     ],
     "cols": [
-      "name",
-      "department_name",
-      "salary",
+      "region",
+      "product",
+      "sales_amount",
       "rank"
     ],
     "rows": [
       [
-        "Jane Doe",
-        "Sales",
-        60000,
+        "East",
+        "Product A",
+        1300,
         1
       ],
       [
-        "John Doe",
-        "Sales",
-        50000,
+        "East",
+        "Product C",
+        1000,
         2
       ],
       [
-        "Tom White",
-        "Sales",
-        45000,
+        "East",
+        "Product B",
+        600,
         3
       ],
       [
-        "Alice Johnson",
-        "Marketing",
-        55000,
+        "North",
+        "Product C",
+        1200,
         1
       ],
       [
-        "Bob Smith",
-        "Marketing",
-        40000,
+        "North",
+        "Product A",
+        1000,
         2
       ],
       [
-        "Linda Lee",
-        "Marketing",
-        35000,
+        "North",
+        "Product B",
+        800,
         3
       ],
       [
-        "Mike Brown",
-        "IT",
-        70000,
+        "South",
+        "Product C",
+        1100,
         1
       ],
       [
-        "David Kim",
-        "IT",
-        58000,
+        "South",
+        "Product A",
+        900,
         2
       ],
       [
-        "Emily Davis",
-        "IT",
-        65000,
+        "South",
+        "Product B",
+        700,
         3
       ]
     ],
-    "solution": "SELECT e.name, d.name AS department_name, e.salary, DENSE_RANK() OVER (PARTITION BY d.id ORDER BY e.salary DESC) AS rank FROM employees e JOIN departments d ON e.department_id = d.id ORDER BY d.id, e.salary DESC;",
-    "tips": "Consider using DENSE_RANK() instead of RANK() to avoid gaps in the ranking.",
+    "solution": "SELECT region, product, sales_amount, RANK() OVER (PARTITION BY region ORDER BY sales_amount DESC) AS rank FROM sales;",
+    "tips": "Using the RANK() function allows for ties in the ranking. If you want to avoid ties, you can use the ROW_NUMBER() function instead.",
     "hints": [
-      "You need to join the employees table with the departments table to get the department name.",
-      "Use the DENSE_RANK() window function to rank employees by salary within each department.",
-      "Make sure to partition the data by department_id and order by salary in descending order."
+      "You will need to use a window function to solve this problem.",
+      "The window function should partition the data by region and order it by sales amount in descending order.",
+      "The RANK() function is the most suitable window function for this problem, as it assigns a unique rank to each row within a partition of a result set."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('Finance'), ('HR'), ('Operations'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments (id)); INSERT INTO employees (name, department_id, salary) VALUES ('Sarah Taylor', 1, 62000.00), ('Kevin Martin', 1, 52000.00), ('Rebecca Hall', 2, 48000.00), ('James Wilson', 2, 38000.00), ('Olivia Thompson', 3, 68000.00), ('William Lewis', 3, 58000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(50), product VARCHAR(50), sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, product, sales_amount) VALUES ('North', 'Product X', 1500.00), ('North', 'Product Y', 1200.00), ('North', 'Product Z', 1000.00), ('South', 'Product X', 1800.00), ('South', 'Product Y', 1500.00), ('South', 'Product Z', 1200.00);",
         "rows": [
           [
-            "Sarah Taylor",
-            "Finance",
-            62000,
+            "North",
+            "Product X",
+            1500,
             1
           ],
           [
-            "Kevin Martin",
-            "Finance",
-            52000,
+            "North",
+            "Product Y",
+            1200,
             2
           ],
           [
-            "Rebecca Hall",
-            "HR",
-            48000,
+            "North",
+            "Product Z",
+            1000,
+            3
+          ],
+          [
+            "South",
+            "Product X",
+            1800,
             1
           ],
           [
-            "James Wilson",
-            "HR",
-            38000,
+            "South",
+            "Product Y",
+            1500,
             2
           ],
           [
-            "Olivia Thompson",
-            "Operations",
-            68000,
-            1
-          ],
-          [
-            "William Lewis",
-            "Operations",
-            58000,
-            2
+            "South",
+            "Product Z",
+            1200,
+            3
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('Research'), ('Development'), ('Quality Assurance'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments (id)); INSERT INTO employees (name, department_id, salary) VALUES ('Peter Davis', 1, 70000.00), ('Lisa Nguyen', 1, 60000.00), ('Daniel Lee', 2, 55000.00), ('Hannah Kim', 2, 50000.00), ('Michael Patel', 3, 65000.00), ('Sofia Rodriguez', 3, 58000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(50), product VARCHAR(50), sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, product, sales_amount) VALUES ('East', 'Product P', 2000.00), ('East', 'Product Q', 1800.00), ('East', 'Product R', 1600.00), ('West', 'Product P', 2200.00), ('West', 'Product Q', 2000.00), ('West', 'Product R', 1800.00);",
         "rows": [
           [
-            "Peter Davis",
-            "Research",
-            70000,
+            "East",
+            "Product P",
+            2000,
             1
           ],
           [
-            "Lisa Nguyen",
-            "Research",
-            60000,
+            "East",
+            "Product Q",
+            1800,
             2
           ],
           [
-            "Daniel Lee",
-            "Development",
-            55000,
+            "East",
+            "Product R",
+            1600,
+            3
+          ],
+          [
+            "West",
+            "Product P",
+            2200,
             1
           ],
           [
-            "Hannah Kim",
-            "Development",
-            50000,
+            "West",
+            "Product Q",
+            2000,
             2
           ],
           [
-            "Michael Patel",
-            "Quality Assurance",
-            65000,
-            1
-          ],
-          [
-            "Sofia Rodriguez",
-            "Quality Assurance",
-            58000,
-            2
+            "West",
+            "Product R",
+            1800,
+            3
           ]
         ]
       }
