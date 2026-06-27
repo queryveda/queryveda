@@ -19,7 +19,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PlanViewer } from "@/components/practice/plan-viewer";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { StruggleBanner } from "@/components/practice/struggle-banner";
-import { getNextSuggestion } from "@/lib/next-question";
+import { getNextSuggestionWithReview, type SuggestionResult } from "@/lib/next-question";
+import { addReviewEntry, updateReviewAfterSolve, getReviewEntry, determineBucket, syncReviewFromCloud } from "@/lib/review";
 import { DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
 import { storage } from "@/lib/storage";
 
@@ -53,16 +54,20 @@ export function PracticeClient({ id }: { id: string }) {
   const [running, setRunning] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [failCount, setFailCount] = useState(0);
+  const [firstRunAt, setFirstRunAt] = useState<number | null>(null);
+  const [attemptCount, setAttemptCount] = useState(0);
 
   // Ref to avoid stale closure in onRun callback
   const sqlRef = useRef(sqlValue);
   sqlRef.current = sqlValue;
 
   // Compute next question suggestion only when verdict changes to pass
-  const suggestion = useMemo(
-    () => verdict.type === "pass" && question ? getNextSuggestion(question, storage.isSolved) : null,
+  const suggestionResult: SuggestionResult | null = useMemo(
+    () => verdict.type === "pass" && question ? getNextSuggestionWithReview(question, storage.isSolved) : null,
     [verdict.type, question]
   );
+  const suggestion = suggestionResult?.question ?? null;
+  const isReviewSuggestion = suggestionResult?.isReview ?? false;
 
   // Access control
   const isEasy = question?.difficulty === "Easy";
@@ -105,6 +110,11 @@ export function PracticeClient({ id }: { id: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionId, ready]);
 
+  // Sync review schedule from cloud on mount
+  useEffect(() => {
+    syncReviewFromCloud();
+  }, []);
+
   const handleRun = useCallback(async () => {
     if (!db || !question) return;
     if (!user) return; // guard
@@ -114,6 +124,8 @@ export function PracticeClient({ id }: { id: string }) {
       return;
     }
 
+    if (!firstRunAt) setFirstRunAt(Date.now());
+    setAttemptCount((prev) => prev + 1);
     setRunning(true);
     try {
       const result = await runTests(db, question, trimmed);
@@ -128,6 +140,15 @@ export function PracticeClient({ id }: { id: string }) {
 
       if (result.passed) {
         markSolved(questionId);
+        // Spaced repetition: create or update review entry
+        const existingReview = getReviewEntry(questionId);
+        if (existingReview) {
+          updateReviewAfterSolve(questionId, attemptCount <= 1);
+        } else {
+          const elapsed = firstRunAt ? Date.now() - firstRunAt : 0;
+          const bucket = determineBucket(attemptCount, elapsed);
+          addReviewEntry(questionId, bucket);
+        }
       } else {
         markAttempted(questionId);
         setFailCount((prev) => prev + 1);
@@ -138,7 +159,7 @@ export function PracticeClient({ id }: { id: string }) {
     } finally {
       setRunning(false);
     }
-  }, [db, question, questionId, markSolved, markAttempted, user]);
+  }, [db, question, questionId, markSolved, markAttempted, user, attemptCount, firstRunAt]);
 
   const handleChange = useCallback(
     (value: string) => {
@@ -303,8 +324,14 @@ export function PracticeClient({ id }: { id: string }) {
             </div>
           )}
           {verdict.type === "pass" && suggestion && (
-            <div className="rounded-xl bg-muted/30 border border-primary/20 p-3 space-y-1.5">
-              <p className="text-xs text-muted-foreground font-medium">Up Next</p>
+            <div className={`rounded-xl border p-3 space-y-1.5 ${
+              isReviewSuggestion
+                ? "bg-amber-500/10 border-amber-500/30"
+                : "bg-muted/30 border-primary/20"
+            }`}>
+              <p className="text-xs text-muted-foreground font-medium">
+                {isReviewSuggestion ? "Time to Review" : "Up Next"}
+              </p>
               <p className="text-sm font-medium">
                 {suggestion.title}
               </p>
