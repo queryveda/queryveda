@@ -62,7 +62,7 @@ export function FlagButton({ questionId, questionSource }: FlagButtonProps) {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="text-lg opacity-60 hover:opacity-100 transition-opacity"
+        className="text-2xl opacity-80 hover:opacity-100 hover:scale-110 transition-all"
         title="Report an issue"
         type="button"
       >
