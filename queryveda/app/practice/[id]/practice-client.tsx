@@ -309,12 +309,6 @@ export function PracticeClient({ id }: { id: string }) {
               <span className="hidden sm:inline">{running ? "Running..." : "Run (⌘/Ctrl+Enter)"}</span>
               <span className="sm:hidden">{running ? "Running..." : "Run"}</span>
             </Button>
-            <PracticeTimer
-              active={timerActive}
-              onStart={() => { setTimerActive(true); setTimerExpired(false); }}
-              onStop={() => setTimerActive(false)}
-              onExpire={() => setTimerExpired(true)}
-            />
             <div className="ml-auto flex items-center gap-2">
               <BookmarkButton questionId={questionId} />
               <FlagButton questionId={questionId} questionSource="practice" />
@@ -429,7 +423,7 @@ export function PracticeClient({ id }: { id: string }) {
   return (
     <div>
       {/* Top bar */}
-      <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b gap-1">
+      <div className="flex items-center px-3 sm:px-5 py-2 sm:py-3 border-b gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -440,9 +434,15 @@ export function PracticeClient({ id }: { id: string }) {
           <span className="hidden sm:inline">Prev</span>
           <span className="sm:hidden">&larr;</span>
         </Button>
-        <h2 className="text-xs sm:text-sm font-semibold truncate px-1 sm:px-2 min-w-0">
+        <h2 className="text-xs sm:text-sm font-semibold truncate px-1 sm:px-2 min-w-0 flex-1">
           {question.title}
         </h2>
+        <PracticeTimer
+          active={timerActive}
+          onStart={() => { setTimerActive(true); setTimerExpired(false); }}
+          onStop={() => setTimerActive(false)}
+          onExpire={() => setTimerExpired(true)}
+        />
         <Button
           variant="outline"
           size="sm"
