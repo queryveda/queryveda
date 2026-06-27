@@ -67,6 +67,7 @@ export function startChallenge(duration: number) {
     s.startedAt = Date.now();
     s.duration = duration;
     setState(s);
+    syncDailyStateToCloud(s);
   }
   return s;
 }
@@ -75,31 +76,44 @@ export function saveDailySQL(sql: string) {
   const s = getState();
   s.sql = sql;
   setState(s);
+  // Debounced cloud sync for SQL (fire-and-forget)
+  _debouncedSqlSync(s);
+}
+
+let _sqlSyncTimer: ReturnType<typeof setTimeout> | null = null;
+function _debouncedSqlSync(s: DailyChallengeState) {
+  if (_sqlSyncTimer) clearTimeout(_sqlSyncTimer);
+  _sqlSyncTimer = setTimeout(() => syncDailyStateToCloud(s), 2000);
 }
 
 export function markDailySolved() {
   const s = getState();
   s.solved = true;
   setState(s);
-  // Sync to Supabase (fire-and-forget)
-  syncDailySolvedToCloud(todayIST());
+  syncDailyStateToCloud(s);
 }
 
-/* Supabase sync */
-async function syncDailySolvedToCloud(date: string) {
+/* Supabase sync — full state */
+async function syncDailyStateToCloud(state: DailyChallengeState) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from("daily_progress").upsert(
-      { user_id: user.id, date, solved: true, solved_at: new Date().toISOString() },
-      { onConflict: "user_id,date" }
-    );
+    const row: Record<string, unknown> = {
+      user_id: user.id,
+      date: state.date,
+      started_at: state.startedAt ? new Date(state.startedAt).toISOString() : null,
+      duration: state.duration,
+      solved: state.solved,
+      sql: state.sql || null,
+    };
+    if (state.solved) row.solved_at = new Date().toISOString();
+    await supabase.from("daily_progress").upsert(row, { onConflict: "user_id,date" });
   } catch {
     // silent — localStorage is the fallback
   }
 }
 
-/** Check Supabase if today's daily was solved on another device */
+/** Sync full daily state from Supabase (other device may have started/solved) */
 export async function syncDailyFromCloud(): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -107,17 +121,32 @@ export async function syncDailyFromCloud(): Promise<boolean> {
     const date = todayIST();
     const { data } = await supabase
       .from("daily_progress")
-      .select("solved")
+      .select("solved, started_at, duration, sql")
       .eq("user_id", user.id)
       .eq("date", date)
-      .single();
-    if (data?.solved) {
-      // Update localStorage to match
-      const s = getState();
-      s.solved = true;
-      setState(s);
-      return true;
+      .maybeSingle();
+    if (!data) return false;
+
+    const s = getState();
+    let changed = false;
+
+    // Merge cloud state into local — cloud wins for started_at/duration/solved
+    if (data.started_at && !s.startedAt) {
+      s.startedAt = new Date(data.started_at).getTime();
+      s.duration = data.duration;
+      changed = true;
     }
+    if (data.sql && !s.sql) {
+      s.sql = data.sql;
+      changed = true;
+    }
+    if (data.solved && !s.solved) {
+      s.solved = true;
+      changed = true;
+    }
+
+    if (changed) setState(s);
+    return s.solved;
   } catch {
     // silent
   }

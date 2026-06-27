@@ -57,13 +57,8 @@ export default function DailyPage() {
   const sqlRef = useRef(sqlValue);
   sqlRef.current = sqlValue;
 
-  // Fetch daily question and sync cloud state
-  useEffect(() => {
-    fetchDailyQuestion().then((dq) => {
-      setDaily(dq);
-      setLoading(false);
-    });
-    const state = getDailyState();
+  // Apply local state then sync from cloud
+  const applyState = useCallback((state: ReturnType<typeof getDailyState>) => {
     if (state.startedAt) {
       setStarted(true);
       setSelectedDuration(state.duration ?? 30);
@@ -71,13 +66,22 @@ export default function DailyPage() {
     }
     if (state.solved) setSolved(true);
     if (state.sql) setSqlValue(state.sql);
-    // Sync from cloud if not solved locally
-    if (!state.solved) {
-      syncDailyFromCloud().then((cloudSolved) => {
-        if (cloudSolved) setSolved(true);
-      });
-    }
   }, []);
+
+  // Fetch daily question and sync cloud state
+  useEffect(() => {
+    fetchDailyQuestion().then((dq) => {
+      setDaily(dq);
+      setLoading(false);
+    });
+    // Apply local state first
+    applyState(getDailyState());
+    // Then sync from cloud — this merges started_at, duration, sql, solved
+    syncDailyFromCloud().then(() => {
+      // Re-read merged state and apply
+      applyState(getDailyState());
+    });
+  }, [applyState]);
 
   // Build a Question object for reuse with ProblemPanel and runTests
   const question: Question | null = useMemo(
