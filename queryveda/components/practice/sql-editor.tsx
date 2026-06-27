@@ -126,6 +126,7 @@ interface SQLEditorProps {
   onChange: (value: string) => void;
   onRun: () => void;
   tables?: Record<string, string[]>;
+  extraToolbar?: React.ReactNode;
 }
 
 export function SQLEditor({
@@ -133,6 +134,7 @@ export function SQLEditor({
   onChange,
   onRun,
   tables,
+  extraToolbar,
 }: SQLEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -238,7 +240,8 @@ export function SQLEditor({
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-2">
+        {extraToolbar}
         <select
           value={editorTheme}
           onChange={(e) =>

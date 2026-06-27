@@ -296,6 +296,14 @@ export function PracticeClient({ id }: { id: string }) {
             onChange={handleChange}
             onRun={handleRun}
             tables={tableHints}
+            extraToolbar={
+              <PracticeTimer
+                active={timerActive}
+                onStart={() => { setTimerActive(true); setTimerExpired(false); }}
+                onStop={() => setTimerActive(false)}
+                onExpire={() => setTimerExpired(true)}
+              />
+            }
           />
 
           {/* Toolbar */}
@@ -437,12 +445,6 @@ export function PracticeClient({ id }: { id: string }) {
         <h2 className="text-xs sm:text-sm font-semibold truncate px-1 sm:px-2 min-w-0 flex-1">
           {question.title}
         </h2>
-        <PracticeTimer
-          active={timerActive}
-          onStart={() => { setTimerActive(true); setTimerExpired(false); }}
-          onStop={() => setTimerActive(false)}
-          onExpire={() => setTimerExpired(true)}
-        />
         <Button
           variant="outline"
           size="sm"
