@@ -1,76 +1,109 @@
 {
-  "date": "2026-06-26",
+  "date": "2026-06-27",
   "question": {
-    "title": "Average Order Value by Region",
+    "title": "Employee Salary Ranking",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Calculate the average order value for each region by joining the orders table with the customers table and grouping the results by region.",
-    "setup": "\n      DROP TABLE IF EXISTS customers;\n      DROP TABLE IF EXISTS orders;\n      CREATE TABLE customers (\n         customer_id SERIAL PRIMARY KEY,\n         name VARCHAR(255),\n         region VARCHAR(255)\n      );\n      CREATE TABLE orders (\n         order_id SERIAL PRIMARY KEY,\n         customer_id INTEGER,\n         order_value DECIMAL(10, 2),\n         FOREIGN KEY (customer_id) REFERENCES customers(customer_id)\n      );\n      INSERT INTO customers (customer_id, name, region)\n      VALUES\n         (1, 'John Doe', 'North'),\n         (2, 'Jane Doe', 'South'),\n         (3, 'Bob Smith', 'North'),\n         (4, 'Alice Johnson', 'East'),\n         (5, 'Mike Brown', 'West');\n      INSERT INTO orders (order_id, customer_id, order_value)\n      VALUES\n         (1, 1, 100.00),\n         (2, 1, 200.00),\n         (3, 2, 50.00),\n         (4, 3, 150.00),\n         (5, 4, 300.00),\n         (6, 5, 250.00),\n         (7, 1, 400.00),\n         (8, 2, 75.00),\n         (9, 3, 125.00),\n         (10, 4, 225.00);\n   ",
+    "topic": "Window Functions",
+    "desc": "Rank employees by their salary within each department. The rank should be assigned based on the salary in descending order. If two employees have the same salary, they should have the same rank, and the next rank should be skipped.",
+    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('John Doe', 'Sales', 50000.00), ('Jane Doe', 'Marketing', 60000.00), ('Bob Smith', 'Sales', 55000.00), ('Alice Johnson', 'Marketing', 65000.00), ('Mike Brown', 'Sales', 50000.00);",
     "tables": [
-      "customers",
-      "orders"
+      "employees"
     ],
     "cols": [
-      "region",
-      "average_order_value"
+      "name",
+      "department",
+      "salary",
+      "rank"
     ],
     "rows": [
       [
-        "East",
-        262.5
+        "John Doe",
+        "Sales",
+        50000,
+        2
       ],
       [
-        "North",
-        193.75
+        "Bob Smith",
+        "Sales",
+        55000,
+        1
       ],
       [
-        "South",
-        62.5
+        "Mike Brown",
+        "Sales",
+        50000,
+        2
       ],
       [
-        "West",
-        250
+        "Jane Doe",
+        "Marketing",
+        60000,
+        2
+      ],
+      [
+        "Alice Johnson",
+        "Marketing",
+        65000,
+        1
       ]
     ],
-    "solution": "\n      SELECT \n         c.region, \n         AVG(o.order_value) AS average_order_value\n      FROM \n         customers c\n      JOIN \n         orders o ON c.customer_id = o.customer_id\n      GROUP BY \n         c.region;\n   ",
-    "tips": "Use the AVG function to calculate the average order value and join the tables based on the customer_id.",
+    "solution": "SELECT name, department, salary, DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rank FROM employees;",
+    "tips": "Use DENSE_RANK() to assign the same rank to employees with the same salary and skip the next rank.",
     "hints": [
-      "You need to join two tables to get the required information.",
-      "Use the GROUP BY clause to group the results by region.",
-      "The AVG function will be used to calculate the average order value for each region."
+      "You will need to use a window function to rank the employees.",
+      "The PARTITION BY clause will help you to divide the employees into departments.",
+      "Use DENSE_RANK() instead of RANK() to avoid gaps in the ranking."
     ],
     "tests": [
       {
-        "setup": "\n            DROP TABLE IF EXISTS customers;\n            DROP TABLE IF EXISTS orders;\n            CREATE TABLE customers (\n               customer_id SERIAL PRIMARY KEY,\n               name VARCHAR(255),\n               region VARCHAR(255)\n            );\n            CREATE TABLE orders (\n               order_id SERIAL PRIMARY KEY,\n               customer_id INTEGER,\n               order_value DECIMAL(10, 2),\n               FOREIGN KEY (customer_id) REFERENCES customers(customer_id)\n            );\n            INSERT INTO customers (customer_id, name, region)\n            VALUES\n               (1, 'John Doe', 'North'),\n               (2, 'Jane Doe', 'South'),\n               (3, 'Bob Smith', 'North');\n            INSERT INTO orders (order_id, customer_id, order_value)\n            VALUES\n               (1, 1, 100.00),\n               (2, 1, 200.00),\n               (3, 2, 50.00),\n               (4, 3, 150.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Emma Taylor', 'HR', 40000.00), ('David Lee', 'IT', 70000.00), ('Sophia Patel', 'HR', 45000.00), ('Oliver Kim', 'IT', 75000.00);",
         "rows": [
           [
-            "North",
-            150
+            "Emma Taylor",
+            "HR",
+            40000,
+            2
           ],
           [
-            "South",
-            50
+            "Sophia Patel",
+            "HR",
+            45000,
+            1
+          ],
+          [
+            "David Lee",
+            "IT",
+            70000,
+            2
+          ],
+          [
+            "Oliver Kim",
+            "IT",
+            75000,
+            1
           ]
         ]
       },
       {
-        "setup": "\n            DROP TABLE IF EXISTS customers;\n            DROP TABLE IF EXISTS orders;\n            CREATE TABLE customers (\n               customer_id SERIAL PRIMARY KEY,\n               name VARCHAR(255),\n               region VARCHAR(255)\n            );\n            CREATE TABLE orders (\n               order_id SERIAL PRIMARY KEY,\n               customer_id INTEGER,\n               order_value DECIMAL(10, 2),\n               FOREIGN KEY (customer_id) REFERENCES customers(customer_id)\n            );\n            INSERT INTO customers (customer_id, name, region)\n            VALUES\n               (1, 'John Doe', 'North'),\n               (2, 'Jane Doe', 'South'),\n               (3, 'Bob Smith', 'East'),\n               (4, 'Alice Johnson', 'West');\n            INSERT INTO orders (order_id, customer_id, order_value)\n            VALUES\n               (1, 1, 100.00),\n               (2, 2, 200.00),\n               (3, 3, 300.00),\n               (4, 4, 400.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Ava Chen', 'Finance', 58000.00), ('Liam Hall', 'Finance', 58000.00), ('Noah Brooks', 'Finance', 62000.00);",
         "rows": [
           [
-            "East",
-            300
+            "Ava Chen",
+            "Finance",
+            58000,
+            2
           ],
           [
-            "North",
-            100
+            "Liam Hall",
+            "Finance",
+            58000,
+            2
           ],
           [
-            "South",
-            200
-          ],
-          [
-            "West",
-            400
+            "Noah Brooks",
+            "Finance",
+            62000,
+            1
           ]
         ]
       }
