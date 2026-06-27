@@ -1,6 +1,7 @@
 import type { Question, Topic } from "@/lib/types";
-import { getSortedQuestions } from "@/lib/questions";
+import { getSortedQuestions, getQuestionById } from "@/lib/questions";
 import { DIFFICULTY_ORDER } from "@/lib/constants";
+import { getDueReviews } from "@/lib/review";
 
 export function getNextSuggestion(
   currentQuestion: Question,
@@ -65,4 +66,28 @@ export function getNextSuggestion(
 
   // Absolute fallback
   return unsolved[0];
+}
+
+export interface SuggestionResult {
+  question: Question;
+  isReview: boolean;
+}
+
+export function getNextSuggestionWithReview(
+  currentQuestion: Question,
+  isSolved: (id: number) => boolean
+): SuggestionResult | null {
+  // Priority 1: Due reviews
+  const dueReviews = getDueReviews();
+  for (const review of dueReviews) {
+    if (review.questionId === currentQuestion.id) continue;
+    const q = getQuestionById(review.questionId);
+    if (q) return { question: q, isReview: true };
+  }
+
+  // Priority 2-3: Existing logic (same topic → weakest topic → fallback)
+  const next = getNextSuggestion(currentQuestion, isSolved);
+  if (next) return { question: next, isReview: false };
+
+  return null;
 }
