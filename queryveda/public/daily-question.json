@@ -1,109 +1,60 @@
 {
-  "date": "2026-06-27",
+  "date": "2026-06-26",
   "question": {
-    "title": "Employee Salary Ranking",
+    "title": "Sales by Product Category",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "Rank employees by their salary within each department. The rank should be assigned based on the salary in descending order. If two employees have the same salary, they should have the same rank, and the next rank should be skipped.",
-    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('John Doe', 'Sales', 50000.00), ('Jane Doe', 'Marketing', 60000.00), ('Bob Smith', 'Sales', 55000.00), ('Alice Johnson', 'Marketing', 65000.00), ('Mike Brown', 'Sales', 50000.00);",
+    "topic": "Aggregations & JOINs",
+    "desc": "Write a SQL query to find the total sales for each product category. The sales amount for each product is stored in the 'sales' table, and the product category is stored in the 'products' table. The 'sales' table contains foreign keys referencing the 'products' table.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INTEGER, sales_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sales_amount) VALUES (1, 100.00), (2, 200.00), (3, 50.00), (1, 150.00), (2, 250.00); DROP TABLE IF EXISTS products; CREATE TABLE products (id INTEGER, name VARCHAR(255), category VARCHAR(255)); INSERT INTO products (id, name, category) VALUES (1, 'Product A', 'Electronics'), (2, 'Product B', 'Electronics'), (3, 'Product C', 'Toys');",
     "tables": [
-      "employees"
+      "sales",
+      "products"
     ],
     "cols": [
-      "name",
-      "department",
-      "salary",
-      "rank"
+      "category",
+      "total_sales"
     ],
     "rows": [
       [
-        "John Doe",
-        "Sales",
-        50000,
-        2
+        "Electronics",
+        700
       ],
       [
-        "Bob Smith",
-        "Sales",
-        55000,
-        1
-      ],
-      [
-        "Mike Brown",
-        "Sales",
-        50000,
-        2
-      ],
-      [
-        "Jane Doe",
-        "Marketing",
-        60000,
-        2
-      ],
-      [
-        "Alice Johnson",
-        "Marketing",
-        65000,
-        1
+        "Toys",
+        50
       ]
     ],
-    "solution": "SELECT name, department, salary, DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rank FROM employees;",
-    "tips": "Use DENSE_RANK() to assign the same rank to employees with the same salary and skip the next rank.",
+    "solution": "SELECT p.category, SUM(s.sales_amount) AS total_sales FROM sales s JOIN products p ON s.product_id = p.id GROUP BY p.category ORDER BY total_sales DESC;",
+    "tips": "Using indexes on the join columns can improve performance.",
     "hints": [
-      "You will need to use a window function to rank the employees.",
-      "The PARTITION BY clause will help you to divide the employees into departments.",
-      "Use DENSE_RANK() instead of RANK() to avoid gaps in the ranking."
+      "You will need to join the 'sales' and 'products' tables based on the product_id.",
+      "Use the SUM aggregation function to calculate the total sales for each category.",
+      "Group the results by the product category and order them by the total sales in descending order."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Emma Taylor', 'HR', 40000.00), ('David Lee', 'IT', 70000.00), ('Sophia Patel', 'HR', 45000.00), ('Oliver Kim', 'IT', 75000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INTEGER, sales_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sales_amount) VALUES (4, 300.00), (5, 400.00), (6, 100.00), (4, 200.00), (5, 300.00); DROP TABLE IF EXISTS products; CREATE TABLE products (id INTEGER, name VARCHAR(255), category VARCHAR(255)); INSERT INTO products (id, name, category) VALUES (4, 'Product D', 'Clothing'), (5, 'Product E', 'Clothing'), (6, 'Product F', 'Home Goods');",
         "rows": [
           [
-            "Emma Taylor",
-            "HR",
-            40000,
-            2
+            "Clothing",
+            1200
           ],
           [
-            "Sophia Patel",
-            "HR",
-            45000,
-            1
-          ],
-          [
-            "David Lee",
-            "IT",
-            70000,
-            2
-          ],
-          [
-            "Oliver Kim",
-            "IT",
-            75000,
-            1
+            "Home Goods",
+            100
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Ava Chen', 'Finance', 58000.00), ('Liam Hall', 'Finance', 58000.00), ('Noah Brooks', 'Finance', 62000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (product_id INTEGER, sales_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sales_amount) VALUES (7, 500.00), (8, 600.00), (9, 200.00), (7, 300.00), (8, 400.00); DROP TABLE IF EXISTS products; CREATE TABLE products (id INTEGER, name VARCHAR(255), category VARCHAR(255)); INSERT INTO products (id, name, category) VALUES (7, 'Product G', 'Sports'), (8, 'Product H', 'Sports'), (9, 'Product I', 'Music');",
         "rows": [
           [
-            "Ava Chen",
-            "Finance",
-            58000,
-            2
+            "Sports",
+            1800
           ],
           [
-            "Liam Hall",
-            "Finance",
-            58000,
-            2
-          ],
-          [
-            "Noah Brooks",
-            "Finance",
-            62000,
-            1
+            "Music",
+            200
           ]
         ]
       }
