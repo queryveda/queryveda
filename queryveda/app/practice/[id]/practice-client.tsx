@@ -21,6 +21,7 @@ import { AuthModal } from "@/components/auth/auth-modal";
 import { StruggleBanner } from "@/components/practice/struggle-banner";
 import { getNextSuggestionWithReview, type SuggestionResult } from "@/lib/next-question";
 import { FlagButton } from "@/components/flag/flag-button";
+import { ShortcutsModal } from "@/components/practice/shortcuts-modal";
 import { addReviewEntry, updateReviewAfterSolve, getReviewEntry, determineBucket, syncReviewFromCloud } from "@/lib/review";
 import { DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
 import { storage } from "@/lib/storage";
@@ -277,6 +278,7 @@ export function PracticeClient({ id }: { id: string }) {
     </div>
   ) : (
     <>
+      <ShortcutsModal />
       {!ready && (
             <p className="text-sm text-muted-foreground">
               Loading database...

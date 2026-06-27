@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AuthModal } from "@/components/auth/auth-modal";
 import type { Question } from "@/lib/types";
 import { FlagButton } from "@/components/flag/flag-button";
+import { ShortcutsModal } from "@/components/practice/shortcuts-modal";
 import {
   fetchDailyQuestion,
   getDailyState,
@@ -256,6 +257,7 @@ export default function DailyPage() {
 
   const rightPanel = (
     <>
+      <ShortcutsModal />
       {!ready && <p className="text-sm text-muted-foreground">Loading database...</p>}
 
       {timeUp && <TimeUpBanner />}
