@@ -88,7 +88,7 @@ export function FilterBar({
             onClick={() => onBookmarkOnlyChange(!bookmarkOnly)}
             className="shrink-0 rounded-full"
           >
-            🔖 Bookmarked Only
+            🔖 <span className="hidden sm:inline">Bookmarked</span> Only
           </Button>
           <Button
             size="sm"
@@ -96,7 +96,7 @@ export function FilterBar({
             onClick={() => onBookmarkFirstChange(!bookmarkFirst)}
             className="shrink-0 rounded-full"
           >
-            🔖 Bookmarked First
+            🔖 <span className="hidden sm:inline">Bookmarked</span> First
           </Button>
         </div>
       )}

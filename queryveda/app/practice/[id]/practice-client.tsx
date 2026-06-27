@@ -19,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PlanViewer } from "@/components/practice/plan-viewer";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { StruggleBanner } from "@/components/practice/struggle-banner";
+import { PracticeTimer } from "@/components/practice/practice-timer";
 import { getNextSuggestionWithReview, type SuggestionResult } from "@/lib/next-question";
 import { FlagButton } from "@/components/flag/flag-button";
 import { ShortcutsModal } from "@/components/practice/shortcuts-modal";
@@ -61,6 +62,8 @@ export function PracticeClient({ id }: { id: string }) {
   const [failCount, setFailCount] = useState(0);
   const [firstRunAt, setFirstRunAt] = useState<number | null>(null);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+  const [timerExpired, setTimerExpired] = useState(false);
 
   // Ref to avoid stale closure in onRun callback
   const sqlRef = useRef(sqlValue);
@@ -303,13 +306,27 @@ export function PracticeClient({ id }: { id: string }) {
               size="sm"
               className="rounded-full"
             >
-              {running ? "Running..." : "Run (⌘/Ctrl+Enter)"}
+              <span className="hidden sm:inline">{running ? "Running..." : "Run (⌘/Ctrl+Enter)"}</span>
+              <span className="sm:hidden">{running ? "Running..." : "Run"}</span>
             </Button>
+            <PracticeTimer
+              active={timerActive}
+              onStart={() => { setTimerActive(true); setTimerExpired(false); }}
+              onStop={() => setTimerActive(false)}
+              onExpire={() => setTimerExpired(true)}
+            />
             <div className="ml-auto flex items-center gap-2">
               <BookmarkButton questionId={questionId} />
               <FlagButton questionId={questionId} questionSource="practice" />
             </div>
           </div>
+
+          {/* Timer expired banner */}
+          {timerExpired && (
+            <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-3 text-sm text-red-700 dark:text-red-400 font-medium text-center">
+              Time&apos;s up! You can still keep working on the problem.
+            </div>
+          )}
 
           {/* Difficulty vote */}
           <DifficultyVote questionId={questionId} />
@@ -412,28 +429,30 @@ export function PracticeClient({ id }: { id: string }) {
   return (
     <div>
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b">
+      <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b gap-1">
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary"
+          className="rounded-full border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary shrink-0 h-8 px-2 sm:px-3"
           disabled={!prevQ}
           onClick={() => prevQ && navigateTo(prevQ)}
         >
-          Prev
+          <span className="hidden sm:inline">Prev</span>
+          <span className="sm:hidden">&larr;</span>
         </Button>
-        <h2 className="text-sm font-semibold truncate px-2">
+        <h2 className="text-xs sm:text-sm font-semibold truncate px-1 sm:px-2 min-w-0">
           {question.title}
         </h2>
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary"
+          className="rounded-full border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary shrink-0 h-8 px-2 sm:px-3"
           disabled={!nextQ}
           onClick={() => nextQ && navigateTo(nextQ)}
           data-tour="next-question"
         >
-          Next
+          <span className="hidden sm:inline">Next</span>
+          <span className="sm:hidden">&rarr;</span>
         </Button>
       </div>
 

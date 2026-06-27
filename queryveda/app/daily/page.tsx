@@ -277,7 +277,8 @@ export default function DailyPage() {
           size="sm"
           className="rounded-full"
         >
-          {running ? "Running..." : "Run (\u2318/Ctrl+Enter)"}
+          <span className="hidden sm:inline">{running ? "Running..." : "Run (\u2318/Ctrl+Enter)"}</span>
+          <span className="sm:hidden">{running ? "Running..." : "Run"}</span>
         </Button>
         <div className="ml-auto">
           <FlagButton questionId={-1} questionSource="daily" />
@@ -322,18 +323,18 @@ export default function DailyPage() {
   return (
     <div>
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-lg" aria-hidden>&#128293;</span>
-          <h2 className="text-sm font-semibold">Daily Challenge &mdash; {daily!.date}</h2>
-          <Badge style={{ backgroundColor: "#f59e0b" }} className="text-white text-xs">Medium</Badge>
+      <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b flex-wrap gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <span className="text-base sm:text-lg shrink-0" aria-hidden>&#128293;</span>
+          <h2 className="text-xs sm:text-sm font-semibold truncate">Daily Challenge &mdash; {daily!.date}</h2>
+          <Badge style={{ backgroundColor: "#f59e0b" }} className="text-white text-xs shrink-0">Medium</Badge>
           {solved && (
-            <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30 text-xs">
+            <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30 text-xs shrink-0">
               Solved
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           {!solved && (
             <CountdownTimer
               label="Solve Timer"

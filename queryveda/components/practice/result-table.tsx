@@ -13,8 +13,8 @@ export function ResultTable({ cols, rows }: ResultTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-primary/20">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-xl border border-primary/20 -mx-1 sm:mx-0">
+      <table className="w-full text-sm whitespace-nowrap">
         <thead>
           <tr className="border-b bg-muted/50">
             {cols.map((c) => (
