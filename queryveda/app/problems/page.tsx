@@ -9,14 +9,23 @@ import { ProblemCard } from "@/components/problems/problem-card";
 import { ProblemTable } from "@/components/problems/problem-table";
 
 function ProblemsContent() {
-  const { difficulty, setDifficulty, topic, setTopic, search, setSearch, filtered } = useFilters(questions);
+  const {
+    difficulty, setDifficulty, topic, setTopic, search, setSearch,
+    bookmarkOnly, setBookmarkOnly, bookmarkFirst, setBookmarkFirst,
+    filtered,
+  } = useFilters(questions);
   const { getStatus } = useStorage();
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="mb-6 text-3xl font-bold">Problems</h1>
       <div className="mb-6 flex flex-col gap-4">
         <SearchInput value={search} onChange={setSearch} />
-        <FilterBar difficulty={difficulty} topic={topic} onDifficultyChange={setDifficulty} onTopicChange={setTopic} />
+        <FilterBar
+          difficulty={difficulty} topic={topic}
+          onDifficultyChange={setDifficulty} onTopicChange={setTopic}
+          bookmarkOnly={bookmarkOnly} onBookmarkOnlyChange={setBookmarkOnly}
+          bookmarkFirst={bookmarkFirst} onBookmarkFirstChange={setBookmarkFirst}
+        />
       </div>
       <p className="mb-4 text-sm text-muted-foreground">{filtered.length} problem{filtered.length !== 1 ? "s" : ""}</p>
       {/* Mobile: cards */}

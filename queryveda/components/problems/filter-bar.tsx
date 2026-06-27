@@ -10,9 +10,17 @@ interface FilterBarProps {
   topic: Topic | "All";
   onDifficultyChange: (d: Difficulty | "All") => void;
   onTopicChange: (t: Topic | "All") => void;
+  bookmarkOnly?: boolean;
+  onBookmarkOnlyChange?: (v: boolean) => void;
+  bookmarkFirst?: boolean;
+  onBookmarkFirstChange?: (v: boolean) => void;
 }
 
-export function FilterBar({ difficulty, topic, onDifficultyChange, onTopicChange }: FilterBarProps) {
+export function FilterBar({
+  difficulty, topic, onDifficultyChange, onTopicChange,
+  bookmarkOnly, onBookmarkOnlyChange,
+  bookmarkFirst, onBookmarkFirstChange,
+}: FilterBarProps) {
   return (
     <div className="flex flex-col gap-2">
       {/* Difficulty row */}
@@ -70,6 +78,28 @@ export function FilterBar({ difficulty, topic, onDifficultyChange, onTopicChange
           </Button>
         ))}
       </div>
+
+      {/* Bookmark row */}
+      {onBookmarkOnlyChange && onBookmarkFirstChange && (
+        <div className="flex gap-2 pb-1">
+          <Button
+            size="sm"
+            variant={bookmarkOnly ? "default" : "outline"}
+            onClick={() => onBookmarkOnlyChange(!bookmarkOnly)}
+            className="shrink-0 rounded-full"
+          >
+            🔖 Bookmarked Only
+          </Button>
+          <Button
+            size="sm"
+            variant={bookmarkFirst ? "default" : "outline"}
+            onClick={() => onBookmarkFirstChange(!bookmarkFirst)}
+            className="shrink-0 rounded-full"
+          >
+            🔖 Bookmarked First
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

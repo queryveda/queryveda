@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import type { Question, QuestionStatus } from "@/lib/types";
 import { DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
+import { storage } from "@/lib/storage";
 
 const STATUS_EMOJI: Record<QuestionStatus, string> = {
   solved: "\u2705",
@@ -28,6 +29,7 @@ export function ProblemTable({ questions, getStatus }: ProblemTableProps) {
             <th className="px-4 py-3">Title</th>
             <th className="px-4 py-3 w-28">Difficulty</th>
             <th className="px-4 py-3">Topic</th>
+            <th className="px-4 py-3 w-12 text-center">🔖</th>
             <th className="px-4 py-3 w-16 text-center">Status</th>
           </tr>
         </thead>
@@ -79,6 +81,9 @@ export function ProblemTable({ questions, getStatus }: ProblemTableProps) {
                   >
                     {q.topic}
                   </Badge>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  {storage.isBookmarked(q.id) ? "🔖" : ""}
                 </td>
                 <td className="px-4 py-3 text-center">
                   {isLocked ? "🔒" : STATUS_EMOJI[status]}
