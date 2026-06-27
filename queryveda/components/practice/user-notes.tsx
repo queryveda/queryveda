@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
 import { storage } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 
@@ -9,17 +11,55 @@ interface UserNotesProps {
 }
 
 export function UserNotes({ questionId }: UserNotesProps) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState(() => storage.getNote(questionId));
   const [saved, setSaved] = useState(false);
+
+  // Sync from cloud on mount
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("user_notes")
+      .select("note")
+      .eq("user_id", user.id)
+      .eq("question_id", questionId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.note) {
+          storage.saveNote(questionId, data.note);
+          setNote(data.note);
+        }
+      });
+  }, [user, questionId]);
 
   const handleSave = () => {
     storage.saveNote(questionId, note);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
+    if (user) {
+      const trimmed = note.trim();
+      if (trimmed) {
+        supabase.from("user_notes").upsert(
+          {
+            user_id: user.id,
+            question_id: questionId,
+            note: trimmed,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,question_id" }
+        );
+      } else {
+        supabase
+          .from("user_notes")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("question_id", questionId);
+      }
+    }
   };
 
-  const hasNote = storage.getNote(questionId).trim().length > 0;
+  const hasNote = note.trim().length > 0;
 
   return (
     <div>

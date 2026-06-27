@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
 import { storage } from "@/lib/storage";
 
 interface BookmarkButtonProps {
@@ -8,13 +10,47 @@ interface BookmarkButtonProps {
 }
 
 export function BookmarkButton({ questionId }: BookmarkButtonProps) {
+  const { user } = useAuth();
   const [bookmarked, setBookmarked] = useState(() =>
     storage.isBookmarked(questionId)
   );
 
+  // Sync from cloud on mount
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("bookmarks")
+      .select("question_id")
+      .eq("user_id", user.id)
+      .eq("question_id", questionId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          storage.setBookmark(questionId, true);
+          setBookmarked(true);
+        }
+      });
+  }, [user, questionId]);
+
   const handleToggle = () => {
     const next = storage.toggleBookmark(questionId);
     setBookmarked(next);
+    if (user) {
+      if (next) {
+        supabase
+          .from("bookmarks")
+          .upsert(
+            { user_id: user.id, question_id: questionId },
+            { onConflict: "user_id,question_id" }
+          );
+      } else {
+        supabase
+          .from("bookmarks")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("question_id", questionId);
+      }
+    }
   };
 
   return (

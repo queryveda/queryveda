@@ -55,12 +55,17 @@ function isBookmarked(id: number): boolean {
   return localStorage.getItem("sql_bookmark_" + id) === "1";
 }
 
+function setBookmark(id: number, value: boolean): void {
+  if (typeof window === "undefined") return;
+  const key = "sql_bookmark_" + id;
+  if (value) localStorage.setItem(key, "1");
+  else localStorage.removeItem(key);
+}
+
 function toggleBookmark(id: number): boolean {
   if (typeof window === "undefined") return false;
-  const key = "sql_bookmark_" + id;
-  const next = localStorage.getItem(key) !== "1";
-  if (next) localStorage.setItem(key, "1");
-  else localStorage.removeItem(key);
+  const next = !isBookmarked(id);
+  setBookmark(id, next);
   return next;
 }
 
@@ -351,6 +356,7 @@ export const storage = {
   syncLocalToCloud,
   _saveToCloud,
   isBookmarked,
+  setBookmark,
   toggleBookmark,
   getBookmarkedIds,
   getNote,
