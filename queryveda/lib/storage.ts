@@ -48,6 +48,48 @@ function markAttempted(id: number, userId?: string): void {
   }
 }
 
+// --- Bookmarks ---
+
+function isBookmarked(id: number): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("sql_bookmark_" + id) === "1";
+}
+
+function toggleBookmark(id: number): boolean {
+  if (typeof window === "undefined") return false;
+  const key = "sql_bookmark_" + id;
+  const next = localStorage.getItem(key) !== "1";
+  if (next) localStorage.setItem(key, "1");
+  else localStorage.removeItem(key);
+  return next;
+}
+
+function getBookmarkedIds(): number[] {
+  if (typeof window === "undefined") return [];
+  const ids: number[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith("sql_bookmark_") && localStorage.getItem(key) === "1") {
+      ids.push(Number(key.replace("sql_bookmark_", "")));
+    }
+  }
+  return ids.sort((a, b) => a - b);
+}
+
+// --- User notes ---
+
+function getNote(id: number): string {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem("sql_note_" + id) || "";
+}
+
+function saveNote(id: number, note: string): void {
+  if (typeof window === "undefined") return;
+  const key = "sql_note_" + id;
+  if (note.trim()) localStorage.setItem(key, note);
+  else localStorage.removeItem(key);
+}
+
 // --- Editor content ---
 
 function getSavedSQL(id: number): string {
@@ -308,4 +350,9 @@ export const storage = {
   syncFromCloud,
   syncLocalToCloud,
   _saveToCloud,
+  isBookmarked,
+  toggleBookmark,
+  getBookmarkedIds,
+  getNote,
+  saveNote,
 };

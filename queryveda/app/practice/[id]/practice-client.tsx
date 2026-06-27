@@ -22,6 +22,9 @@ import { StruggleBanner } from "@/components/practice/struggle-banner";
 import { getNextSuggestionWithReview, type SuggestionResult } from "@/lib/next-question";
 import { FlagButton } from "@/components/flag/flag-button";
 import { ShortcutsModal } from "@/components/practice/shortcuts-modal";
+import { BookmarkButton } from "@/components/practice/bookmark-button";
+import { UserNotes } from "@/components/practice/user-notes";
+import { DifficultyVote } from "@/components/practice/difficulty-vote";
 import { addReviewEntry, updateReviewAfterSolve, getReviewEntry, determineBucket, syncReviewFromCloud } from "@/lib/review";
 import { DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
 import { storage } from "@/lib/storage";
@@ -302,10 +305,14 @@ export function PracticeClient({ id }: { id: string }) {
             >
               {running ? "Running..." : "Run (⌘/Ctrl+Enter)"}
             </Button>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <BookmarkButton questionId={questionId} />
               <FlagButton questionId={questionId} questionSource="practice" />
             </div>
           </div>
+
+          {/* Difficulty vote */}
+          <DifficultyVote questionId={questionId} />
 
           {/* Struggle banner */}
           {question && <StruggleBanner question={question} failCount={failCount} />}
@@ -396,6 +403,9 @@ export function PracticeClient({ id }: { id: string }) {
             tips={question.tips}
             optSolution={question.optSolution}
           />
+
+          {/* User notes */}
+          <UserNotes questionId={questionId} />
     </>
   );
 
