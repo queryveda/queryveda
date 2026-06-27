@@ -1,105 +1,115 @@
 {
   "date": "2026-06-27",
   "question": {
-    "title": "Ranking Sales by Region",
+    "title": "Ranking Employee Salaries by Department",
     "difficulty": "Medium",
     "topic": "Window Functions",
-    "desc": "Write a SQL query to rank sales representatives by their total sales amount within each region, using window functions. The output should include the representative's name, their region, and their rank based on sales.",
-    "setup": "DROP TABLE IF EXISTS sales_representatives; CREATE TABLE sales_representatives (name VARCHAR(50), region VARCHAR(50), sales DECIMAL(10, 2)); INSERT INTO sales_representatives (name, region, sales) VALUES ('John Doe', 'North', 10000.00), ('Jane Doe', 'North', 8000.00), ('Alice Smith', 'South', 12000.00), ('Bob Johnson', 'South', 9000.00), ('Charlie Brown', 'East', 11000.00), ('David Lee', 'East', 7000.00);",
+    "desc": "Given two tables, employees and departments, rank the salaries of employees within each department. The output should include the department name, employee name, salary, and their rank within the department based on salary.",
+    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(100), department_id INTEGER, salary DECIMAL(10,2)); INSERT INTO employees (name, department_id, salary) VALUES ('John Doe', 1, 50000.00), ('Jane Smith', 1, 60000.00), ('Bob Brown', 2, 40000.00), ('Alice Johnson', 2, 70000.00), ('Mike Davis', 1, 55000.00); DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(100)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing');",
     "tables": [
-      "sales_representatives"
+      "employees",
+      "departments"
     ],
     "cols": [
-      "name",
-      "region",
+      "department_name",
+      "employee_name",
+      "salary",
       "rank"
     ],
     "rows": [
       [
-        "Charlie Brown",
-        "East",
+        "Sales",
+        "Jane Smith",
+        60000,
         1
       ],
       [
-        "David Lee",
-        "East",
+        "Sales",
+        "Mike Davis",
+        55000,
         2
       ],
       [
-        "Alice Smith",
-        "South",
-        1
-      ],
-      [
-        "Bob Johnson",
-        "South",
-        2
-      ],
-      [
+        "Sales",
         "John Doe",
-        "North",
+        50000,
+        3
+      ],
+      [
+        "Marketing",
+        "Alice Johnson",
+        70000,
         1
       ],
       [
-        "Jane Doe",
-        "North",
+        "Marketing",
+        "Bob Brown",
+        40000,
         2
       ]
     ],
-    "solution": "SELECT name, region, RANK() OVER (PARTITION BY region ORDER BY sales DESC) AS rank FROM sales_representatives;",
-    "tips": "Using PARTITION BY allows the window function to reset for each group, and RANK() assigns a rank based on the ORDER BY clause.",
+    "solution": "SELECT d.name AS department_name, e.name AS employee_name, e.salary, RANK() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC) AS rank FROM employees e JOIN departments d ON e.department_id = d.id ORDER BY d.name, e.salary DESC;",
+    "tips": "Consider using DENSE_RANK() if there are ties in salaries and you want to avoid gaps in the ranking.",
     "hints": [
-      "Consider using a window function that can partition the data by region and then rank based on sales.",
-      "You will need to use the OVER clause with PARTITION BY to divide the data into regions before ranking.",
-      "The correct query will use RANK() OVER (PARTITION BY region ORDER BY sales DESC) to achieve the desired ranking."
+      "You will need to join the two tables based on the department_id.",
+      "Use a window function to rank the salaries within each department. The PARTITION BY clause is crucial here.",
+      "The final query should order the results by department name and then by salary in descending order to match the expected output."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales_representatives; CREATE TABLE sales_representatives (name VARCHAR(50), region VARCHAR(50), sales DECIMAL(10, 2)); INSERT INTO sales_representatives (name, region, sales) VALUES ('Eve Williams', 'West', 13000.00), ('Frank Davis', 'West', 10000.00), ('Grace Hall', 'Central', 14000.00), ('Helen Martin', 'Central', 11000.00);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(100), department_id INTEGER, salary DECIMAL(10,2)); INSERT INTO employees (name, department_id, salary) VALUES ('Emily Chen', 3, 65000.00), ('David Lee', 3, 58000.00), ('Sophia Patel', 4, 72000.00), ('Oliver Kim', 4, 62000.00); DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(100)); INSERT INTO departments (name) VALUES ('IT'), ('Finance');",
         "rows": [
           [
-            "Grace Hall",
-            "Central",
+            "IT",
+            "Emily Chen",
+            65000,
             1
           ],
           [
-            "Helen Martin",
-            "Central",
+            "IT",
+            "David Lee",
+            58000,
             2
           ],
           [
-            "Eve Williams",
-            "West",
+            "Finance",
+            "Sophia Patel",
+            72000,
             1
           ],
           [
-            "Frank Davis",
-            "West",
+            "Finance",
+            "Oliver Kim",
+            62000,
             2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales_representatives; CREATE TABLE sales_representatives (name VARCHAR(50), region VARCHAR(50), sales DECIMAL(10, 2)); INSERT INTO sales_representatives (name, region, sales) VALUES ('Isaac Kim', 'North', 15000.00), ('Julia Patel', 'North', 12000.00), ('Kevin White', 'South', 16000.00), ('Lily Chen', 'South', 14000.00);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(100), department_id INTEGER, salary DECIMAL(10,2)); INSERT INTO employees (name, department_id, salary) VALUES ('Kevin White', 5, 68000.00), ('Rebecca Hall', 5, 69000.00), ('James Martin', 6, 75000.00), ('Heather Brooks', 6, 78000.00); DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(100)); INSERT INTO departments (name) VALUES ('HR'), ('Operations');",
         "rows": [
           [
-            "Kevin White",
-            "South",
+            "HR",
+            "Rebecca Hall",
+            69000,
             1
           ],
           [
-            "Lily Chen",
-            "South",
+            "HR",
+            "Kevin White",
+            68000,
             2
           ],
           [
-            "Isaac Kim",
-            "North",
+            "Operations",
+            "Heather Brooks",
+            78000,
             1
           ],
           [
-            "Julia Patel",
-            "North",
+            "Operations",
+            "James Martin",
+            75000,
             2
           ]
         ]
