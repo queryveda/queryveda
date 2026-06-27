@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: queryveda/package-lock.json
 
@@ -48,7 +48,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_BASE_PATH: /sql-practice
+          NEXT_PUBLIC_BASE_PATH: /queryveda
 
       - run: touch out/.nojekyll
       - run: cp out/404/index.html out/404.html || true
