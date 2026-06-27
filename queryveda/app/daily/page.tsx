@@ -16,6 +16,7 @@ import { TimeUpBanner } from "@/components/daily/time-up-banner";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthModal } from "@/components/auth/auth-modal";
 import type { Question } from "@/lib/types";
+import { FlagButton } from "@/components/flag/flag-button";
 import {
   fetchDailyQuestion,
   getDailyState,
@@ -276,6 +277,9 @@ export default function DailyPage() {
         >
           {running ? "Running..." : "Run (\u2318/Ctrl+Enter)"}
         </Button>
+        <div className="ml-auto">
+          <FlagButton questionId={-1} questionSource="daily" />
+        </div>
       </div>
 
       {/* Verdict */}

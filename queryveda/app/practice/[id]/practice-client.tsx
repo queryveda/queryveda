@@ -20,6 +20,7 @@ import { PlanViewer } from "@/components/practice/plan-viewer";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { StruggleBanner } from "@/components/practice/struggle-banner";
 import { getNextSuggestionWithReview, type SuggestionResult } from "@/lib/next-question";
+import { FlagButton } from "@/components/flag/flag-button";
 import { addReviewEntry, updateReviewAfterSolve, getReviewEntry, determineBucket, syncReviewFromCloud } from "@/lib/review";
 import { DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
 import { storage } from "@/lib/storage";
@@ -299,6 +300,9 @@ export function PracticeClient({ id }: { id: string }) {
             >
               {running ? "Running..." : "Run (⌘/Ctrl+Enter)"}
             </Button>
+            <div className="ml-auto">
+              <FlagButton questionId={questionId} questionSource="practice" />
+            </div>
           </div>
 
           {/* Struggle banner */}
