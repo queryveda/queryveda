@@ -2,6 +2,7 @@ import { DailyHeroCard } from "@/components/daily/daily-hero-card";
 import { DailyToast } from "@/components/daily/daily-toast";
 import { TwoPathCards } from "@/components/home/two-path-cards";
 import { HomeRedirectGuard } from "@/components/home/home-client";
+import { ReviewCard } from "@/components/home/review-card";
 
 export default function Home() {
   return (
@@ -33,6 +34,9 @@ export default function Home() {
 
       {/* Daily Challenge */}
       <DailyHeroCard />
+
+      {/* Review Queue */}
+      <ReviewCard />
 
       {/* Features — subtle inline list */}
       <section className="mx-auto max-w-5xl px-6 py-10">
