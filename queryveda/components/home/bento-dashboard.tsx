@@ -173,41 +173,14 @@ function RankCard() {
   );
 }
 
-function NextQuestionCard() {
-  const questions = getSortedQuestions();
-  const suggestion = useMemo(() => {
-    const unsolved = questions.filter((q) => !storage.isSolved(q.id));
-    if (unsolved.length === 0) return null;
-    return getNextSuggestion(unsolved[0], storage.isSolved);
-  }, [questions]);
-
-  if (!suggestion) return null;
-
-  return (
-    <BentoCard gradient={GRADIENTS.next}>
-      <div className="flex flex-col gap-2 h-full items-center justify-center text-center">
-        <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center">
-          <ArrowRight className="w-5 h-5 text-blue-500" />
-        </div>
-        <h3 className="font-semibold text-sm">Next Up</h3>
-        <p className="text-xs text-muted-foreground line-clamp-1">{suggestion.topic}</p>
-        <Link href={`/practice/${suggestion.id}/`}>
-          <Button size="sm" className="rounded-full text-xs bg-blue-500 hover:bg-blue-600 text-white">
-            Go <ArrowRight className="w-3 h-3 ml-1" />
-          </Button>
-        </Link>
-      </div>
-    </BentoCard>
-  );
-}
 
 function SkillTreeCards() {
   const { hasTrack } = useTrack();
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-1">
+    <div className="grid grid-cols-2 gap-3">
       {hasTrack("sql") && (
-        <Link href="/learn" className="shrink-0 flex-1 min-w-[200px]">
+        <Link href="/learn">
           <BentoCard gradient={GRADIENTS.sql}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center">
@@ -222,7 +195,7 @@ function SkillTreeCards() {
         </Link>
       )}
       {hasTrack("excel") && (
-        <Link href="/excel" className="shrink-0 flex-1 min-w-[200px]">
+        <Link href="/excel">
           <BentoCard gradient={GRADIENTS.excel}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
@@ -240,20 +213,43 @@ function SkillTreeCards() {
   );
 }
 
-function ReviewQueueRow() {
+function ReviewQueueCell() {
   const { user } = useAuth();
   const dueReviews = user ? getDueReviews() : [];
-  const hasReviews = dueReviews.length > 0;
+  if (dueReviews.length === 0) return null;
+  return (
+    <div className="col-span-2">
+      <ReviewQueueCard />
+    </div>
+  );
+}
+
+function NextUpCell() {
+  const questions = getSortedQuestions();
+  const suggestion = useMemo(() => {
+    const unsolved = questions.filter((q) => !storage.isSolved(q.id));
+    if (unsolved.length === 0) return null;
+    return getNextSuggestion(unsolved[0], storage.isSolved);
+  }, [questions]);
+
+  if (!suggestion) return null;
 
   return (
-    <div className={`grid gap-4 mb-4 ${hasReviews ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2"}`}>
-      {hasReviews && (
-        <div className="col-span-2 sm:col-span-1">
-          <ReviewQueueCard />
+    <div className="col-span-1">
+      <BentoCard gradient={GRADIENTS.next}>
+        <div className="flex flex-col gap-2 h-full items-center justify-center text-center">
+          <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center">
+            <ArrowRight className="w-5 h-5 text-blue-500" />
+          </div>
+          <h3 className="font-semibold text-sm">Next Up</h3>
+          <p className="text-xs text-muted-foreground line-clamp-1">{suggestion.topic}</p>
+          <Link href={`/practice/${suggestion.id}/`}>
+            <Button size="sm" className="rounded-full text-xs bg-blue-500 hover:bg-blue-600 text-white">
+              Go <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+          </Link>
         </div>
-      )}
-      <RankCard />
-      <NextQuestionCard />
+      </BentoCard>
     </div>
   );
 }
@@ -337,18 +333,28 @@ export function BentoDashboard() {
     <div className="mx-auto max-w-4xl px-4 py-6">
       <DashboardGreeting />
 
-      {/* Row 1: Daily + Progress — large cards */}
-      <div className="grid gap-4 sm:grid-cols-2 mb-4">
-        <DailyCard />
-        <ProgressCard />
-      </div>
-
-      {/* Row 2: Review + Rank + Next — medium + small cards */}
-      <ReviewQueueRow />
-
-      {/* Row 3: Skill Trees */}
-      <div data-tour="learning-paths">
-        <SkillTreeCards />
+      {/* Compact bento grid */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+        {/* Daily Challenge — spans 2 cols */}
+        <div className="col-span-2">
+          <DailyCard />
+        </div>
+        {/* Progress — spans 2 cols */}
+        <div className="col-span-2">
+          <ProgressCard />
+        </div>
+        {/* Review Queue — spans 2 cols (only if items due) */}
+        <ReviewQueueCell />
+        {/* Leaderboard — 1 col */}
+        <div className="col-span-1">
+          <RankCard />
+        </div>
+        {/* Next Up — 1 col */}
+        <NextUpCell />
+        {/* Skill Trees — spans remaining */}
+        <div className="col-span-2 sm:col-span-4" data-tour="learning-paths">
+          <SkillTreeCards />
+        </div>
       </div>
     </div>
   );

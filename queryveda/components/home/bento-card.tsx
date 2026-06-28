@@ -23,7 +23,7 @@ export function BentoCard({
         ...(glow ? { "--card-glow": glow } as React.CSSProperties : {}),
       }}
     >
-      <div className="rounded-2xl bg-card p-5 h-full transition-shadow duration-200 group-hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
+      <div className="rounded-2xl bg-card p-4 h-full transition-shadow duration-200 group-hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
         {children}
       </div>
     </div>
