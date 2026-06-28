@@ -178,7 +178,7 @@ function SkillTreeCards() {
   const { hasTrack } = useTrack();
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <>
       {hasTrack("sql") && (
         <Link href="/learn">
           <BentoCard gradient={GRADIENTS.sql}>
@@ -209,7 +209,7 @@ function SkillTreeCards() {
           </BentoCard>
         </Link>
       )}
-    </div>
+    </>
   );
 }
 
@@ -235,22 +235,20 @@ function NextUpCell() {
   if (!suggestion) return null;
 
   return (
-    <div className="col-span-1">
-      <BentoCard gradient={GRADIENTS.next}>
-        <div className="flex flex-col gap-2 h-full items-center justify-center text-center">
-          <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center">
-            <ArrowRight className="w-5 h-5 text-blue-500" />
-          </div>
-          <h3 className="font-semibold text-sm">Next Up</h3>
-          <p className="text-xs text-muted-foreground line-clamp-1">{suggestion.topic}</p>
-          <Link href={`/practice/${suggestion.id}/`}>
-            <Button size="sm" className="rounded-full text-xs bg-blue-500 hover:bg-blue-600 text-white">
-              Go <ArrowRight className="w-3 h-3 ml-1" />
-            </Button>
-          </Link>
+    <BentoCard gradient={GRADIENTS.next}>
+      <div className="flex flex-col gap-2 h-full items-center justify-center text-center">
+        <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center">
+          <ArrowRight className="w-5 h-5 text-blue-500" />
         </div>
-      </BentoCard>
-    </div>
+        <h3 className="font-semibold text-sm">Next Up</h3>
+        <p className="text-xs text-muted-foreground line-clamp-1">{suggestion.topic}</p>
+        <Link href={`/practice/${suggestion.id}/`}>
+          <Button size="sm" className="rounded-full text-xs bg-blue-500 hover:bg-blue-600 text-white">
+            Go <ArrowRight className="w-3 h-3 ml-1" />
+          </Button>
+        </Link>
+      </div>
+    </BentoCard>
   );
 }
 
@@ -333,28 +331,17 @@ export function BentoDashboard() {
     <div className="mx-auto max-w-4xl px-4 py-6">
       <DashboardGreeting />
 
-      {/* Compact bento grid */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-        {/* Daily Challenge — spans 2 cols */}
-        <div className="col-span-2">
-          <DailyCard />
-        </div>
-        {/* Progress — spans 2 cols */}
-        <div className="col-span-2">
-          <ProgressCard />
-        </div>
-        {/* Review Queue — spans 2 cols (only if items due) */}
+      <div className="grid gap-3 grid-cols-2">
+        {/* Row 1: Daily + Progress */}
+        <DailyCard />
+        <ProgressCard />
+        {/* Row 2: Review Queue (if any) */}
         <ReviewQueueCell />
-        {/* Leaderboard — 1 col */}
-        <div className="col-span-1">
-          <RankCard />
-        </div>
-        {/* Next Up — 1 col */}
+        {/* Row 3: Leaderboard + Next Up */}
+        <RankCard />
         <NextUpCell />
-        {/* Skill Trees — spans remaining */}
-        <div className="col-span-2 sm:col-span-4" data-tour="learning-paths">
-          <SkillTreeCards />
-        </div>
+        {/* Row 4: Skill Trees — each card fills 1 col */}
+        <SkillTreeCards />
       </div>
     </div>
   );
