@@ -42,8 +42,8 @@ export function SplitPane({ left, right }: SplitPaneProps) {
         className="hidden md:grid h-[calc(100vh-8rem)]"
         style={{ gridTemplateColumns: "400px 6px 1fr" }}
       >
-        <div data-pane="left" className="overflow-auto bg-card">
-          <div className="p-5">{left}</div>
+        <div data-pane="left" className="overflow-auto p-5 bg-card h-full">
+          {left}
         </div>
         <div
           className="cursor-col-resize bg-border hover:bg-primary transition-colors"
