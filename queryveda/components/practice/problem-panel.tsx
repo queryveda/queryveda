@@ -6,13 +6,16 @@ import { ResultTable } from "./result-table";
 import type { Question } from "@/lib/types";
 import { DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
 import type { QueryResult } from "@/lib/pglite";
-import { Lightbulb, BookOpen, Trophy, Sparkles } from "lucide-react";
 
-const TIPS = [
-  { icon: Lightbulb, label: "Query Plans", text: "Use the Plan tab to see how your SQL executes under the hood", color: "text-yellow-500" },
-  { icon: BookOpen, label: "Learn SQL", text: "Master SQL concepts step by step with our guided skill tree", color: "text-blue-400", href: "/learn" },
-  { icon: Trophy, label: "Leaderboard", text: "See how you rank against other learners on the platform", color: "text-amber-500", href: "/leaderboard" },
-  { icon: Sparkles, label: "Excel Track", text: "Try our Excel formula challenges — cell references to advanced analytics", color: "text-emerald-400", href: "/excel" },
+const ADS = [
+  { text: "Master SQL with guided skill trees", emoji: "🎯", href: "/learn" },
+  { text: "Try our Excel formula challenges", emoji: "📊", href: "/excel" },
+  { text: "Climb the leaderboard — compete with others", emoji: "🏆", href: "/leaderboard" },
+  { text: "75+ SQL problems from Easy to Hard", emoji: "🔥", href: "/practice" },
+  { text: "See query execution plans in real time", emoji: "⚡" },
+  { text: "Track your progress across all topics", emoji: "📈", href: "/learn" },
+  { text: "Free forever — no signup required to practice", emoji: "🎉" },
+  { text: "Built-in PostgreSQL — runs entirely in your browser", emoji: "🚀" },
 ];
 
 interface ProblemPanelProps {
@@ -21,10 +24,6 @@ interface ProblemPanelProps {
 }
 
 export function ProblemPanel({ question, schemaTables }: ProblemPanelProps) {
-  // Pick 2 random tips based on question id for variety
-  const tipIndices = [question.id % TIPS.length, (question.id + 2) % TIPS.length];
-  const selectedTips = tipIndices.map((i) => TIPS[i]);
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 flex-wrap">
@@ -64,36 +63,30 @@ export function ProblemPanel({ question, schemaTables }: ProblemPanelProps) {
         <ResultTable cols={question.cols} rows={question.rows} />
       </div>
 
-      {/* Ad slot — platform features for now, replaceable with real ads later */}
-      <div className="mt-6 pt-4 border-t border-border/50" data-slot="sidebar-ad">
-        <div className="flex flex-col gap-3">
-          {selectedTips.map((tip, i) => {
-            const Icon = tip.icon;
-            const inner = (
-              <div
-                className={`flex items-start gap-3 rounded-xl p-3.5 border border-border/50 bg-gradient-to-br from-muted/50 to-muted/20 ${
-                  tip.href ? "hover:border-primary/30 hover:from-primary/5 hover:to-transparent transition-all cursor-pointer" : ""
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-lg bg-background/80 flex items-center justify-center shrink-0`}>
-                  <Icon className={`w-4 h-4 ${tip.color}`} />
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-xs font-medium text-foreground/90">
-                    {tip.label}
+      {/* Scrolling marquee ad banner — like cricket boundary LED boards */}
+      <div className="mt-6" data-slot="sidebar-ad">
+        <div className="overflow-hidden rounded-lg border border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
+          <div className="marquee-track flex items-center gap-8 whitespace-nowrap py-3 px-4">
+            {/* Duplicate content for seamless loop */}
+            {[...ADS, ...ADS].map((ad, i) => {
+              const content = (
+                <span className="inline-flex items-center gap-2 text-sm">
+                  <span>{ad.emoji}</span>
+                  <span className={`font-medium ${ad.href ? "text-primary" : "text-foreground/80"}`}>
+                    {ad.text}
                   </span>
-                  <span className="text-[11px] text-muted-foreground leading-relaxed">
-                    {tip.text}
-                  </span>
-                </div>
-              </div>
-            );
-            return tip.href ? (
-              <Link key={i} href={tip.href}>{inner}</Link>
-            ) : (
-              <div key={i}>{inner}</div>
-            );
-          })}
+                  <span className="text-muted-foreground/30 mx-2">|</span>
+                </span>
+              );
+              return ad.href ? (
+                <Link key={i} href={ad.href} className="hover:opacity-80 transition-opacity shrink-0">
+                  {content}
+                </Link>
+              ) : (
+                <span key={i} className="shrink-0">{content}</span>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
