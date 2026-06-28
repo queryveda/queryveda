@@ -2,13 +2,14 @@
 
 import { skillTreeNodes } from "@/lib/skill-tree-data";
 import { SkillNodeCard } from "./skill-node-card";
-import type { NodeMastery } from "@/lib/skill-tree-types";
+import type { NodeMastery, SkillNode } from "@/lib/skill-tree-types";
 
 interface SkillTreeMapProps {
   getMastery: (nodeId: string) => NodeMastery;
+  onNodeClick?: (node: SkillNode) => void;
 }
 
-export function SkillTreeMap({ getMastery }: SkillTreeMapProps) {
+export function SkillTreeMap({ getMastery, onNodeClick }: SkillTreeMapProps) {
   // Group nodes by row
   const rows = new Map<number, typeof skillTreeNodes>();
   for (const node of skillTreeNodes) {
@@ -34,6 +35,7 @@ export function SkillTreeMap({ getMastery }: SkillTreeMapProps) {
                   key={node.id}
                   node={node}
                   mastery={getMastery(node.id)}
+                  onNodeClick={onNodeClick}
                 />
               ))}
           </div>

@@ -8,9 +8,10 @@ import type { NodeMastery, SkillNode } from "@/lib/skill-tree-types";
 interface SkillNodeCardProps {
   node: SkillNode;
   mastery: NodeMastery;
+  onNodeClick?: (node: SkillNode) => void;
 }
 
-export function SkillNodeCard({ node, mastery }: SkillNodeCardProps) {
+export function SkillNodeCard({ node, mastery, onNodeClick }: SkillNodeCardProps) {
   const { unlocked, starred, completed, total, percentage } = mastery;
 
   if (!unlocked) {
@@ -23,6 +24,43 @@ export function SkillNodeCard({ node, mastery }: SkillNodeCardProps) {
           {node.title}
         </span>
       </div>
+    );
+  }
+
+  if (onNodeClick) {
+    return (
+      <button
+        onClick={() => onNodeClick(node)}
+        className="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-none p-0"
+      >
+        <div
+          className={`relative w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
+            starred
+              ? "border-yellow-500 bg-yellow-500/10 shadow-md shadow-yellow-500/15"
+              : percentage > 0
+              ? "border-primary bg-primary/10 shadow-md shadow-primary/15"
+              : "border-muted-foreground/30 bg-card group-hover:border-primary/40 group-hover:shadow-sm group-hover:shadow-primary/10"
+          }`}
+        >
+          {starred ? (
+            <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+          ) : percentage === 100 ? (
+            <CheckCircle2 className="w-6 h-6 text-primary" />
+          ) : (
+            <span className="text-xs font-bold text-muted-foreground">
+              {percentage > 0 ? `${percentage}%` : "Start"}
+            </span>
+          )}
+        </div>
+        <span className="text-sm font-medium text-center max-w-[140px] group-hover:text-primary transition-colors">
+          {node.title}
+        </span>
+        {percentage > 0 && percentage < 100 && (
+          <div className="w-24">
+            <MasteryBar completed={completed} total={total} showLabel={false} />
+          </div>
+        )}
+      </button>
     );
   }
 
