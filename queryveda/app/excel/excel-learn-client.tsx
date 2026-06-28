@@ -6,7 +6,7 @@ import { useExcelSkillTree } from "@/hooks/use-excel-skill-tree";
 import { excelSkillTreeNodes } from "@/lib/excel-skill-tree-data";
 import { MasteryBar } from "@/components/learn/mastery-bar";
 import { ExcelSkillTreePanel } from "@/components/learn/excel-skill-tree-panel";
-import { Lock, Star, CheckCircle2 } from "lucide-react";
+import { Lock, Star, CheckCircle2, ChevronRight } from "lucide-react";
 import type { ExcelSkillNode, ExcelNodeMastery } from "@/lib/excel-skill-tree-types";
 
 function ExcelNodeCard({
@@ -21,14 +21,18 @@ function ExcelNodeCard({
   const totalCompleted =
     mastery.conceptualCompleted + mastery.exercisesCompleted;
   const totalItems = mastery.conceptualTotal + mastery.exercisesTotal;
+  const { percentage, starred } = mastery;
+  const isComplete = percentage === 100;
+  const inProgress = percentage > 0 && percentage < 100;
+  const notStarted = percentage === 0;
 
   if (!mastery.unlocked) {
     return (
-      <div className="flex flex-col items-center gap-2">
-        <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/50 flex items-center justify-center bg-muted/40">
-          <Lock className="w-5 h-5 text-muted-foreground/70" />
+      <div className="flex flex-col items-center gap-3 w-[160px]">
+        <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/20 backdrop-blur-sm">
+          <Lock className="w-6 h-6 text-muted-foreground/40" />
         </div>
-        <span className="text-sm text-muted-foreground/80 text-center max-w-[140px]">
+        <span className="text-sm text-muted-foreground/50 text-center font-medium">
           {node.title}
         </span>
       </div>
@@ -39,38 +43,65 @@ function ExcelNodeCard({
     <button
       type="button"
       onClick={() => onClick?.(node)}
-      className="flex flex-col items-center gap-2 group"
+      className="flex flex-col items-center gap-3 w-[160px] group bg-transparent border-none p-0 cursor-pointer"
     >
-      <div
-        className={`relative w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
-          mastery.starred
-            ? "border-yellow-500 bg-yellow-500/10 shadow-md shadow-yellow-500/15"
-            : mastery.percentage > 0
-            ? "border-primary bg-primary/10 shadow-md shadow-primary/15"
-            : "border-muted-foreground/30 bg-card group-hover:border-primary/40 group-hover:shadow-sm group-hover:shadow-primary/10"
+      <div className="relative">
+        {(starred || isComplete) && (
+          <div
+            className={`absolute -inset-1 rounded-2xl blur-md opacity-40 ${
+              starred ? "bg-yellow-500" : "bg-primary"
+            }`}
+          />
+        )}
+        <div
+          className={`relative w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 ${
+            starred
+              ? "bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border-2 border-yellow-500/50 shadow-lg shadow-yellow-500/20"
+              : isComplete
+              ? "bg-gradient-to-br from-primary/20 to-violet-500/10 border-2 border-primary/50 shadow-lg shadow-primary/20"
+              : inProgress
+              ? "bg-gradient-to-br from-primary/15 to-violet-500/5 border-2 border-primary/30 shadow-md shadow-primary/10"
+              : "bg-gradient-to-br from-muted/60 to-muted/30 border-2 border-border group-hover:border-primary/40 group-hover:shadow-md group-hover:shadow-primary/10"
+          }`}
+        >
+          {starred ? (
+            <Star className="w-7 h-7 text-yellow-500 fill-yellow-500 drop-shadow-sm" />
+          ) : isComplete ? (
+            <CheckCircle2 className="w-7 h-7 text-primary drop-shadow-sm" />
+          ) : inProgress ? (
+            <span className="text-base font-bold text-primary">{percentage}%</span>
+          ) : (
+            <ChevronRight className="w-6 h-6 text-muted-foreground/60 group-hover:text-primary transition-colors" />
+          )}
+        </div>
+      </div>
+
+      <span
+        className={`text-sm font-semibold text-center leading-tight transition-colors ${
+          starred
+            ? "text-yellow-500"
+            : isComplete
+            ? "text-primary"
+            : "text-foreground/80 group-hover:text-primary"
         }`}
       >
-        {mastery.starred ? (
-          <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
-        ) : mastery.percentage === 100 ? (
-          <CheckCircle2 className="w-6 h-6 text-primary" />
-        ) : (
-          <span className="text-xs font-bold text-muted-foreground">
-            {mastery.percentage > 0 ? `${mastery.percentage}%` : "Start"}
-          </span>
-        )}
-      </div>
-      <span className="text-sm font-medium text-center max-w-[140px] group-hover:text-primary transition-colors">
         {node.title}
       </span>
-      {mastery.percentage > 0 && mastery.percentage < 100 && (
-        <div className="w-24">
+
+      {inProgress && (
+        <div className="w-28">
           <MasteryBar
             completed={totalCompleted}
             total={totalItems}
             showLabel={false}
           />
         </div>
+      )}
+
+      {notStarted && (
+        <span className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider group-hover:text-primary/60 transition-colors">
+          Start
+        </span>
       )}
     </button>
   );
