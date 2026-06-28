@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -29,7 +29,7 @@ const learnTracks = [
   { href: "/excel", label: "Excel", track: "excel" as const, icon: Table2 },
 ];
 
-export function Navbar() {
+function NavbarContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
@@ -229,5 +229,13 @@ export function Navbar() {
 
       <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
     </>
+  );
+}
+
+export function Navbar() {
+  return (
+    <Suspense>
+      <NavbarContent />
+    </Suspense>
   );
 }

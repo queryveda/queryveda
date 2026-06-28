@@ -1,8 +1,9 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
-export function Footer() {
+function FooterContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -24,5 +25,13 @@ export function Footer() {
         · PostgreSQL in the browser
       </p>
     </footer>
+  );
+}
+
+export function Footer() {
+  return (
+    <Suspense>
+      <FooterContent />
+    </Suspense>
   );
 }
