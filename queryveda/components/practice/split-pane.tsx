@@ -14,51 +14,40 @@ const ADS = [
   { text: "Built-in PostgreSQL — runs entirely in your browser", emoji: "🚀" },
 ];
 
-function AdSection() {
+function MarqueeBanner() {
   return (
     <div
-      className="flex-1 flex flex-col justify-end overflow-hidden border-t border-border/50 bg-card"
+      className="shrink-0 overflow-hidden border-t border-border/50"
       data-slot="sidebar-ad"
     >
-      {/* Multiple marquee rows fill the space */}
-      {[0, 1, 2].map((row) => (
-        <div
-          key={row}
-          className="overflow-hidden"
-        >
-          <div
-            className="marquee-track flex items-center gap-8 whitespace-nowrap py-2.5 px-4"
-            style={{ animationDuration: `${20 + row * 8}s`, animationDirection: row % 2 === 1 ? "reverse" : "normal" }}
-          >
-            {[...ADS, ...ADS].map((ad, i) => {
-              const content = (
-                <span className="inline-flex items-center gap-2 text-sm" key={i}>
-                  <span>{ad.emoji}</span>
-                  <span
-                    className={`font-medium ${ad.href ? "text-primary" : "text-foreground/80"}`}
-                  >
-                    {ad.text}
-                  </span>
-                  <span className="text-muted-foreground/30 mx-2">|</span>
-                </span>
-              );
-              return ad.href ? (
-                <Link
-                  key={i}
-                  href={ad.href}
-                  className="hover:opacity-80 transition-opacity shrink-0"
-                >
-                  {content}
-                </Link>
-              ) : (
-                <span key={i} className="shrink-0">
-                  {content}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+      <div className="marquee-track flex items-center gap-8 whitespace-nowrap py-3 px-4">
+        {[...ADS, ...ADS].map((ad, i) => {
+          const content = (
+            <span className="inline-flex items-center gap-2 text-sm" key={i}>
+              <span>{ad.emoji}</span>
+              <span
+                className={`font-medium ${ad.href ? "text-primary" : "text-foreground/80"}`}
+              >
+                {ad.text}
+              </span>
+              <span className="text-muted-foreground/30 mx-2">|</span>
+            </span>
+          );
+          return ad.href ? (
+            <Link
+              key={i}
+              href={ad.href}
+              className="hover:opacity-80 transition-opacity shrink-0"
+            >
+              {content}
+            </Link>
+          ) : (
+            <span key={i} className="shrink-0">
+              {content}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -103,10 +92,10 @@ export function SplitPane({ left, right }: SplitPaneProps) {
         className="hidden md:grid h-[calc(100vh-8rem)]"
         style={{ gridTemplateColumns: "400px 6px 1fr" }}
       >
-        {/* Left pane: question content + ad section fills remaining space */}
-        <div data-pane="left" className="flex flex-col bg-card h-full overflow-auto">
-          <div className="p-5 shrink-0">{left}</div>
-          <AdSection />
+        {/* Left pane: scrollable question + single marquee pinned at bottom */}
+        <div data-pane="left" className="flex flex-col bg-card h-full">
+          <div className="flex-1 overflow-auto p-5">{left}</div>
+          <MarqueeBanner />
         </div>
         <div
           className="cursor-col-resize bg-border hover:bg-primary transition-colors"
