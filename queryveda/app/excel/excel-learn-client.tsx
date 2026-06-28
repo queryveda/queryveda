@@ -6,6 +6,7 @@ import { useExcelSkillTree } from "@/hooks/use-excel-skill-tree";
 import { excelSkillTreeNodes } from "@/lib/excel-skill-tree-data";
 import { MasteryBar } from "@/components/learn/mastery-bar";
 import { ExcelSkillTreePanel } from "@/components/learn/excel-skill-tree-panel";
+import { ExcelNodeBottomSheet } from "@/components/learn/excel-node-bottom-sheet";
 import { Lock, Star, CheckCircle2, ChevronRight } from "lucide-react";
 import type { ExcelSkillNode, ExcelNodeMastery } from "@/lib/excel-skill-tree-types";
 
@@ -174,6 +175,15 @@ export function ExcelLearnClient() {
         <div className="hidden lg:flex flex-col w-[320px] border-l border-border overflow-hidden">
           <ExcelSkillTreePanel node={selectedNode} />
         </div>
+      </div>
+
+      {/* Mobile bottom sheet */}
+      <div className="lg:hidden">
+        <ExcelNodeBottomSheet
+          node={selectedNode}
+          open={!!selectedNode}
+          onClose={() => setSelectedNode(null)}
+        />
       </div>
     </div>
   );
