@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useDailyStatus } from "@/hooks/use-daily-status";
 import { useTrack } from "@/hooks/use-track";
@@ -31,6 +31,7 @@ const learnTracks = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, logout } = useAuth();
   const { hasTrack } = useTrack();
   const { hasUnattempted } = useDailyStatus();
@@ -52,6 +53,9 @@ export function Navbar() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  // Hide navbar when viewing a shared profile link
+  if (pathname === "/profile" && searchParams.has("share")) return null;
 
   return (
     <>

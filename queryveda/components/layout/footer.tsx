@@ -1,4 +1,14 @@
+"use client";
+
+import { usePathname, useSearchParams } from "next/navigation";
+
 export function Footer() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Hide footer when viewing a shared profile
+  if (pathname === "/profile" && searchParams.has("share")) return null;
+
   return (
     <footer className="border-t py-6">
       <p className="text-center text-sm text-muted-foreground">
