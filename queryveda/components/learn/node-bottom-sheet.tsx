@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, ArrowRight, X } from "lucide-react";
 import { skillTreeStorage } from "@/lib/skill-tree-storage";
@@ -12,6 +13,14 @@ interface NodeBottomSheetProps {
 }
 
 export function NodeBottomSheet({ node, open, onClose }: NodeBottomSheetProps) {
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
   const exercises = node?.exercises ?? [];
   const completedCount = exercises.filter((ex) =>
     skillTreeStorage.isExerciseCompleted(ex.id)

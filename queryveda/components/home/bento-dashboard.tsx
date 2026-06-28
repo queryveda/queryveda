@@ -219,6 +219,24 @@ function SkillTreeCards() {
   );
 }
 
+function ReviewQueueRow() {
+  const { user } = useAuth();
+  const dueReviews = user ? getDueReviews() : [];
+  const hasReviews = dueReviews.length > 0;
+
+  return (
+    <div className={`grid gap-4 mb-4 ${hasReviews ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2"}`}>
+      {hasReviews && (
+        <div className="col-span-2 sm:col-span-1">
+          <ReviewQueueCard />
+        </div>
+      )}
+      <RankCard />
+      <NextQuestionCard />
+    </div>
+  );
+}
+
 function LoggedOutHero() {
   return (
     <div className="space-y-6">
@@ -300,16 +318,12 @@ export function BentoDashboard() {
       </div>
 
       {/* Row 2: Review + Rank + Next — medium + small cards */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 mb-4">
-        <div className="col-span-2 sm:col-span-1">
-          <ReviewQueueCard />
-        </div>
-        <RankCard />
-        <NextQuestionCard />
-      </div>
+      <ReviewQueueRow />
 
       {/* Row 3: Skill Trees */}
-      <SkillTreeCards />
+      <div data-tour="learning-paths">
+        <SkillTreeCards />
+      </div>
     </div>
   );
 }

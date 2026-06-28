@@ -20,22 +20,23 @@ import {
   Trophy,
   User,
   HelpCircle,
+  LogOut,
 } from "lucide-react";
 
 const mainNav = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/learn", label: "Learn SQL", icon: BookOpen, track: "sql" as const },
+  { href: "/learn", label: "Learn SQL", icon: BookOpen, track: "sql" as const, tour: "learn" },
   { href: "/excel", label: "Learn Excel", icon: Table2, track: "excel" as const },
-  { href: "/daily", label: "Daily", icon: Zap, hasBadge: true },
-  { href: "/problems", label: "Problems", icon: ClipboardList },
-  { href: "/progress", label: "Progress", icon: BarChart3 },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+  { href: "/daily", label: "Daily", icon: Zap, hasBadge: true, tour: "daily" },
+  { href: "/problems", label: "Problems", icon: ClipboardList, tour: "problems" },
+  { href: "/progress", label: "Progress", icon: BarChart3, tour: "progress" },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy, tour: "leaderboard" },
 ];
 
 function SidebarContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { hasTrack } = useTrack();
   const { hasUnattempted } = useDailyStatus();
   const { reset: resetTour } = useTourState();
@@ -85,13 +86,14 @@ function SidebarContent() {
 
         {/* Main nav */}
         <nav className="flex-1 flex flex-col gap-1 px-2 py-2 overflow-y-auto">
-          {filteredNav.map(({ href, label, icon: Icon, hasBadge }) => {
+          {filteredNav.map(({ href, label, icon: Icon, hasBadge, tour }) => {
             const active = isActive(href);
             return (
               <Link
                 key={href}
                 href={href}
                 title={!expanded ? label : undefined}
+                data-tour={tour}
                 className={`relative flex items-center gap-3 h-10 px-3 rounded-lg text-sm font-medium transition-colors overflow-hidden ${
                   active
                     ? "bg-primary/15 text-primary"
@@ -126,30 +128,43 @@ function SidebarContent() {
         <div className="flex flex-col gap-1 px-2 py-3 border-t border-border shrink-0">
           {/* Profile / Auth */}
           {user ? (
-            <Link
-              href="/profile"
-              title={!expanded ? user.name : undefined}
-              className={`flex items-center gap-3 h-10 px-3 rounded-lg text-sm font-medium transition-colors overflow-hidden ${
-                isActive("/profile")
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
-              }`}
-            >
-              {user.avatar ? (
-                <Image src={user.avatar} alt={user.name} width={20} height={20} className="rounded-full object-cover shrink-0" />
-              ) : (
-                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-semibold text-primary-foreground shrink-0">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <span
-                className={`whitespace-nowrap truncate transition-opacity duration-150 ${
-                  expanded ? "opacity-100 delay-[50ms]" : "opacity-0"
+            <>
+              <Link
+                href="/profile"
+                title={!expanded ? user.name : undefined}
+                data-tour="profile"
+                className={`flex items-center gap-3 h-10 px-3 rounded-lg text-sm font-medium transition-colors overflow-hidden ${
+                  isActive("/profile")
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 }`}
               >
-                {user.name}
-              </span>
-            </Link>
+                {user.avatar ? (
+                  <Image src={user.avatar} alt={user.name} width={20} height={20} className="rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-semibold text-primary-foreground shrink-0">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span
+                  className={`whitespace-nowrap truncate transition-opacity duration-150 ${
+                    expanded ? "opacity-100 delay-[50ms]" : "opacity-0"
+                  }`}
+                >
+                  {user.name}
+                </span>
+              </Link>
+              {expanded && (
+                <button
+                  onClick={() => logout()}
+                  title="Sign out"
+                  className="flex items-center gap-3 h-10 px-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors overflow-hidden"
+                >
+                  <LogOut className="w-5 h-5 shrink-0" />
+                  <span className="whitespace-nowrap">Sign Out</span>
+                </button>
+              )}
+            </>
           ) : (
             <button
               onClick={() => setAuthOpen(true)}
@@ -189,7 +204,7 @@ function SidebarContent() {
           </button>
 
           {/* Theme toggle */}
-          <div className="flex items-center gap-3 h-10 px-3 overflow-hidden">
+          <div data-tour="theme-toggle" className="flex items-center gap-3 h-10 px-3 overflow-hidden">
             <ThemeToggle />
             <span
               className={`whitespace-nowrap text-sm text-muted-foreground transition-opacity duration-150 ${
