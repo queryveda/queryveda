@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/components/auth/auth-provider";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
+import { AppShell } from "@/components/layout/app-shell";
 import { ScrollToTop } from "@/components/layout/scroll-to-top";
 import { PlatformTour } from "@/components/layout/platform-tour";
 import { ProtectionWrapper } from "@/components/layout/protection-wrapper";
@@ -30,9 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <AuthProvider>
             <ProtectionWrapper />
-            <Navbar />
-            <main className="min-h-[calc(100vh-8rem)]">{children}</main>
-            <Footer />
+            <AppShell>{children}</AppShell>
             <ScrollToTop />
             <PlatformTour />
           </AuthProvider>
