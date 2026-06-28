@@ -42,7 +42,7 @@ export function SplitPane({ left, right }: SplitPaneProps) {
         className="hidden md:grid h-[calc(100vh-8rem)]"
         style={{ gridTemplateColumns: "400px 6px 1fr" }}
       >
-        <div data-pane="left" className="overflow-auto p-5 bg-card">
+        <div data-pane="left" className="overflow-auto p-5 bg-card min-h-full">
           {left}
         </div>
         <div
