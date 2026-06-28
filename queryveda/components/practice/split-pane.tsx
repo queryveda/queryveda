@@ -1,6 +1,56 @@
 "use client";
 
 import { useRef, useCallback } from "react";
+import Link from "next/link";
+
+const ADS = [
+  { text: "Master SQL with guided skill trees", emoji: "🎯", href: "/learn" },
+  { text: "Try our Excel formula challenges", emoji: "📊", href: "/excel" },
+  { text: "Climb the leaderboard — compete with others", emoji: "🏆", href: "/leaderboard" },
+  { text: "75+ SQL problems from Easy to Hard", emoji: "🔥", href: "/practice" },
+  { text: "See query execution plans in real time", emoji: "⚡" },
+  { text: "Track your progress across all topics", emoji: "📈", href: "/learn" },
+  { text: "Free forever — no signup required to practice", emoji: "🎉" },
+  { text: "Built-in PostgreSQL — runs entirely in your browser", emoji: "🚀" },
+];
+
+function MarqueeBanner() {
+  return (
+    <div
+      className="shrink-0 overflow-hidden border-t border-border/50 bg-card"
+      data-slot="sidebar-ad"
+    >
+      <div className="marquee-track flex items-center gap-8 whitespace-nowrap py-3 px-4">
+        {[...ADS, ...ADS].map((ad, i) => {
+          const content = (
+            <span className="inline-flex items-center gap-2 text-sm" key={i}>
+              <span>{ad.emoji}</span>
+              <span
+                className={`font-medium ${ad.href ? "text-primary" : "text-foreground/80"}`}
+              >
+                {ad.text}
+              </span>
+              <span className="text-muted-foreground/30 mx-2">|</span>
+            </span>
+          );
+          return ad.href ? (
+            <Link
+              key={i}
+              href={ad.href}
+              className="hover:opacity-80 transition-opacity shrink-0"
+            >
+              {content}
+            </Link>
+          ) : (
+            <span key={i} className="shrink-0">
+              {content}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 interface SplitPaneProps {
   left: React.ReactNode;
@@ -42,8 +92,10 @@ export function SplitPane({ left, right }: SplitPaneProps) {
         className="hidden md:grid h-[calc(100vh-8rem)]"
         style={{ gridTemplateColumns: "400px 6px 1fr" }}
       >
-        <div data-pane="left" className="overflow-auto p-5 bg-card h-full">
-          {left}
+        {/* Left pane: scrollable question + pinned marquee at bottom */}
+        <div data-pane="left" className="flex flex-col bg-card h-full">
+          <div className="flex-1 overflow-auto p-5">{left}</div>
+          <MarqueeBanner />
         </div>
         <div
           className="cursor-col-resize bg-border hover:bg-primary transition-colors"
