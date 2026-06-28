@@ -95,10 +95,10 @@ export function SplitPane({ left, right }: SplitPaneProps) {
         {/* Left pane: scrollable question + single marquee pinned at bottom */}
         <div
           data-pane="left"
-          className="flex flex-col"
-          style={{ backgroundColor: "rgb(var(--card))", height: "100%" }}
+          className="flex flex-col bg-card"
+          style={{ height: "100%" }}
         >
-          <div className="flex-1 overflow-auto p-5">{left}</div>
+          <div className="flex-1 overflow-auto p-5 bg-card">{left}</div>
           <MarqueeBanner />
         </div>
         <div
