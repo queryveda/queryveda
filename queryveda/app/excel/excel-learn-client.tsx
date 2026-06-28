@@ -87,34 +87,47 @@ export function ExcelLearnClient() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Excel Skill Tree</h1>
-        <p className="mt-2 text-muted-foreground">
-          Master Excel formulas from the ground up — cell references to advanced
-          analytics.
-        </p>
+    <div className="flex flex-col h-[calc(100dvh-var(--header-height,0px))] overflow-hidden">
+      {/* Track switcher + heading — matches Learn SQL layout */}
+      <div className="flex items-center justify-between px-4 py-4 border-b border-border shrink-0">
+        <h1 className="text-2xl font-bold tracking-tight">Learn Excel</h1>
+        <div className="flex rounded-full bg-muted p-0.5">
+          <Link
+            href="/learn"
+            className="px-3 py-1 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            SQL
+          </Link>
+          <Link
+            href="/excel"
+            className="px-3 py-1 rounded-full text-sm font-medium bg-primary text-primary-foreground transition-colors"
+          >
+            Excel
+          </Link>
+        </div>
       </div>
 
-      <div className="flex flex-col items-center gap-8 py-8">
-        {sortedRows.map(([rowIdx, nodes]) => (
-          <div key={rowIdx} className="flex flex-col items-center gap-2">
-            {rowIdx > 0 && (
-              <div className="w-px h-8 bg-muted-foreground/20" />
-            )}
-            <div className="flex items-start gap-12 flex-wrap justify-center">
-              {nodes
-                .sort((a, b) => a.column - b.column)
-                .map((node) => (
-                  <ExcelNodeCard
-                    key={node.id}
-                    node={node}
-                    mastery={getNodeMastery(node.id)}
-                  />
-                ))}
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="flex flex-col items-center gap-8 py-8">
+          {sortedRows.map(([rowIdx, nodes]) => (
+            <div key={rowIdx} className="flex flex-col items-center gap-2">
+              {rowIdx > 0 && (
+                <div className="w-px h-8 bg-muted-foreground/20" />
+              )}
+              <div className="flex items-start gap-12 flex-wrap justify-center">
+                {nodes
+                  .sort((a, b) => a.column - b.column)
+                  .map((node) => (
+                    <ExcelNodeCard
+                      key={node.id}
+                      node={node}
+                      mastery={getNodeMastery(node.id)}
+                    />
+                  ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
