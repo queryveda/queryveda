@@ -40,7 +40,12 @@ export function OnboardingClient() {
     const tracks = Array.from(selected);
     if (tracks.length === 0) return;
     selectTracks(tracks);
-    router.push("/");
+    // Redirect to the selected skill tree (prefer SQL if both selected)
+    if (tracks.includes("sql")) {
+      router.push("/learn");
+    } else {
+      router.push("/excel");
+    }
   };
 
   return (
