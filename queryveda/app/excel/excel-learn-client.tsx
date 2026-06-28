@@ -1,19 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useExcelSkillTree } from "@/hooks/use-excel-skill-tree";
 import { excelSkillTreeNodes } from "@/lib/excel-skill-tree-data";
 import { MasteryBar } from "@/components/learn/mastery-bar";
+import { ExcelSkillTreePanel } from "@/components/learn/excel-skill-tree-panel";
 import { Lock, Star, CheckCircle2 } from "lucide-react";
 import type { ExcelSkillNode, ExcelNodeMastery } from "@/lib/excel-skill-tree-types";
 
 function ExcelNodeCard({
   node,
   mastery,
+  onClick,
 }: {
   node: ExcelSkillNode;
   mastery: ExcelNodeMastery;
+  onClick?: (node: ExcelSkillNode) => void;
 }) {
   const totalCompleted =
     mastery.conceptualCompleted + mastery.exercisesCompleted;
@@ -33,8 +36,9 @@ function ExcelNodeCard({
   }
 
   return (
-    <Link
-      href={`/excel/learn/${node.id}`}
+    <button
+      type="button"
+      onClick={() => onClick?.(node)}
       className="flex flex-col items-center gap-2 group"
     >
       <div
@@ -68,12 +72,13 @@ function ExcelNodeCard({
           />
         </div>
       )}
-    </Link>
+    </button>
   );
 }
 
 export function ExcelLearnClient() {
   const { getNodeMastery } = useExcelSkillTree();
+  const [selectedNode, setSelectedNode] = useState<ExcelSkillNode | null>(null);
 
   // Group nodes by row (same approach as SQL skill tree)
   const sortedRows = useMemo(() => {
@@ -107,26 +112,36 @@ export function ExcelLearnClient() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
-        <div className="flex flex-col items-center gap-8 py-8">
-          {sortedRows.map(([rowIdx, nodes]) => (
-            <div key={rowIdx} className="flex flex-col items-center gap-2">
-              {rowIdx > 0 && (
-                <div className="w-px h-8 bg-muted-foreground/20" />
-              )}
-              <div className="flex items-start gap-12 flex-wrap justify-center">
-                {nodes
-                  .sort((a, b) => a.column - b.column)
-                  .map((node) => (
-                    <ExcelNodeCard
-                      key={node.id}
-                      node={node}
-                      mastery={getNodeMastery(node.id)}
-                    />
-                  ))}
+      {/* Two-panel layout — matches Learn SQL */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left: skill tree */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <div className="flex flex-col items-center gap-8 py-8">
+            {sortedRows.map(([rowIdx, nodes]) => (
+              <div key={rowIdx} className="flex flex-col items-center gap-2">
+                {rowIdx > 0 && (
+                  <div className="w-px h-8 bg-muted-foreground/20" />
+                )}
+                <div className="flex items-start gap-12 flex-wrap justify-center">
+                  {nodes
+                    .sort((a, b) => a.column - b.column)
+                    .map((node) => (
+                      <ExcelNodeCard
+                        key={node.id}
+                        node={node}
+                        mastery={getNodeMastery(node.id)}
+                        onClick={setSelectedNode}
+                      />
+                    ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        {/* Right: detail panel (desktop only) */}
+        <div className="hidden lg:flex flex-col w-[320px] border-l border-border overflow-hidden">
+          <ExcelSkillTreePanel node={selectedNode} />
         </div>
       </div>
     </div>
