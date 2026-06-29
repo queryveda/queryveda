@@ -4,12 +4,13 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTrack } from "@/hooks/use-track";
-import { Home, BookOpen, Zap, BarChart3, User } from "lucide-react";
+import { Home, BookOpen, Zap, ClipboardList, BarChart3, User } from "lucide-react";
 
 const dockItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/learn", label: "Learn", icon: BookOpen },
   { href: "/daily", label: "Daily", icon: Zap },
+  { href: "/problems", label: "Problems", icon: ClipboardList },
   { href: "/progress", label: "Progress", icon: BarChart3 },
   { href: "/profile", label: "Me", icon: User },
 ];
