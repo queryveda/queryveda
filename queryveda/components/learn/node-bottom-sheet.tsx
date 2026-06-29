@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, ArrowRight, X } from "lucide-react";
 import { skillTreeStorage } from "@/lib/skill-tree-storage";
+import { useAuth } from "@/hooks/use-auth";
 import type { SkillNode } from "@/lib/skill-tree-types";
 
 interface NodeBottomSheetProps {
@@ -13,6 +14,8 @@ interface NodeBottomSheetProps {
 }
 
 export function NodeBottomSheet({ node, open, onClose }: NodeBottomSheetProps) {
+  const { user } = useAuth();
+
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -21,17 +24,16 @@ export function NodeBottomSheet({ node, open, onClose }: NodeBottomSheetProps) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, onClose]);
+
+  const isSolved = (id: string) => !!user && skillTreeStorage.isExerciseCompleted(id);
+
   const exercises = node?.exercises ?? [];
-  const completedCount = exercises.filter((ex) =>
-    skillTreeStorage.isExerciseCompleted(ex.id)
-  ).length;
+  const completedCount = exercises.filter((ex) => isSolved(ex.id)).length;
   const totalCount = exercises.length;
   const percentage =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const firstUnsolved = exercises.find(
-    (ex) => !skillTreeStorage.isExerciseCompleted(ex.id)
-  );
+  const firstUnsolved = exercises.find((ex) => !isSolved(ex.id));
   const continueHref = node
     ? firstUnsolved
       ? `/learn/${node.id}?exercise=${firstUnsolved.id}`
@@ -105,7 +107,7 @@ export function NodeBottomSheet({ node, open, onClose }: NodeBottomSheetProps) {
             <div className="flex-1 overflow-y-auto px-5 py-3">
               <ul className="space-y-1.5">
                 {exercises.map((ex, idx) => {
-                  const solved = skillTreeStorage.isExerciseCompleted(ex.id);
+                  const solved = isSolved(ex.id);
                   return (
                     <li key={ex.id}>
                       <Link

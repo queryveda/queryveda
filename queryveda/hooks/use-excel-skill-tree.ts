@@ -63,13 +63,13 @@ export function useExcelSkillTree() {
   );
 
   const isExerciseCompleted = useCallback(
-    (exerciseId: string) => excelSkillTreeStorage.isExerciseCompleted(exerciseId),
-    []
+    (exerciseId: string) => !!user && excelSkillTreeStorage.isExerciseCompleted(exerciseId),
+    [user]
   );
 
   const isConceptualCompleted = useCallback(
-    (questionId: string) => excelSkillTreeStorage.isConceptualCompleted(questionId),
-    []
+    (questionId: string) => !!user && excelSkillTreeStorage.isConceptualCompleted(questionId),
+    [user]
   );
 
   const getNodeMastery = useCallback(

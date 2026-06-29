@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
 import { skillTreeStorage } from "@/lib/skill-tree-storage";
+import { useAuth } from "@/hooks/use-auth";
 import type { SkillNode } from "@/lib/skill-tree-types";
 
 interface SkillTreePanelProps {
@@ -10,6 +11,8 @@ interface SkillTreePanelProps {
 }
 
 export function SkillTreePanel({ node }: SkillTreePanelProps) {
+  const { user } = useAuth();
+
   if (!node) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12">
@@ -26,17 +29,15 @@ export function SkillTreePanel({ node }: SkillTreePanelProps) {
     );
   }
 
+  const isSolved = (id: string) => !!user && skillTreeStorage.isExerciseCompleted(id);
+
   const exercises = node.exercises ?? [];
-  const completedIds = exercises.filter((ex) =>
-    skillTreeStorage.isExerciseCompleted(ex.id)
-  );
+  const completedIds = exercises.filter((ex) => isSolved(ex.id));
   const completedCount = completedIds.length;
   const totalCount = exercises.length;
   const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const firstUnsolved = exercises.find(
-    (ex) => !skillTreeStorage.isExerciseCompleted(ex.id)
-  );
+  const firstUnsolved = exercises.find((ex) => !isSolved(ex.id));
   const continueHref = firstUnsolved
     ? `/learn/${node.id}?exercise=${firstUnsolved.id}`
     : `/learn/${node.id}`;
@@ -77,7 +78,7 @@ export function SkillTreePanel({ node }: SkillTreePanelProps) {
         </p>
         <ul className="space-y-2">
           {exercises.map((ex, idx) => {
-            const solved = skillTreeStorage.isExerciseCompleted(ex.id);
+            const solved = isSolved(ex.id);
             return (
               <li key={ex.id}>
                 <Link

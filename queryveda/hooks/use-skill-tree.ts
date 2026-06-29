@@ -49,8 +49,8 @@ export function useSkillTree() {
   );
 
   const isExerciseCompleted = useCallback(
-    (exerciseId: string) => skillTreeStorage.isExerciseCompleted(exerciseId),
-    []
+    (exerciseId: string) => !!user && skillTreeStorage.isExerciseCompleted(exerciseId),
+    [user]
   );
 
   const getNodeMastery = useCallback(

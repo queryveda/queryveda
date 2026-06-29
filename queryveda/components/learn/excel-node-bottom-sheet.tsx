@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, ArrowRight, X } from "lucide-react";
 import { excelSkillTreeStorage } from "@/lib/excel-skill-tree-storage";
+import { useAuth } from "@/hooks/use-auth";
 import type { ExcelSkillNode } from "@/lib/excel-skill-tree-types";
 
 interface ExcelNodeBottomSheetProps {
@@ -13,6 +14,8 @@ interface ExcelNodeBottomSheetProps {
 }
 
 export function ExcelNodeBottomSheet({ node, open, onClose }: ExcelNodeBottomSheetProps) {
+  const { user } = useAuth();
+
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -22,25 +25,20 @@ export function ExcelNodeBottomSheet({ node, open, onClose }: ExcelNodeBottomShe
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, onClose]);
 
+  const isConceptSolved = (id: string) => !!user && excelSkillTreeStorage.isConceptualCompleted(id);
+  const isExSolved = (id: string) => !!user && excelSkillTreeStorage.isExerciseCompleted(id);
+
   const concepts = node?.conceptualQuestions ?? [];
   const exercises = node?.exercises ?? [];
-  const conceptsDone = concepts.filter((q) =>
-    excelSkillTreeStorage.isConceptualCompleted(q.id)
-  ).length;
-  const exercisesDone = exercises.filter((ex) =>
-    excelSkillTreeStorage.isExerciseCompleted(ex.id)
-  ).length;
+  const conceptsDone = concepts.filter((q) => isConceptSolved(q.id)).length;
+  const exercisesDone = exercises.filter((ex) => isExSolved(ex.id)).length;
   const totalCompleted = conceptsDone + exercisesDone;
   const totalCount = concepts.length + exercises.length;
   const percentage =
     totalCount > 0 ? Math.round((totalCompleted / totalCount) * 100) : 0;
 
-  const firstUnsolvedConcept = concepts.find(
-    (q) => !excelSkillTreeStorage.isConceptualCompleted(q.id)
-  );
-  const firstUnsolvedExercise = exercises.find(
-    (ex) => !excelSkillTreeStorage.isExerciseCompleted(ex.id)
-  );
+  const firstUnsolvedConcept = concepts.find((q) => !isConceptSolved(q.id));
+  const firstUnsolvedExercise = exercises.find((ex) => !isExSolved(ex.id));
   const continueHref = node
     ? firstUnsolvedConcept
       ? `/excel/learn/${node.id}?tab=concepts&q=${firstUnsolvedConcept.id}`
@@ -121,7 +119,7 @@ export function ExcelNodeBottomSheet({ node, open, onClose }: ExcelNodeBottomShe
                   </p>
                   <ul className="space-y-1.5 mb-4">
                     {concepts.map((q, idx) => {
-                      const solved = excelSkillTreeStorage.isConceptualCompleted(q.id);
+                      const solved = isConceptSolved(q.id);
                       return (
                         <li key={q.id}>
                           <Link
@@ -158,7 +156,7 @@ export function ExcelNodeBottomSheet({ node, open, onClose }: ExcelNodeBottomShe
                   </p>
                   <ul className="space-y-1.5">
                     {exercises.map((ex, idx) => {
-                      const solved = excelSkillTreeStorage.isExerciseCompleted(ex.id);
+                      const solved = isExSolved(ex.id);
                       return (
                         <li key={ex.id}>
                           <Link

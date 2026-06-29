@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
 import { excelSkillTreeStorage } from "@/lib/excel-skill-tree-storage";
+import { useAuth } from "@/hooks/use-auth";
 import type { ExcelSkillNode } from "@/lib/excel-skill-tree-types";
 
 interface ExcelSkillTreePanelProps {
@@ -10,6 +11,8 @@ interface ExcelSkillTreePanelProps {
 }
 
 export function ExcelSkillTreePanel({ node }: ExcelSkillTreePanelProps) {
+  const { user } = useAuth();
+
   if (!node) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12">
@@ -26,14 +29,13 @@ export function ExcelSkillTreePanel({ node }: ExcelSkillTreePanelProps) {
     );
   }
 
+  const isConceptSolved = (id: string) => !!user && excelSkillTreeStorage.isConceptualCompleted(id);
+  const isExSolved = (id: string) => !!user && excelSkillTreeStorage.isExerciseCompleted(id);
+
   const conceptual = node.conceptualQuestions ?? [];
   const exercises = node.exercises ?? [];
-  const completedConcepts = conceptual.filter((q) =>
-    excelSkillTreeStorage.isConceptualCompleted(q.id)
-  ).length;
-  const completedExercises = exercises.filter((ex) =>
-    excelSkillTreeStorage.isExerciseCompleted(ex.id)
-  ).length;
+  const completedConcepts = conceptual.filter((q) => isConceptSolved(q.id)).length;
+  const completedExercises = exercises.filter((ex) => isExSolved(ex.id)).length;
   const totalCount = conceptual.length + exercises.length;
   const completedCount = completedConcepts + completedExercises;
   const percentage =
@@ -81,7 +83,7 @@ export function ExcelSkillTreePanel({ node }: ExcelSkillTreePanelProps) {
             </p>
             <ul className="space-y-2 mb-4">
               {conceptual.map((q, idx) => {
-                const solved = excelSkillTreeStorage.isConceptualCompleted(q.id);
+                const solved = isConceptSolved(q.id);
                 return (
                   <li key={q.id}>
                     <Link
@@ -117,7 +119,7 @@ export function ExcelSkillTreePanel({ node }: ExcelSkillTreePanelProps) {
             </p>
             <ul className="space-y-2">
               {exercises.map((ex, idx) => {
-                const solved = excelSkillTreeStorage.isExerciseCompleted(ex.id);
+                const solved = isExSolved(ex.id);
                 return (
                   <li key={ex.id}>
                     <Link
