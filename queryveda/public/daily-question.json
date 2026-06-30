@@ -1,56 +1,96 @@
 {
-  "date": "2026-06-29",
+  "date": "2026-06-30",
   "question": {
-    "title": "Consecutive Logins",
+    "title": "Average Sales by Region with Ranking",
     "difficulty": "Medium",
-    "topic": "Consecutive Sequences",
-    "desc": "Find users with 3 or more consecutive days of login activity from the given login history.",
-    "setup": "DROP TABLE IF EXISTS user_logins; CREATE TABLE user_logins (user_id INT, login_date DATE); INSERT INTO user_logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-05'), (2, '2022-01-06'), (3, '2022-01-01'), (3, '2022-01-02');",
+    "topic": "Advanced Analytics",
+    "desc": "Find the average sales for each region and rank the regions based on their average sales. Consider only the sales from the year 2022.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(100), year INT, sales DECIMAL(10,2)); INSERT INTO sales (region, year, sales) VALUES ('North', 2022, 1000.00), ('South', 2022, 800.00), ('East', 2022, 1200.00), ('West', 2022, 900.00), ('North', 2021, 1100.00), ('South', 2022, 700.00), ('East', 2021, 1300.00), ('West', 2022, 1000.00);",
     "tables": [
-      "user_logins"
+      "sales"
     ],
     "cols": [
-      "user_id",
-      "start_date",
-      "end_date"
+      "region",
+      "avg_sales",
+      "rank"
     ],
     "rows": [
       [
-        1,
-        "2022-01-01",
-        "2022-01-03"
+        "East",
+        1200,
+        1
+      ],
+      [
+        "North",
+        1000,
+        2
+      ],
+      [
+        "West",
+        950,
+        3
+      ],
+      [
+        "South",
+        750,
+        4
       ]
     ],
-    "solution": "WITH consecutive_logins AS ( SELECT user_id, login_date, DATEADD('day', -ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date), login_date) AS group_id FROM user_logins ) SELECT user_id, MIN(login_date) AS start_date, MAX(login_date) AS end_date FROM consecutive_logins GROUP BY user_id, group_id HAVING COUNT(DISTINCT login_date) >= 3;",
-    "tips": "Consider using a calendar table for more complex date range queries.",
+    "solution": "WITH regional_sales AS (SELECT region, AVG(sales) AS avg_sales FROM sales WHERE year = 2022 GROUP BY region) SELECT region, avg_sales, DENSE_RANK() OVER (ORDER BY avg_sales DESC) AS rank FROM regional_sales;",
+    "tips": "Use window functions for ranking and common table expressions for intermediate calculations.",
     "hints": [
-      "Use window functions to assign a group ID based on consecutive dates",
-      "Partition the data by user and apply the ROW_NUMBER function to get a sequence of dates",
-      "Utilize the DATEADD function to shift dates and group consecutive logins"
+      "Consider filtering the data to only include the year 2022 before calculating averages.",
+      "Use a window function like DENSE_RANK() to assign ranks based on average sales.",
+      "Calculate the average sales per region using a GROUP BY clause before applying the ranking."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS user_logins; CREATE TABLE user_logins (user_id INT, login_date DATE); INSERT INTO user_logins (user_id, login_date) VALUES (4, '2022-01-10'), (4, '2022-01-11'), (4, '2022-01-12'), (5, '2022-01-15');",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(100), year INT, sales DECIMAL(10,2)); INSERT INTO sales (region, year, sales) VALUES ('North', 2022, 1500.00), ('South', 2022, 600.00), ('East', 2022, 1000.00), ('West', 2022, 1200.00), ('North', 2021, 1600.00), ('South', 2022, 500.00), ('East', 2021, 1100.00), ('West', 2022, 1300.00);",
         "rows": [
           [
-            4,
-            "2022-01-10",
-            "2022-01-12"
+            "West",
+            1250,
+            1
+          ],
+          [
+            "North",
+            1500,
+            1
+          ],
+          [
+            "East",
+            1000,
+            3
+          ],
+          [
+            "South",
+            550,
+            4
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS user_logins; CREATE TABLE user_logins (user_id INT, login_date DATE); INSERT INTO user_logins (user_id, login_date) VALUES (6, '2022-02-01'), (6, '2022-02-02'), (7, '2022-02-05'), (7, '2022-02-06'), (7, '2022-02-07');",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(100), year INT, sales DECIMAL(10,2)); INSERT INTO sales (region, year, sales) VALUES ('North', 2022, 2000.00), ('South', 2022, 400.00), ('East', 2022, 1800.00), ('West', 2022, 2200.00), ('North', 2021, 2100.00), ('South', 2022, 300.00), ('East', 2021, 1900.00), ('West', 2022, 2300.00);",
         "rows": [
           [
-            6,
-            "2022-02-01",
-            "2022-02-02"
+            "West",
+            2250,
+            1
           ],
           [
-            7,
-            "2022-02-05",
-            "2022-02-07"
+            "East",
+            1800,
+            2
+          ],
+          [
+            "North",
+            2000,
+            2
+          ],
+          [
+            "South",
+            350,
+            4
           ]
         ]
       }
