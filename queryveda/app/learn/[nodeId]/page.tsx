@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { skillTreeNodes } from "@/lib/skill-tree-data";
 import { NodeClient } from "./node-client";
 
@@ -11,5 +12,9 @@ export default async function NodePage({
   params: Promise<{ nodeId: string }>;
 }) {
   const { nodeId } = await params;
-  return <NodeClient nodeId={nodeId} />;
+  return (
+    <Suspense>
+      <NodeClient nodeId={nodeId} />
+    </Suspense>
+  );
 }

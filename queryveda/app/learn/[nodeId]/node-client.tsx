@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getSkillNode } from "@/lib/skill-tree-data";
 import { questions } from "@/lib/questions";
@@ -16,13 +17,24 @@ import { Button } from "@/components/ui/button";
 
 export function NodeClient({ nodeId }: { nodeId: string }) {
   const node = getSkillNode(nodeId);
+  const searchParams = useSearchParams();
   const { db, ready } = usePGlite();
   const { user } = useAuth();
   const { markCompleted, isExerciseCompleted, getNodeMastery } = useSkillTree();
   const mastery = getNodeMastery(nodeId);
+  const exerciseParam = searchParams.get("exercise");
+  const matchedExerciseId = exerciseParam
+    ? node?.exercises.find((e) => e.id === exerciseParam)?.id
+    : undefined;
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(
-    node?.exercises[0]?.id ?? null
+    matchedExerciseId ?? node?.exercises[0]?.id ?? null
   );
+
+  useEffect(() => {
+    if (matchedExerciseId) {
+      setActiveExerciseId(matchedExerciseId);
+    }
+  }, [matchedExerciseId]);
   const [, setAnonRunCount] = useState(0);
   const [authOpen, setAuthOpen] = useState(false);
 
