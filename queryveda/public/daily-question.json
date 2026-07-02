@@ -1,77 +1,98 @@
 {
-  "date": "2026-07-01",
+  "date": "2026-07-02",
   "question": {
-    "title": "Sales Performance by Region",
+    "title": "Ranking Sales by Product Category",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the total sales amount for each region, along with the salesperson who made the most sales in that region. Use the 'regions' table to get the region names and the 'sales' table to get the sales data.",
-    "setup": "DROP TABLE IF EXISTS regions; DROP TABLE IF EXISTS sales; CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(50)); CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, salesperson VARCHAR(50), amount DECIMAL(10,2)); INSERT INTO regions (name) VALUES ('North'), ('South'), ('East'), ('West'); INSERT INTO sales (region_id, salesperson, amount) VALUES (1, 'John', 1000.00), (1, 'Alice', 2000.00), (2, 'Bob', 500.00), (3, 'Charlie', 1500.00), (4, 'David', 2500.00), (1, 'John', 3000.00), (2, 'Bob', 1000.00), (3, 'Charlie', 2000.00), (4, 'David', 3000.00);",
+    "topic": "Window Functions",
+    "desc": "You are given two tables: products and sales. The products table contains information about each product, including its category. The sales table contains information about each sale, including the product_id and the sale amount. Your task is to write a query that ranks the sales of each product within its category. The ranking should be based on the total sales amount for each product.",
+    "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), category VARCHAR(100)); INSERT INTO products (name, category) VALUES ('Product A', 'Electronics'), ('Product B', 'Electronics'), ('Product C', 'Clothing'), ('Product D', 'Clothing'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sale_amount) VALUES (1, 100.00), (1, 200.00), (2, 50.00), (3, 75.00), (3, 125.00), (4, 25.00), (4, 50.00);",
     "tables": [
-      "regions",
+      "products",
       "sales"
     ],
     "cols": [
-      "region_name",
+      "product_name",
+      "category",
       "total_sales",
-      "top_salesperson"
+      "rank"
     ],
     "rows": [
       [
-        "East",
-        3500,
-        "Charlie"
+        "Product A",
+        "Electronics",
+        300,
+        1
       ],
       [
-        "North",
-        6000,
-        "Alice"
+        "Product B",
+        "Electronics",
+        50,
+        2
       ],
       [
-        "South",
-        1500,
-        "Bob"
+        "Product C",
+        "Clothing",
+        200,
+        1
       ],
       [
-        "West",
-        5500,
-        "David"
+        "Product D",
+        "Clothing",
+        75,
+        2
       ]
     ],
-    "solution": "WITH ranked_sales AS (SELECT s.region_id, s.salesperson, SUM(s.amount) AS total_sales, RANK() OVER (PARTITION BY s.region_id ORDER BY SUM(s.amount) DESC) AS sales_rank FROM sales s GROUP BY s.region_id, s.salesperson) SELECT r.name AS region_name, COALESCE(SUM(s.amount), 0) AS total_sales, rs.salesperson AS top_salesperson FROM regions r LEFT JOIN sales s ON r.id = s.region_id LEFT JOIN ranked_sales rs ON r.id = rs.region_id AND rs.sales_rank = 1 GROUP BY r.name, rs.salesperson ORDER BY r.name;",
-    "tips": "Using window functions like RANK() can help you find the top salesperson in each region.",
+    "solution": "WITH product_sales AS (SELECT p.name AS product_name, p.category, SUM(s.sale_amount) AS total_sales FROM products p JOIN sales s ON p.id = s.product_id GROUP BY p.name, p.category) SELECT product_name, category, total_sales, ROW_NUMBER() OVER (PARTITION BY category ORDER BY total_sales DESC) AS rank FROM product_sales;",
+    "tips": "Consider using Common Table Expressions (CTEs) to simplify complex queries and improve readability.",
     "hints": [
-      "You'll need to join the 'regions' table with the 'sales' table to get the region names and sales data.",
-      "Use a window function like RANK() to find the salesperson with the most sales in each region.",
-      "You can use a Common Table Expression (CTE) to calculate the total sales and rank the salespeople, then join this with the 'regions' table to get the final result."
+      "You will need to use a window function to rank the sales of each product within its category.",
+      "First, join the products and sales tables to get the total sales amount for each product, then use a window function to rank the products within each category.",
+      "Use a CTE to calculate the total sales for each product, then use the ROW_NUMBER() window function to assign a rank to each product within its category based on the total sales amount."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS regions; DROP TABLE IF EXISTS sales; CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(50)); CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, salesperson VARCHAR(50), amount DECIMAL(10,2)); INSERT INTO regions (name) VALUES ('North'), ('South'); INSERT INTO sales (region_id, salesperson, amount) VALUES (1, 'John', 1000.00), (1, 'Alice', 2000.00), (2, 'Bob', 500.00), (1, 'John', 3000.00), (2, 'Bob', 1000.00);",
+        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), category VARCHAR(100)); INSERT INTO products (name, category) VALUES ('Product E', 'Toys'), ('Product F', 'Toys'), ('Product G', 'Books'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sale_amount) VALUES (1, 150.00), (1, 100.00), (2, 200.00), (3, 50.00);",
         "rows": [
           [
-            "North",
-            6000,
-            "John"
+            "Product F",
+            "Toys",
+            200,
+            1
           ],
           [
-            "South",
-            1500,
-            "Bob"
+            "Product E",
+            "Toys",
+            250,
+            2
+          ],
+          [
+            "Product G",
+            "Books",
+            50,
+            1
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS regions; DROP TABLE IF EXISTS sales; CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(50)); CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, salesperson VARCHAR(50), amount DECIMAL(10,2)); INSERT INTO regions (name) VALUES ('East'), ('West'); INSERT INTO sales (region_id, salesperson, amount) VALUES (1, 'Charlie', 1500.00), (2, 'David', 2500.00), (1, 'Charlie', 2000.00), (2, 'David', 3000.00);",
+        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), category VARCHAR(100)); INSERT INTO products (name, category) VALUES ('Product H', 'Electronics'), ('Product I', 'Electronics'), ('Product J', 'Clothing'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sale_amount) VALUES (1, 300.00), (2, 100.00), (3, 200.00);",
         "rows": [
           [
-            "East",
-            3500,
-            "Charlie"
+            "Product H",
+            "Electronics",
+            300,
+            1
           ],
           [
-            "West",
-            5500,
-            "David"
+            "Product I",
+            "Electronics",
+            100,
+            2
+          ],
+          [
+            "Product J",
+            "Clothing",
+            200,
+            1
           ]
         ]
       }
