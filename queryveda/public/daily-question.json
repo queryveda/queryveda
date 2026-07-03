@@ -1,98 +1,142 @@
 {
-  "date": "2026-07-02",
+  "date": "2026-07-03",
   "question": {
-    "title": "Ranking Sales by Product Category",
+    "title": "Sliding Window Sales",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "You are given two tables: products and sales. The products table contains information about each product, including its category. The sales table contains information about each sale, including the product_id and the sale amount. Your task is to write a query that ranks the sales of each product within its category. The ranking should be based on the total sales amount for each product.",
-    "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), category VARCHAR(100)); INSERT INTO products (name, category) VALUES ('Product A', 'Electronics'), ('Product B', 'Electronics'), ('Product C', 'Clothing'), ('Product D', 'Clothing'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sale_amount) VALUES (1, 100.00), (1, 200.00), (2, 50.00), (3, 75.00), (3, 125.00), (4, 25.00), (4, 50.00);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Find the total sales for each product over a 3-day sliding window.",
+    "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(50)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, date DATE, amount DECIMAL(10,2)); INSERT INTO products (name) VALUES ('Product A'), ('Product B'), ('Product C'); INSERT INTO sales (product_id, date, amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-02', 150.00), (1, '2022-01-03', 200.00), (2, '2022-01-01', 50.00), (2, '2022-01-02', 75.00), (2, '2022-01-03', 100.00), (3, '2022-01-01', 200.00), (3, '2022-01-02', 250.00), (3, '2022-01-03', 300.00);",
     "tables": [
       "products",
       "sales"
     ],
     "cols": [
-      "product_name",
-      "category",
-      "total_sales",
-      "rank"
+      "name",
+      "date",
+      "total_sales"
     ],
     "rows": [
       [
         "Product A",
-        "Electronics",
-        300,
-        1
+        "2022-01-01",
+        100
+      ],
+      [
+        "Product A",
+        "2022-01-02",
+        250
+      ],
+      [
+        "Product A",
+        "2022-01-03",
+        450
       ],
       [
         "Product B",
-        "Electronics",
-        50,
-        2
+        "2022-01-01",
+        50
+      ],
+      [
+        "Product B",
+        "2022-01-02",
+        125
+      ],
+      [
+        "Product B",
+        "2022-01-03",
+        225
       ],
       [
         "Product C",
-        "Clothing",
-        200,
-        1
+        "2022-01-01",
+        200
       ],
       [
-        "Product D",
-        "Clothing",
-        75,
-        2
+        "Product C",
+        "2022-01-02",
+        450
+      ],
+      [
+        "Product C",
+        "2022-01-03",
+        750
       ]
     ],
-    "solution": "WITH product_sales AS (SELECT p.name AS product_name, p.category, SUM(s.sale_amount) AS total_sales FROM products p JOIN sales s ON p.id = s.product_id GROUP BY p.name, p.category) SELECT product_name, category, total_sales, ROW_NUMBER() OVER (PARTITION BY category ORDER BY total_sales DESC) AS rank FROM product_sales;",
-    "tips": "Consider using Common Table Expressions (CTEs) to simplify complex queries and improve readability.",
+    "solution": "WITH sales_window AS (SELECT p.name, s.date, SUM(s.amount) OVER (PARTITION BY p.id ORDER BY s.date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS total_sales FROM products p JOIN sales s ON p.id = s.product_id) SELECT name, date, total_sales FROM sales_window ORDER BY name, date;",
+    "tips": "Consider using window functions for efficient calculation of sliding window aggregates.",
     "hints": [
-      "You will need to use a window function to rank the sales of each product within its category.",
-      "First, join the products and sales tables to get the total sales amount for each product, then use a window function to rank the products within each category.",
-      "Use a CTE to calculate the total sales for each product, then use the ROW_NUMBER() window function to assign a rank to each product within its category based on the total sales amount."
+      "Use a JOIN to combine the products and sales tables.",
+      "Apply a window function to calculate the total sales over a 3-day sliding window.",
+      "Use the ROWS BETWEEN clause to specify the window frame."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), category VARCHAR(100)); INSERT INTO products (name, category) VALUES ('Product E', 'Toys'), ('Product F', 'Toys'), ('Product G', 'Books'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sale_amount) VALUES (1, 150.00), (1, 100.00), (2, 200.00), (3, 50.00);",
+        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(50)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, date DATE, amount DECIMAL(10,2)); INSERT INTO products (name) VALUES ('Product X'), ('Product Y'); INSERT INTO sales (product_id, date, amount) VALUES (1, '2022-02-01', 500.00), (1, '2022-02-02', 600.00), (1, '2022-02-03', 700.00), (2, '2022-02-01', 300.00), (2, '2022-02-02', 400.00), (2, '2022-02-03', 500.00);",
         "rows": [
           [
-            "Product F",
-            "Toys",
-            200,
-            1
+            "Product X",
+            "2022-02-01",
+            500
           ],
           [
-            "Product E",
-            "Toys",
-            250,
-            2
+            "Product X",
+            "2022-02-02",
+            1100
           ],
           [
-            "Product G",
-            "Books",
-            50,
-            1
+            "Product X",
+            "2022-02-03",
+            1800
+          ],
+          [
+            "Product Y",
+            "2022-02-01",
+            300
+          ],
+          [
+            "Product Y",
+            "2022-02-02",
+            700
+          ],
+          [
+            "Product Y",
+            "2022-02-03",
+            1200
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), category VARCHAR(100)); INSERT INTO products (name, category) VALUES ('Product H', 'Electronics'), ('Product I', 'Electronics'), ('Product J', 'Clothing'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sale_amount) VALUES (1, 300.00), (2, 100.00), (3, 200.00);",
+        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(50)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, date DATE, amount DECIMAL(10,2)); INSERT INTO products (name) VALUES ('Product M'), ('Product N'); INSERT INTO sales (product_id, date, amount) VALUES (1, '2022-03-01', 800.00), (1, '2022-03-02', 900.00), (1, '2022-03-03', 1000.00), (2, '2022-03-01', 400.00), (2, '2022-03-02', 500.00), (2, '2022-03-03', 600.00);",
         "rows": [
           [
-            "Product H",
-            "Electronics",
-            300,
-            1
+            "Product M",
+            "2022-03-01",
+            800
           ],
           [
-            "Product I",
-            "Electronics",
-            100,
-            2
+            "Product M",
+            "2022-03-02",
+            1700
           ],
           [
-            "Product J",
-            "Clothing",
-            200,
-            1
+            "Product M",
+            "2022-03-03",
+            2700
+          ],
+          [
+            "Product N",
+            "2022-03-01",
+            400
+          ],
+          [
+            "Product N",
+            "2022-03-02",
+            900
+          ],
+          [
+            "Product N",
+            "2022-03-03",
+            1500
           ]
         ]
       }
