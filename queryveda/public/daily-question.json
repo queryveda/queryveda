@@ -1,73 +1,66 @@
 {
-  "date": "2026-07-04",
+  "date": "2026-07-05",
   "question": {
-    "title": "Consecutive Logins",
+    "title": "Ranking Products by Sales",
     "difficulty": "Medium",
-    "topic": "Consecutive Sequences",
-    "desc": "Find the users with the most consecutive days of logging in, along with the start and end dates of their longest streak.",
-    "setup": "DROP TABLE IF EXISTS users; CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255)); DROP TABLE IF EXISTS logins; CREATE TABLE logins (id SERIAL PRIMARY KEY, user_id INTEGER, login_date DATE); INSERT INTO users (name) VALUES ('Alice'), ('Bob'), ('Charlie'); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (3, '2022-01-01'), (3, '2022-01-02'), (3, '2022-01-03'), (3, '2022-01-04');",
+    "topic": "Advanced Analytics",
+    "desc": "Rank products by their total sales across different regions, considering only products with sales in more than one region.",
+    "setup": "\n      DROP TABLE IF EXISTS sales;\n      DROP TABLE IF EXISTS products;\n      CREATE TABLE products (\n         product_id SERIAL PRIMARY KEY,\n         product_name VARCHAR(50)\n      );\n      CREATE TABLE sales (\n         sale_id SERIAL PRIMARY KEY,\n         product_id INTEGER,\n         region VARCHAR(50),\n         sales_amount DECIMAL(10, 2),\n         FOREIGN KEY (product_id) REFERENCES products(product_id)\n      );\n      INSERT INTO products (product_name) VALUES ('Product A'), ('Product B'), ('Product C');\n      INSERT INTO sales (product_id, region, sales_amount)\n      VALUES\n         (1, 'North', 100.00),\n         (1, 'South', 200.00),\n         (2, 'East', 50.00),\n         (2, 'West', 75.00),\n         (3, 'North', 150.00);\n   ",
     "tables": [
-      "users",
-      "logins"
+      "sales",
+      "products"
     ],
     "cols": [
-      "name",
-      "start_date",
-      "end_date",
-      "streak"
+      "product_name",
+      "total_sales",
+      "rank"
     ],
     "rows": [
       [
-        "Alice",
-        "2022-01-01",
-        "2022-01-03",
-        3
+        "Product A",
+        300,
+        1
       ],
       [
-        "Charlie",
-        "2022-01-01",
-        "2022-01-04",
-        4
+        "Product B",
+        125,
+        2
       ]
     ],
-    "solution": "WITH ranked_logins AS ( SELECT user_id, login_date, DATEADD('day', -ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date), login_date) AS group_date FROM logins ), streaks AS ( SELECT user_id, MIN(login_date) AS start_date, MAX(login_date) AS end_date, COUNT(*) AS streak FROM ranked_logins GROUP BY user_id, group_date ) SELECT u.name, s.start_date, s.end_date, s.streak FROM streaks s JOIN users u ON s.user_id = u.id ORDER BY s.streak DESC LIMIT 2;",
-    "tips": "Consider using window functions to identify consecutive sequences.",
+    "solution": "\n      WITH ranked_products AS (\n         SELECT \n            p.product_name,\n            SUM(s.sales_amount) AS total_sales,\n            COUNT(DISTINCT s.region) AS num_regions\n         FROM \n            sales s\n         JOIN \n            products p ON s.product_id = p.product_id\n         GROUP BY \n            p.product_name\n         HAVING \n            COUNT(DISTINCT s.region) > 1\n      )\n      SELECT \n         product_name,\n         total_sales,\n         DENSE_RANK() OVER (ORDER BY total_sales DESC) AS rank\n      FROM \n         ranked_products;\n   ",
+    "tips": "Consider using window functions for ranking and CTEs for intermediate calculations.",
     "hints": [
-      "Use a Common Table Expression (CTE) to simplify the query and improve readability.",
-      "You will need to use the ROW_NUMBER() function to assign a unique number to each row within each partition of the result set.",
-      "The DATEADD function can be used to calculate the group date by subtracting the row number from the login date."
+      "You need to join two tables and group by a specific column.",
+      "Use a window function to rank the products based on their total sales.",
+      "First, filter products with sales in more than one region using a HAVING clause."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS users; CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255)); DROP TABLE IF EXISTS logins; CREATE TABLE logins (id SERIAL PRIMARY KEY, user_id INTEGER, login_date DATE); INSERT INTO users (name) VALUES ('David'), ('Eve'); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-02-01'), (1, '2022-02-02'), (1, '2022-02-03'), (2, '2022-02-01'), (2, '2022-02-02');",
+        "setup": "\n            DROP TABLE IF EXISTS sales;\n            DROP TABLE IF EXISTS products;\n            CREATE TABLE products (\n               product_id SERIAL PRIMARY KEY,\n               product_name VARCHAR(50)\n            );\n            CREATE TABLE sales (\n               sale_id SERIAL PRIMARY KEY,\n               product_id INTEGER,\n               region VARCHAR(50),\n               sales_amount DECIMAL(10, 2),\n               FOREIGN KEY (product_id) REFERENCES products(product_id)\n            );\n            INSERT INTO products (product_name) VALUES ('Product X'), ('Product Y');\n            INSERT INTO sales (product_id, region, sales_amount)\n            VALUES\n               (1, 'North', 200.00),\n               (1, 'South', 300.00),\n               (2, 'East', 100.00),\n               (2, 'West', 150.00),\n               (2, 'North', 200.00);\n         ",
         "rows": [
           [
-            "David",
-            "2022-02-01",
-            "2022-02-03",
-            3
+            "Product Y",
+            450,
+            1
           ],
           [
-            "Eve",
-            "2022-02-01",
-            "2022-02-02",
+            "Product X",
+            500,
             2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS users; CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255)); DROP TABLE IF EXISTS logins; CREATE TABLE logins (id SERIAL PRIMARY KEY, user_id INTEGER, login_date DATE); INSERT INTO users (name) VALUES ('Frank'), ('George'); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-03-01'), (1, '2022-03-02'), (2, '2022-03-01'), (2, '2022-03-03'), (2, '2022-03-04');",
+        "setup": "\n            DROP TABLE IF EXISTS sales;\n            DROP TABLE IF EXISTS products;\n            CREATE TABLE products (\n               product_id SERIAL PRIMARY KEY,\n               product_name VARCHAR(50)\n            );\n            CREATE TABLE sales (\n               sale_id SERIAL PRIMARY KEY,\n               product_id INTEGER,\n               region VARCHAR(50),\n               sales_amount DECIMAL(10, 2),\n               FOREIGN KEY (product_id) REFERENCES products(product_id)\n            );\n            INSERT INTO products (product_name) VALUES ('Product P'), ('Product Q'), ('Product R');\n            INSERT INTO sales (product_id, region, sales_amount)\n            VALUES\n               (1, 'North', 100.00),\n               (1, 'South', 200.00),\n               (2, 'East', 50.00),\n               (3, 'West', 75.00),\n               (3, 'North', 100.00);\n         ",
         "rows": [
           [
-            "George",
-            "2022-03-03",
-            "2022-03-04",
-            2
+            "Product P",
+            300,
+            1
           ],
           [
-            "Frank",
-            "2022-03-01",
-            "2022-03-02",
+            "Product R",
+            175,
             2
           ]
         ]
