@@ -1,67 +1,64 @@
 {
-  "date": "2026-07-05",
+  "date": "2026-07-06",
   "question": {
-    "title": "Ranking Products by Sales",
+    "title": "Average Order Value by Customer",
     "difficulty": "Medium",
-    "topic": "Advanced Analytics",
-    "desc": "Rank products by their total sales across different regions, considering only products with sales in more than one region.",
-    "setup": "\n      DROP TABLE IF EXISTS sales;\n      DROP TABLE IF EXISTS products;\n      CREATE TABLE products (\n         product_id SERIAL PRIMARY KEY,\n         product_name VARCHAR(50)\n      );\n      CREATE TABLE sales (\n         sale_id SERIAL PRIMARY KEY,\n         product_id INTEGER,\n         region VARCHAR(50),\n         sales_amount DECIMAL(10, 2),\n         FOREIGN KEY (product_id) REFERENCES products(product_id)\n      );\n      INSERT INTO products (product_name) VALUES ('Product A'), ('Product B'), ('Product C');\n      INSERT INTO sales (product_id, region, sales_amount)\n      VALUES\n         (1, 'North', 100.00),\n         (1, 'South', 200.00),\n         (2, 'East', 50.00),\n         (2, 'West', 75.00),\n         (3, 'North', 150.00);\n   ",
+    "topic": "Aggregations & JOINs",
+    "desc": "Find the average order value for each customer, considering only orders placed in 2022. The average order value should be calculated as the total order value divided by the number of orders. Sort the results by customer name.",
+    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100)); INSERT INTO customers (name) VALUES ('John Doe'), ('Jane Doe'), ('Bob Smith'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers (id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-15', 200.00), (2, '2022-02-01', 50.00), (3, '2022-03-01', 150.00), (1, '2021-01-01', 120.00);",
     "tables": [
-      "sales",
-      "products"
+      "customers",
+      "orders"
     ],
     "cols": [
-      "product_name",
-      "total_sales",
-      "rank"
+      "name",
+      "average_order_value"
     ],
     "rows": [
       [
-        "Product A",
-        300,
-        1
+        "John Doe",
+        150
       ],
       [
-        "Product B",
-        125,
-        2
+        "Jane Doe",
+        50
+      ],
+      [
+        "Bob Smith",
+        150
       ]
     ],
-    "solution": "\n      WITH ranked_products AS (\n         SELECT \n            p.product_name,\n            SUM(s.sales_amount) AS total_sales,\n            COUNT(DISTINCT s.region) AS num_regions\n         FROM \n            sales s\n         JOIN \n            products p ON s.product_id = p.product_id\n         GROUP BY \n            p.product_name\n         HAVING \n            COUNT(DISTINCT s.region) > 1\n      )\n      SELECT \n         product_name,\n         total_sales,\n         DENSE_RANK() OVER (ORDER BY total_sales DESC) AS rank\n      FROM \n         ranked_products;\n   ",
-    "tips": "Consider using window functions for ranking and CTEs for intermediate calculations.",
+    "solution": "WITH customer_orders AS (SELECT c.name, o.total FROM customers c JOIN orders o ON c.id = o.customer_id WHERE EXTRACT(YEAR FROM o.order_date) = 2022) SELECT name, AVG(total) AS average_order_value FROM customer_orders GROUP BY name ORDER BY name;",
+    "tips": "Consider using window functions for more complex aggregations.",
     "hints": [
-      "You need to join two tables and group by a specific column.",
-      "Use a window function to rank the products based on their total sales.",
-      "First, filter products with sales in more than one region using a HAVING clause."
+      "Start by filtering orders to only those in 2022.",
+      "Use a JOIN to connect customers with their orders.",
+      "Apply the AVG aggregation function to calculate the average order value per customer."
     ],
     "tests": [
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            DROP TABLE IF EXISTS products;\n            CREATE TABLE products (\n               product_id SERIAL PRIMARY KEY,\n               product_name VARCHAR(50)\n            );\n            CREATE TABLE sales (\n               sale_id SERIAL PRIMARY KEY,\n               product_id INTEGER,\n               region VARCHAR(50),\n               sales_amount DECIMAL(10, 2),\n               FOREIGN KEY (product_id) REFERENCES products(product_id)\n            );\n            INSERT INTO products (product_name) VALUES ('Product X'), ('Product Y');\n            INSERT INTO sales (product_id, region, sales_amount)\n            VALUES\n               (1, 'North', 200.00),\n               (1, 'South', 300.00),\n               (2, 'East', 100.00),\n               (2, 'West', 150.00),\n               (2, 'North', 200.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100)); INSERT INTO customers (name) VALUES ('Alice Johnson'), ('Mike Brown'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers (id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-04-01', 80.00), (2, '2022-05-01', 300.00), (1, '2022-06-01', 220.00);",
         "rows": [
           [
-            "Product Y",
-            450,
-            1
+            "Alice Johnson",
+            150
           ],
           [
-            "Product X",
-            500,
-            2
+            "Mike Brown",
+            300
           ]
         ]
       },
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            DROP TABLE IF EXISTS products;\n            CREATE TABLE products (\n               product_id SERIAL PRIMARY KEY,\n               product_name VARCHAR(50)\n            );\n            CREATE TABLE sales (\n               sale_id SERIAL PRIMARY KEY,\n               product_id INTEGER,\n               region VARCHAR(50),\n               sales_amount DECIMAL(10, 2),\n               FOREIGN KEY (product_id) REFERENCES products(product_id)\n            );\n            INSERT INTO products (product_name) VALUES ('Product P'), ('Product Q'), ('Product R');\n            INSERT INTO sales (product_id, region, sales_amount)\n            VALUES\n               (1, 'North', 100.00),\n               (1, 'South', 200.00),\n               (2, 'East', 50.00),\n               (3, 'West', 75.00),\n               (3, 'North', 100.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100)); INSERT INTO customers (name) VALUES ('Emily Davis'), ('Tom White'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers (id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-07-01', 400.00), (2, '2022-08-01', 250.00), (1, '2021-09-01', 180.00);",
         "rows": [
           [
-            "Product P",
-            300,
-            1
+            "Emily Davis",
+            400
           ],
           [
-            "Product R",
-            175,
-            2
+            "Tom White",
+            250
           ]
         ]
       }
