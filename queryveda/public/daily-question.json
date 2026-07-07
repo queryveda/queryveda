@@ -1,64 +1,128 @@
 {
-  "date": "2026-07-06",
+  "date": "2026-07-07",
   "question": {
-    "title": "Average Order Value by Customer",
+    "title": "Ranking Employee Salaries by Department",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the average order value for each customer, considering only orders placed in 2022. The average order value should be calculated as the total order value divided by the number of orders. Sort the results by customer name.",
-    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100)); INSERT INTO customers (name) VALUES ('John Doe'), ('Jane Doe'), ('Bob Smith'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers (id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-15', 200.00), (2, '2022-02-01', 50.00), (3, '2022-03-01', 150.00), (1, '2021-01-01', 120.00);",
+    "topic": "Window Functions",
+    "desc": "You are given two tables, employees and departments. Write a query to rank the salaries of employees within each department. The ranking should be based on the salary in descending order.",
+    "setup": "DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE employees (id SERIAL, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10,2)); CREATE TABLE departments (id SERIAL, name VARCHAR(255)); INSERT INTO departments (id, name) VALUES (1, 'Sales'), (2, 'Marketing'), (3, 'IT'); INSERT INTO employees (name, department_id, salary) VALUES ('John Doe', 1, 50000.00), ('Jane Doe', 1, 60000.00), ('Alice Smith', 2, 70000.00), ('Bob Johnson', 2, 55000.00), ('Charlie Brown', 3, 45000.00), ('David Lee', 3, 65000.00);",
     "tables": [
-      "customers",
-      "orders"
+      "employees",
+      "departments"
     ],
     "cols": [
       "name",
-      "average_order_value"
+      "department_name",
+      "salary",
+      "rank"
     ],
     "rows": [
       [
-        "John Doe",
-        150
-      ],
-      [
         "Jane Doe",
-        50
+        "Sales",
+        60000,
+        1
       ],
       [
-        "Bob Smith",
-        150
+        "John Doe",
+        "Sales",
+        50000,
+        2
+      ],
+      [
+        "Alice Smith",
+        "Marketing",
+        70000,
+        1
+      ],
+      [
+        "Bob Johnson",
+        "Marketing",
+        55000,
+        2
+      ],
+      [
+        "David Lee",
+        "IT",
+        65000,
+        1
+      ],
+      [
+        "Charlie Brown",
+        "IT",
+        45000,
+        2
       ]
     ],
-    "solution": "WITH customer_orders AS (SELECT c.name, o.total FROM customers c JOIN orders o ON c.id = o.customer_id WHERE EXTRACT(YEAR FROM o.order_date) = 2022) SELECT name, AVG(total) AS average_order_value FROM customer_orders GROUP BY name ORDER BY name;",
-    "tips": "Consider using window functions for more complex aggregations.",
+    "solution": "SELECT e.name, d.name AS department_name, e.salary, DENSE_RANK() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC) AS rank FROM employees e JOIN departments d ON e.department_id = d.id;",
+    "tips": "Using DENSE_RANK() instead of RANK() will avoid gaps in the ranking if there are ties.",
     "hints": [
-      "Start by filtering orders to only those in 2022.",
-      "Use a JOIN to connect customers with their orders.",
-      "Apply the AVG aggregation function to calculate the average order value per customer."
+      "Use a JOIN to combine the employees and departments tables.",
+      "Apply a window function to rank the salaries within each department.",
+      "The DENSE_RANK() function will give you the desired ranking without gaps."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100)); INSERT INTO customers (name) VALUES ('Alice Johnson'), ('Mike Brown'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers (id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-04-01', 80.00), (2, '2022-05-01', 300.00), (1, '2022-06-01', 220.00);",
+        "setup": "DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE employees (id SERIAL, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10,2)); CREATE TABLE departments (id SERIAL, name VARCHAR(255)); INSERT INTO departments (id, name) VALUES (1, 'HR'), (2, 'Finance'); INSERT INTO employees (name, department_id, salary) VALUES ('Emily Chen', 1, 58000.00), ('Frank Kim', 1, 62000.00), ('Grace Patel', 2, 68000.00), ('Hannah Lee', 2, 52000.00);",
         "rows": [
           [
-            "Alice Johnson",
-            150
+            "Frank Kim",
+            "HR",
+            62000,
+            1
           ],
           [
-            "Mike Brown",
-            300
+            "Emily Chen",
+            "HR",
+            58000,
+            2
+          ],
+          [
+            "Grace Patel",
+            "Finance",
+            68000,
+            1
+          ],
+          [
+            "Hannah Lee",
+            "Finance",
+            52000,
+            2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100)); INSERT INTO customers (name) VALUES ('Emily Davis'), ('Tom White'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers (id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-07-01', 400.00), (2, '2022-08-01', 250.00), (1, '2021-09-01', 180.00);",
+        "setup": "DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE employees (id SERIAL, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10,2)); CREATE TABLE departments (id SERIAL, name VARCHAR(255)); INSERT INTO departments (id, name) VALUES (1, 'Dev'), (2, 'QA'); INSERT INTO employees (name, department_id, salary) VALUES ('Ivan Wong', 1, 70000.00), ('Julia Hall', 1, 60000.00), ('Kevin White', 2, 65000.00), ('Lily Tran', 2, 55000.00), ('Matthew Kim', 1, 70000.00);",
         "rows": [
           [
-            "Emily Davis",
-            400
+            "Ivan Wong",
+            "Dev",
+            70000,
+            1
           ],
           [
-            "Tom White",
-            250
+            "Matthew Kim",
+            "Dev",
+            70000,
+            1
+          ],
+          [
+            "Julia Hall",
+            "Dev",
+            60000,
+            3
+          ],
+          [
+            "Kevin White",
+            "QA",
+            65000,
+            1
+          ],
+          [
+            "Lily Tran",
+            "QA",
+            55000,
+            2
           ]
         ]
       }
