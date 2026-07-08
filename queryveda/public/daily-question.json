@@ -1,128 +1,107 @@
 {
-  "date": "2026-07-07",
+  "date": "2026-07-08",
   "question": {
-    "title": "Ranking Employee Salaries by Department",
+    "title": "Cumulative Sales by Region",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "You are given two tables, employees and departments. Write a query to rank the salaries of employees within each department. The ranking should be based on the salary in descending order.",
-    "setup": "DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE employees (id SERIAL, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10,2)); CREATE TABLE departments (id SERIAL, name VARCHAR(255)); INSERT INTO departments (id, name) VALUES (1, 'Sales'), (2, 'Marketing'), (3, 'IT'); INSERT INTO employees (name, department_id, salary) VALUES ('John Doe', 1, 50000.00), ('Jane Doe', 1, 60000.00), ('Alice Smith', 2, 70000.00), ('Bob Johnson', 2, 55000.00), ('Charlie Brown', 3, 45000.00), ('David Lee', 3, 65000.00);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Write a query that calculates the cumulative sales for each region. The result should include the region name, the date, and the cumulative sales amount.",
+    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, date DATE, sales_amount DECIMAL(10,2)); CREATE TABLE regions (id INT, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'); INSERT INTO sales (region_id, date, sales_amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-02', 150.00), (2, '2022-01-01', 200.00), (2, '2022-01-03', 250.00), (1, '2022-01-04', 300.00);",
     "tables": [
-      "employees",
-      "departments"
+      "sales",
+      "regions"
     ],
     "cols": [
-      "name",
-      "department_name",
-      "salary",
-      "rank"
+      "region_name",
+      "date",
+      "cumulative_sales"
     ],
     "rows": [
       [
-        "Jane Doe",
-        "Sales",
-        60000,
-        1
+        "North",
+        "2022-01-01",
+        100
       ],
       [
-        "John Doe",
-        "Sales",
-        50000,
-        2
+        "North",
+        "2022-01-02",
+        250
       ],
       [
-        "Alice Smith",
-        "Marketing",
-        70000,
-        1
+        "North",
+        "2022-01-04",
+        550
       ],
       [
-        "Bob Johnson",
-        "Marketing",
-        55000,
-        2
+        "South",
+        "2022-01-01",
+        200
       ],
       [
-        "David Lee",
-        "IT",
-        65000,
-        1
-      ],
-      [
-        "Charlie Brown",
-        "IT",
-        45000,
-        2
+        "South",
+        "2022-01-03",
+        450
       ]
     ],
-    "solution": "SELECT e.name, d.name AS department_name, e.salary, DENSE_RANK() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC) AS rank FROM employees e JOIN departments d ON e.department_id = d.id;",
-    "tips": "Using DENSE_RANK() instead of RANK() will avoid gaps in the ranking if there are ties.",
+    "solution": "SELECT r.name AS region_name, s.date, SUM(s.sales_amount) OVER (PARTITION BY s.region_id ORDER BY s.date) AS cumulative_sales FROM sales s JOIN regions r ON s.region_id = r.id ORDER BY s.region_id, s.date;",
+    "tips": "Consider using window functions to calculate cumulative sums.",
     "hints": [
-      "Use a JOIN to combine the employees and departments tables.",
-      "Apply a window function to rank the salaries within each department.",
-      "The DENSE_RANK() function will give you the desired ranking without gaps."
+      "Use a JOIN to combine the sales and regions tables.",
+      "Apply a window function to calculate the cumulative sales for each region.",
+      "Use the PARTITION BY clause to separate the cumulative sums by region and ORDER BY to ensure the correct order of dates."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE employees (id SERIAL, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10,2)); CREATE TABLE departments (id SERIAL, name VARCHAR(255)); INSERT INTO departments (id, name) VALUES (1, 'HR'), (2, 'Finance'); INSERT INTO employees (name, department_id, salary) VALUES ('Emily Chen', 1, 58000.00), ('Frank Kim', 1, 62000.00), ('Grace Patel', 2, 68000.00), ('Hannah Lee', 2, 52000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, date DATE, sales_amount DECIMAL(10,2)); CREATE TABLE regions (id INT, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'East'), (2, 'West'); INSERT INTO sales (region_id, date, sales_amount) VALUES (1, '2022-02-01', 500.00), (1, '2022-02-02', 600.00), (2, '2022-02-01', 700.00), (2, '2022-02-03', 800.00);",
         "rows": [
           [
-            "Frank Kim",
-            "HR",
-            62000,
-            1
+            "East",
+            "2022-02-01",
+            500
           ],
           [
-            "Emily Chen",
-            "HR",
-            58000,
-            2
+            "East",
+            "2022-02-02",
+            1100
           ],
           [
-            "Grace Patel",
-            "Finance",
-            68000,
-            1
+            "West",
+            "2022-02-01",
+            700
           ],
           [
-            "Hannah Lee",
-            "Finance",
-            52000,
-            2
+            "West",
+            "2022-02-03",
+            1500
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE employees (id SERIAL, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10,2)); CREATE TABLE departments (id SERIAL, name VARCHAR(255)); INSERT INTO departments (id, name) VALUES (1, 'Dev'), (2, 'QA'); INSERT INTO employees (name, department_id, salary) VALUES ('Ivan Wong', 1, 70000.00), ('Julia Hall', 1, 60000.00), ('Kevin White', 2, 65000.00), ('Lily Tran', 2, 55000.00), ('Matthew Kim', 1, 70000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, date DATE, sales_amount DECIMAL(10,2)); CREATE TABLE regions (id INT, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'Central'), (2, 'Coastal'); INSERT INTO sales (region_id, date, sales_amount) VALUES (1, '2022-03-01', 300.00), (1, '2022-03-02', 400.00), (2, '2022-03-01', 900.00), (2, '2022-03-04', 1000.00), (1, '2022-03-03', 500.00);",
         "rows": [
           [
-            "Ivan Wong",
-            "Dev",
-            70000,
-            1
+            "Central",
+            "2022-03-01",
+            300
           ],
           [
-            "Matthew Kim",
-            "Dev",
-            70000,
-            1
+            "Central",
+            "2022-03-02",
+            700
           ],
           [
-            "Julia Hall",
-            "Dev",
-            60000,
-            3
+            "Central",
+            "2022-03-03",
+            1200
           ],
           [
-            "Kevin White",
-            "QA",
-            65000,
-            1
+            "Coastal",
+            "2022-03-01",
+            900
           ],
           [
-            "Lily Tran",
-            "QA",
-            55000,
-            2
+            "Coastal",
+            "2022-03-04",
+            1900
           ]
         ]
       }
