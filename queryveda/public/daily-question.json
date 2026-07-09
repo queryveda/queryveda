@@ -1,107 +1,46 @@
 {
-  "date": "2026-07-08",
+  "date": "2026-07-09",
   "question": {
-    "title": "Cumulative Sales by Region",
+    "title": "Consecutive Logins",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "Write a query that calculates the cumulative sales for each region. The result should include the region name, the date, and the cumulative sales amount.",
-    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, date DATE, sales_amount DECIMAL(10,2)); CREATE TABLE regions (id INT, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'); INSERT INTO sales (region_id, date, sales_amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-02', 150.00), (2, '2022-01-01', 200.00), (2, '2022-01-03', 250.00), (1, '2022-01-04', 300.00);",
+    "topic": "Consecutive Sequences",
+    "desc": "Find the users who have logged in for at least 3 consecutive days.",
+    "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (1, '2022-01-05'), (2, '2022-01-01'), (2, '2022-01-02'), (3, '2022-01-01'), (3, '2022-01-02'), (3, '2022-01-03'), (3, '2022-01-04');",
     "tables": [
-      "sales",
-      "regions"
+      "logins"
     ],
     "cols": [
-      "region_name",
-      "date",
-      "cumulative_sales"
+      "user_id"
     ],
     "rows": [
       [
-        "North",
-        "2022-01-01",
-        100
+        1
       ],
       [
-        "North",
-        "2022-01-02",
-        250
-      ],
-      [
-        "North",
-        "2022-01-04",
-        550
-      ],
-      [
-        "South",
-        "2022-01-01",
-        200
-      ],
-      [
-        "South",
-        "2022-01-03",
-        450
+        3
       ]
     ],
-    "solution": "SELECT r.name AS region_name, s.date, SUM(s.sales_amount) OVER (PARTITION BY s.region_id ORDER BY s.date) AS cumulative_sales FROM sales s JOIN regions r ON s.region_id = r.id ORDER BY s.region_id, s.date;",
-    "tips": "Consider using window functions to calculate cumulative sums.",
+    "solution": "WITH consecutive_logins AS ( SELECT user_id, login_date, login_date - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS consecutive_group FROM logins ) SELECT DISTINCT user_id FROM consecutive_logins GROUP BY user_id, consecutive_group HAVING COUNT(DISTINCT login_date) >= 3;",
+    "tips": "Use window functions to assign a group to each sequence of consecutive dates for each user.",
     "hints": [
-      "Use a JOIN to combine the sales and regions tables.",
-      "Apply a window function to calculate the cumulative sales for each region.",
-      "Use the PARTITION BY clause to separate the cumulative sums by region and ORDER BY to ensure the correct order of dates."
+      "To solve this, think about how to group consecutive dates together for each user.",
+      "Use a window function like ROW_NUMBER to assign a unique number to each row within each user's partition, ordered by date.",
+      "Then subtract this row number from the date to create a 'group' that will be the same for consecutive dates."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, date DATE, sales_amount DECIMAL(10,2)); CREATE TABLE regions (id INT, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'East'), (2, 'West'); INSERT INTO sales (region_id, date, sales_amount) VALUES (1, '2022-02-01', 500.00), (1, '2022-02-02', 600.00), (2, '2022-02-01', 700.00), (2, '2022-02-03', 800.00);",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (4, '2022-02-01'), (4, '2022-02-02'), (4, '2022-02-03'), (5, '2022-02-01'), (5, '2022-02-03'), (6, '2022-02-01'), (6, '2022-02-02), (6, '2022-02-04');",
         "rows": [
           [
-            "East",
-            "2022-02-01",
-            500
-          ],
-          [
-            "East",
-            "2022-02-02",
-            1100
-          ],
-          [
-            "West",
-            "2022-02-01",
-            700
-          ],
-          [
-            "West",
-            "2022-02-03",
-            1500
+            4
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, date DATE, sales_amount DECIMAL(10,2)); CREATE TABLE regions (id INT, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'Central'), (2, 'Coastal'); INSERT INTO sales (region_id, date, sales_amount) VALUES (1, '2022-03-01', 300.00), (1, '2022-03-02', 400.00), (2, '2022-03-01', 900.00), (2, '2022-03-04', 1000.00), (1, '2022-03-03', 500.00);",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (7, '2022-03-01'), (7, '2022-03-02'), (7, '2022-03-03'), (7, '2022-03-04'), (8, '2022-03-01'), (8, '2022-03-02'), (9, '2022-03-01'), (9, '2022-03-03'), (9, '2022-03-05');",
         "rows": [
           [
-            "Central",
-            "2022-03-01",
-            300
-          ],
-          [
-            "Central",
-            "2022-03-02",
-            700
-          ],
-          [
-            "Central",
-            "2022-03-03",
-            1200
-          ],
-          [
-            "Coastal",
-            "2022-03-01",
-            900
-          ],
-          [
-            "Coastal",
-            "2022-03-04",
-            1900
+            7
           ]
         ]
       }
