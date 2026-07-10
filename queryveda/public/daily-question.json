@@ -1,46 +1,145 @@
 {
-  "date": "2026-07-09",
+  "date": "2026-07-10",
   "question": {
-    "title": "Consecutive Logins",
+    "title": "Sales Ranking by Region",
     "difficulty": "Medium",
-    "topic": "Consecutive Sequences",
-    "desc": "Find the users who have logged in for at least 3 consecutive days.",
-    "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (1, '2022-01-05'), (2, '2022-01-01'), (2, '2022-01-02'), (3, '2022-01-01'), (3, '2022-01-02'), (3, '2022-01-03'), (3, '2022-01-04');",
+    "topic": "Advanced Analytics",
+    "desc": "Write a query to rank salespeople by their total sales within each region. The salespeople should be ranked based on their total sales in descending order. If two or more salespeople have the same total sales, they should be ranked the same and the next salesperson should have a rank that is one more than the number of salespeople with the same rank.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, salesperson VARCHAR(255), region VARCHAR(255), sales_amount DECIMAL(10, 2)); INSERT INTO sales (salesperson, region, sales_amount) VALUES ('John', 'North', 1000.00), ('Jane', 'North', 800.00), ('Bob', 'South', 1200.00), ('Alice', 'South', 900.00), ('Mike', 'North', 700.00), ('Emily', 'South', 1100.00), ('Tom', 'North', 600.00), ('Lily', 'South', 1000.00);",
     "tables": [
-      "logins"
+      "sales"
     ],
     "cols": [
-      "user_id"
+      "region",
+      "salesperson",
+      "total_sales",
+      "rank"
     ],
     "rows": [
       [
+        "North",
+        "John",
+        1000,
         1
       ],
       [
+        "North",
+        "Jane",
+        800,
+        2
+      ],
+      [
+        "North",
+        "Mike",
+        700,
         3
+      ],
+      [
+        "North",
+        "Tom",
+        600,
+        4
+      ],
+      [
+        "South",
+        "Bob",
+        1200,
+        1
+      ],
+      [
+        "South",
+        "Emily",
+        1100,
+        2
+      ],
+      [
+        "South",
+        "Lily",
+        1000,
+        3
+      ],
+      [
+        "South",
+        "Alice",
+        900,
+        4
       ]
     ],
-    "solution": "WITH consecutive_logins AS ( SELECT user_id, login_date, login_date - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS consecutive_group FROM logins ) SELECT DISTINCT user_id FROM consecutive_logins GROUP BY user_id, consecutive_group HAVING COUNT(DISTINCT login_date) >= 3;",
-    "tips": "Use window functions to assign a group to each sequence of consecutive dates for each user.",
+    "solution": "WITH ranked_sales AS (SELECT region, salesperson, SUM(sales_amount) AS total_sales FROM sales GROUP BY region, salesperson) SELECT region, salesperson, total_sales, DENSE_RANK() OVER (PARTITION BY region ORDER BY total_sales DESC) AS rank FROM ranked_sales ORDER BY region, rank;",
+    "tips": "Using DENSE_RANK() ensures that if two or more salespeople have the same total sales, they will have the same rank and the next salesperson will have a rank that is one more than the number of salespeople with the same rank.",
     "hints": [
-      "To solve this, think about how to group consecutive dates together for each user.",
-      "Use a window function like ROW_NUMBER to assign a unique number to each row within each user's partition, ordered by date.",
-      "Then subtract this row number from the date to create a 'group' that will be the same for consecutive dates."
+      "First, you need to calculate the total sales for each salesperson in each region.",
+      "Then, you need to use a window function to rank the salespeople based on their total sales.",
+      "Finally, use DENSE_RANK() to ensure that salespeople with the same total sales have the same rank and the next salesperson has a rank that is one more than the number of salespeople with the same rank."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (4, '2022-02-01'), (4, '2022-02-02'), (4, '2022-02-03'), (5, '2022-02-01'), (5, '2022-02-03'), (6, '2022-02-01'), (6, '2022-02-02), (6, '2022-02-04');",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, salesperson VARCHAR(255), region VARCHAR(255), sales_amount DECIMAL(10, 2)); INSERT INTO sales (salesperson, region, sales_amount) VALUES ('David', 'East', 1500.00), ('Sarah', 'East', 1200.00), ('Kevin', 'West', 1800.00), ('Olivia', 'West', 1500.00), ('William', 'East', 1000.00);",
         "rows": [
           [
-            4
+            "East",
+            "David",
+            1500,
+            1
+          ],
+          [
+            "East",
+            "Sarah",
+            1200,
+            2
+          ],
+          [
+            "East",
+            "William",
+            1000,
+            3
+          ],
+          [
+            "West",
+            "Kevin",
+            1800,
+            1
+          ],
+          [
+            "West",
+            "Olivia",
+            1500,
+            2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (7, '2022-03-01'), (7, '2022-03-02'), (7, '2022-03-03'), (7, '2022-03-04'), (8, '2022-03-01'), (8, '2022-03-02'), (9, '2022-03-01'), (9, '2022-03-03'), (9, '2022-03-05');",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, salesperson VARCHAR(255), region VARCHAR(255), sales_amount DECIMAL(10, 2)); INSERT INTO sales (salesperson, region, sales_amount) VALUES ('James', 'Central', 2000.00), ('Jessica', 'Central', 1800.00), ('Robert', 'Central', 1600.00), ('Ava', 'Central', 1400.00), ('Michael', 'Central', 1200.00);",
         "rows": [
           [
-            7
+            "Central",
+            "James",
+            2000,
+            1
+          ],
+          [
+            "Central",
+            "Jessica",
+            1800,
+            2
+          ],
+          [
+            "Central",
+            "Robert",
+            1600,
+            3
+          ],
+          [
+            "Central",
+            "Ava",
+            1400,
+            4
+          ],
+          [
+            "Central",
+            "Michael",
+            1200,
+            5
           ]
         ]
       }
