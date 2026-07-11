@@ -1,145 +1,71 @@
 {
-  "date": "2026-07-10",
+  "date": "2026-07-11",
   "question": {
-    "title": "Sales Ranking by Region",
+    "title": "Average Salaries by Department and Job",
     "difficulty": "Medium",
-    "topic": "Advanced Analytics",
-    "desc": "Write a query to rank salespeople by their total sales within each region. The salespeople should be ranked based on their total sales in descending order. If two or more salespeople have the same total sales, they should be ranked the same and the next salesperson should have a rank that is one more than the number of salespeople with the same rank.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, salesperson VARCHAR(255), region VARCHAR(255), sales_amount DECIMAL(10, 2)); INSERT INTO sales (salesperson, region, sales_amount) VALUES ('John', 'North', 1000.00), ('Jane', 'North', 800.00), ('Bob', 'South', 1200.00), ('Alice', 'South', 900.00), ('Mike', 'North', 700.00), ('Emily', 'South', 1100.00), ('Tom', 'North', 600.00), ('Lily', 'South', 1000.00);",
+    "topic": "Aggregations & JOINs",
+    "desc": "Find the average salary for each department and job title. Sort the results by department and then by job title.",
+    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), job_title VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, job_title, salary) VALUES ('John Doe', 'Sales', 'Salesman', 50000.00), ('Jane Doe', 'Marketing', 'Marketing Manager', 70000.00), ('Bob Smith', 'Sales', 'Salesman', 60000.00), ('Alice Johnson', 'Marketing', 'Marketing Manager', 80000.00), ('Mike Brown', 'IT', 'Developer', 90000.00);",
     "tables": [
-      "sales"
+      "employees"
     ],
     "cols": [
-      "region",
-      "salesperson",
-      "total_sales",
-      "rank"
+      "department",
+      "job_title",
+      "average_salary"
     ],
     "rows": [
       [
-        "North",
-        "John",
-        1000,
-        1
+        "IT",
+        "Developer",
+        90000
       ],
       [
-        "North",
-        "Jane",
-        800,
-        2
+        "Marketing",
+        "Marketing Manager",
+        75000
       ],
       [
-        "North",
-        "Mike",
-        700,
-        3
-      ],
-      [
-        "North",
-        "Tom",
-        600,
-        4
-      ],
-      [
-        "South",
-        "Bob",
-        1200,
-        1
-      ],
-      [
-        "South",
-        "Emily",
-        1100,
-        2
-      ],
-      [
-        "South",
-        "Lily",
-        1000,
-        3
-      ],
-      [
-        "South",
-        "Alice",
-        900,
-        4
+        "Sales",
+        "Salesman",
+        55000
       ]
     ],
-    "solution": "WITH ranked_sales AS (SELECT region, salesperson, SUM(sales_amount) AS total_sales FROM sales GROUP BY region, salesperson) SELECT region, salesperson, total_sales, DENSE_RANK() OVER (PARTITION BY region ORDER BY total_sales DESC) AS rank FROM ranked_sales ORDER BY region, rank;",
-    "tips": "Using DENSE_RANK() ensures that if two or more salespeople have the same total sales, they will have the same rank and the next salesperson will have a rank that is one more than the number of salespeople with the same rank.",
+    "solution": "SELECT department, job_title, AVG(salary) AS average_salary FROM employees GROUP BY department, job_title ORDER BY department, job_title;",
+    "tips": "Consider using indexes on the department and job_title columns for larger datasets.",
     "hints": [
-      "First, you need to calculate the total sales for each salesperson in each region.",
-      "Then, you need to use a window function to rank the salespeople based on their total sales.",
-      "Finally, use DENSE_RANK() to ensure that salespeople with the same total sales have the same rank and the next salesperson has a rank that is one more than the number of salespeople with the same rank."
+      "You will need to use the AVG function to calculate the average salary.",
+      "Use the GROUP BY clause to group the results by department and job title.",
+      "The ORDER BY clause will be used to sort the results by department and then by job title."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, salesperson VARCHAR(255), region VARCHAR(255), sales_amount DECIMAL(10, 2)); INSERT INTO sales (salesperson, region, sales_amount) VALUES ('David', 'East', 1500.00), ('Sarah', 'East', 1200.00), ('Kevin', 'West', 1800.00), ('Olivia', 'West', 1500.00), ('William', 'East', 1000.00);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), job_title VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, job_title, salary) VALUES ('Emily Davis', 'HR', 'HR Manager', 65000.00), ('David Lee', 'Finance', 'Accountant', 75000.00), ('Sarah Taylor', 'HR', 'HR Manager', 70000.00);",
         "rows": [
           [
-            "East",
-            "David",
-            1500,
-            1
+            "Finance",
+            "Accountant",
+            75000
           ],
           [
-            "East",
-            "Sarah",
-            1200,
-            2
-          ],
-          [
-            "East",
-            "William",
-            1000,
-            3
-          ],
-          [
-            "West",
-            "Kevin",
-            1800,
-            1
-          ],
-          [
-            "West",
-            "Olivia",
-            1500,
-            2
+            "HR",
+            "HR Manager",
+            67500
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, salesperson VARCHAR(255), region VARCHAR(255), sales_amount DECIMAL(10, 2)); INSERT INTO sales (salesperson, region, sales_amount) VALUES ('James', 'Central', 2000.00), ('Jessica', 'Central', 1800.00), ('Robert', 'Central', 1600.00), ('Ava', 'Central', 1400.00), ('Michael', 'Central', 1200.00);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), job_title VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, job_title, salary) VALUES ('Kevin White', 'Operations', 'Operations Manager', 85000.00), ('Rebecca Martin', 'Operations', 'Operations Manager', 90000.00), ('James Wilson', 'Customer Service', 'Customer Service Rep', 55000.00);",
         "rows": [
           [
-            "Central",
-            "James",
-            2000,
-            1
+            "Customer Service",
+            "Customer Service Rep",
+            55000
           ],
           [
-            "Central",
-            "Jessica",
-            1800,
-            2
-          ],
-          [
-            "Central",
-            "Robert",
-            1600,
-            3
-          ],
-          [
-            "Central",
-            "Ava",
-            1400,
-            4
-          ],
-          [
-            "Central",
-            "Michael",
-            1200,
-            5
+            "Operations",
+            "Operations Manager",
+            87500
           ]
         ]
       }
