@@ -1,71 +1,82 @@
 {
-  "date": "2026-07-11",
+  "date": "2026-07-12",
   "question": {
-    "title": "Average Salaries by Department and Job",
+    "title": "Ranking Sales by Region",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the average salary for each department and job title. Sort the results by department and then by job title.",
-    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), job_title VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, job_title, salary) VALUES ('John Doe', 'Sales', 'Salesman', 50000.00), ('Jane Doe', 'Marketing', 'Marketing Manager', 70000.00), ('Bob Smith', 'Sales', 'Salesman', 60000.00), ('Alice Johnson', 'Marketing', 'Marketing Manager', 80000.00), ('Mike Brown', 'IT', 'Developer', 90000.00);",
+    "topic": "Window Functions",
+    "desc": "Given two tables, 'sales' and 'regions', where 'sales' contains information about sales made in different regions and 'regions' contains the names of the regions, write a query to rank sales by region. The ranking should be based on the total sales amount in each region, from highest to lowest. The query should return the region name, the total sales amount for that region, and the rank of the region.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL, region_id INTEGER, amount DECIMAL(10,2)); INSERT INTO sales (region_id, amount) VALUES (1, 100.00), (1, 200.00), (2, 50.00), (3, 300.00), (2, 150.00), (1, 250.00), (3, 400.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'), (3, 'East');",
     "tables": [
-      "employees"
+      "sales",
+      "regions"
     ],
     "cols": [
-      "department",
-      "job_title",
-      "average_salary"
+      "region_name",
+      "total_sales",
+      "rank"
     ],
     "rows": [
       [
-        "IT",
-        "Developer",
-        90000
+        "East",
+        700,
+        1
       ],
       [
-        "Marketing",
-        "Marketing Manager",
-        75000
+        "North",
+        550,
+        2
       ],
       [
-        "Sales",
-        "Salesman",
-        55000
+        "South",
+        200,
+        3
       ]
     ],
-    "solution": "SELECT department, job_title, AVG(salary) AS average_salary FROM employees GROUP BY department, job_title ORDER BY department, job_title;",
-    "tips": "Consider using indexes on the department and job_title columns for larger datasets.",
+    "solution": "SELECT r.name AS region_name, SUM(s.amount) AS total_sales, DENSE_RANK() OVER (ORDER BY SUM(s.amount) DESC) AS rank FROM sales s JOIN regions r ON s.region_id = r.id GROUP BY r.name ORDER BY total_sales DESC;",
+    "tips": "Using DENSE_RANK() ensures that if two regions have the same total sales, they will have the same rank and the next region will have a rank that is one more than the previous rank.",
     "hints": [
-      "You will need to use the AVG function to calculate the average salary.",
-      "Use the GROUP BY clause to group the results by department and job title.",
-      "The ORDER BY clause will be used to sort the results by department and then by job title."
+      "Use a JOIN to combine data from the 'sales' and 'regions' tables.",
+      "Use the SUM aggregation function with a GROUP BY clause to calculate the total sales for each region.",
+      "Apply the DENSE_RANK() window function to rank the regions based on their total sales."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), job_title VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, job_title, salary) VALUES ('Emily Davis', 'HR', 'HR Manager', 65000.00), ('David Lee', 'Finance', 'Accountant', 75000.00), ('Sarah Taylor', 'HR', 'HR Manager', 70000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL, region_id INTEGER, amount DECIMAL(10,2)); INSERT INTO sales (region_id, amount) VALUES (1, 500.00), (2, 300.00), (3, 200.00), (1, 400.00), (2, 100.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'West'), (2, 'Central'), (3, 'Coastal');",
         "rows": [
           [
-            "Finance",
-            "Accountant",
-            75000
+            "West",
+            900,
+            1
           ],
           [
-            "HR",
-            "HR Manager",
-            67500
+            "Central",
+            400,
+            2
+          ],
+          [
+            "Coastal",
+            200,
+            3
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), job_title VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, job_title, salary) VALUES ('Kevin White', 'Operations', 'Operations Manager', 85000.00), ('Rebecca Martin', 'Operations', 'Operations Manager', 90000.00), ('James Wilson', 'Customer Service', 'Customer Service Rep', 55000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL, region_id INTEGER, amount DECIMAL(10,2)); INSERT INTO sales (region_id, amount) VALUES (1, 800.00), (1, 200.00), (2, 600.00), (3, 400.00), (1, 100.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'Mountain'), (2, 'Valley'), (3, 'Hill');",
         "rows": [
           [
-            "Customer Service",
-            "Customer Service Rep",
-            55000
+            "Mountain",
+            1100,
+            1
           ],
           [
-            "Operations",
-            "Operations Manager",
-            87500
+            "Valley",
+            600,
+            2
+          ],
+          [
+            "Hill",
+            400,
+            3
           ]
         ]
       }
