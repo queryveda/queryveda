@@ -1,82 +1,109 @@
 {
-  "date": "2026-07-12",
+  "date": "2026-07-13",
   "question": {
-    "title": "Ranking Sales by Region",
+    "title": "Daily Sales Cumulative Total",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "Given two tables, 'sales' and 'regions', where 'sales' contains information about sales made in different regions and 'regions' contains the names of the regions, write a query to rank sales by region. The ranking should be based on the total sales amount in each region, from highest to lowest. The query should return the region name, the total sales amount for that region, and the rank of the region.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL, region_id INTEGER, amount DECIMAL(10,2)); INSERT INTO sales (region_id, amount) VALUES (1, 100.00), (1, 200.00), (2, 50.00), (3, 300.00), (2, 150.00), (1, 250.00), (3, 400.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'), (3, 'East');",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "You are a sales analyst for an online store. Given the daily sales data for a product, calculate the cumulative total sales for each day. Additionally, find the daily sales amount and the difference between the current day's sales and the previous day's sales.",
+    "setup": "DROP TABLE IF EXISTS daily_sales; CREATE TABLE daily_sales (date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO daily_sales (date, sales_amount) VALUES ('2022-01-01', 100.00), ('2022-01-02', 120.00), ('2022-01-03', 130.00), ('2022-01-04', 110.00), ('2022-01-05', 140.00);",
     "tables": [
-      "sales",
-      "regions"
+      "daily_sales"
     ],
     "cols": [
-      "region_name",
-      "total_sales",
-      "rank"
+      "date",
+      "sales_amount",
+      "cumulative_total",
+      "sales_diff"
     ],
     "rows": [
       [
-        "East",
-        700,
-        1
+        "2022-01-01",
+        100,
+        100,
+        null
       ],
       [
-        "North",
-        550,
-        2
+        "2022-01-02",
+        120,
+        220,
+        20
       ],
       [
-        "South",
-        200,
-        3
+        "2022-01-03",
+        130,
+        350,
+        10
+      ],
+      [
+        "2022-01-04",
+        110,
+        460,
+        -20
+      ],
+      [
+        "2022-01-05",
+        140,
+        600,
+        30
       ]
     ],
-    "solution": "SELECT r.name AS region_name, SUM(s.amount) AS total_sales, DENSE_RANK() OVER (ORDER BY SUM(s.amount) DESC) AS rank FROM sales s JOIN regions r ON s.region_id = r.id GROUP BY r.name ORDER BY total_sales DESC;",
-    "tips": "Using DENSE_RANK() ensures that if two regions have the same total sales, they will have the same rank and the next region will have a rank that is one more than the previous rank.",
+    "solution": "SELECT date, sales_amount, SUM(sales_amount) OVER (ORDER BY date) AS cumulative_total, sales_amount - LAG(sales_amount) OVER (ORDER BY date) AS sales_diff FROM daily_sales ORDER BY date;",
+    "tips": "To optimize performance, consider indexing the date column.",
     "hints": [
-      "Use a JOIN to combine data from the 'sales' and 'regions' tables.",
-      "Use the SUM aggregation function with a GROUP BY clause to calculate the total sales for each region.",
-      "Apply the DENSE_RANK() window function to rank the regions based on their total sales."
+      "Use a window function to calculate the cumulative total.",
+      "To find the difference between the current day's sales and the previous day's sales, use the LAG function.",
+      "Combine the SUM window function with the LAG function to get the desired output."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL, region_id INTEGER, amount DECIMAL(10,2)); INSERT INTO sales (region_id, amount) VALUES (1, 500.00), (2, 300.00), (3, 200.00), (1, 400.00), (2, 100.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'West'), (2, 'Central'), (3, 'Coastal');",
+        "setup": "DROP TABLE IF EXISTS daily_sales; CREATE TABLE daily_sales (date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO daily_sales (date, sales_amount) VALUES ('2022-02-01', 50.00), ('2022-02-02', 75.00), ('2022-02-03', 90.00);",
         "rows": [
           [
-            "West",
-            900,
-            1
+            "2022-02-01",
+            50,
+            50,
+            null
           ],
           [
-            "Central",
-            400,
-            2
+            "2022-02-02",
+            75,
+            125,
+            25
           ],
           [
-            "Coastal",
-            200,
-            3
+            "2022-02-03",
+            90,
+            215,
+            15
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL, region_id INTEGER, amount DECIMAL(10,2)); INSERT INTO sales (region_id, amount) VALUES (1, 800.00), (1, 200.00), (2, 600.00), (3, 400.00), (1, 100.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'Mountain'), (2, 'Valley'), (3, 'Hill');",
+        "setup": "DROP TABLE IF EXISTS daily_sales; CREATE TABLE daily_sales (date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO daily_sales (date, sales_amount) VALUES ('2022-03-01', 200.00), ('2022-03-02', 220.00), ('2022-03-03', 250.00), ('2022-03-04', 280.00);",
         "rows": [
           [
-            "Mountain",
-            1100,
-            1
+            "2022-03-01",
+            200,
+            200,
+            null
           ],
           [
-            "Valley",
-            600,
-            2
+            "2022-03-02",
+            220,
+            420,
+            20
           ],
           [
-            "Hill",
-            400,
-            3
+            "2022-03-03",
+            250,
+            670,
+            30
+          ],
+          [
+            "2022-03-04",
+            280,
+            950,
+            30
           ]
         ]
       }
