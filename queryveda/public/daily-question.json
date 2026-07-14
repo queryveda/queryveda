@@ -1,109 +1,47 @@
 {
-  "date": "2026-07-13",
+  "date": "2026-07-14",
   "question": {
-    "title": "Daily Sales Cumulative Total",
+    "title": "Consecutive Logins",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "You are a sales analyst for an online store. Given the daily sales data for a product, calculate the cumulative total sales for each day. Additionally, find the daily sales amount and the difference between the current day's sales and the previous day's sales.",
-    "setup": "DROP TABLE IF EXISTS daily_sales; CREATE TABLE daily_sales (date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO daily_sales (date, sales_amount) VALUES ('2022-01-01', 100.00), ('2022-01-02', 120.00), ('2022-01-03', 130.00), ('2022-01-04', 110.00), ('2022-01-05', 140.00);",
+    "topic": "Consecutive Sequences",
+    "desc": "Find the users who have logged in for 3 consecutive days and return their user_id and the date of their first consecutive login.",
+    "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INTEGER, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (2, '2022-01-04');",
     "tables": [
-      "daily_sales"
+      "logins"
     ],
     "cols": [
-      "date",
-      "sales_amount",
-      "cumulative_total",
-      "sales_diff"
+      "user_id",
+      "first_consecutive_login"
     ],
     "rows": [
       [
-        "2022-01-01",
-        100,
-        100,
-        null
-      ],
-      [
-        "2022-01-02",
-        120,
-        220,
-        20
-      ],
-      [
-        "2022-01-03",
-        130,
-        350,
-        10
-      ],
-      [
-        "2022-01-04",
-        110,
-        460,
-        -20
-      ],
-      [
-        "2022-01-05",
-        140,
-        600,
-        30
+        1,
+        "2022-01-01"
       ]
     ],
-    "solution": "SELECT date, sales_amount, SUM(sales_amount) OVER (ORDER BY date) AS cumulative_total, sales_amount - LAG(sales_amount) OVER (ORDER BY date) AS sales_diff FROM daily_sales ORDER BY date;",
-    "tips": "To optimize performance, consider indexing the date column.",
+    "solution": "WITH ranked_logins AS ( SELECT user_id, login_date, login_date - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS date_rank FROM logins ) SELECT user_id, MIN(login_date) AS first_consecutive_login FROM ranked_logins GROUP BY user_id, date_rank HAVING COUNT(*) >= 3",
+    "tips": "Consider using window functions to efficiently process the sequence of logins.",
     "hints": [
-      "Use a window function to calculate the cumulative total.",
-      "To find the difference between the current day's sales and the previous day's sales, use the LAG function.",
-      "Combine the SUM window function with the LAG function to get the desired output."
+      "Consider how you might use window functions to identify consecutive sequences.",
+      "Use ROW_NUMBER() to assign a rank to each login within a user's sequence, then calculate a 'date rank' by subtracting this from the login date.",
+      "Group by both user_id and 'date rank', and then filter for groups with 3 or more rows."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS daily_sales; CREATE TABLE daily_sales (date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO daily_sales (date, sales_amount) VALUES ('2022-02-01', 50.00), ('2022-02-02', 75.00), ('2022-02-03', 90.00);",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INTEGER, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (3, '2022-02-01'), (3, '2022-02-02'), (3, '2022-02-03'), (3, '2022-02-04'), (4, '2022-02-01'), (4, '2022-02-03'), (4, '2022-02-05');",
         "rows": [
           [
-            "2022-02-01",
-            50,
-            50,
-            null
-          ],
-          [
-            "2022-02-02",
-            75,
-            125,
-            25
-          ],
-          [
-            "2022-02-03",
-            90,
-            215,
-            15
+            3,
+            "2022-02-01"
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS daily_sales; CREATE TABLE daily_sales (date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO daily_sales (date, sales_amount) VALUES ('2022-03-01', 200.00), ('2022-03-02', 220.00), ('2022-03-03', 250.00), ('2022-03-04', 280.00);",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INTEGER, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (5, '2022-03-01'), (5, '2022-03-02'), (5, '2022-03-04'), (6, '2022-03-01'), (6, '2022-03-02'), (6, '2022-03-03');",
         "rows": [
           [
-            "2022-03-01",
-            200,
-            200,
-            null
-          ],
-          [
-            "2022-03-02",
-            220,
-            420,
-            20
-          ],
-          [
-            "2022-03-03",
-            250,
-            670,
-            30
-          ],
-          [
-            "2022-03-04",
-            280,
-            950,
-            30
+            6,
+            "2022-03-01"
           ]
         ]
       }
