@@ -1,102 +1,49 @@
 {
-  "date": "2026-07-18",
+  "date": "2026-07-19",
   "question": {
-    "title": "Cumulative Product Sales",
+    "title": "Identify Consecutive Sequences",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "Find the cumulative total of sales for each product over the last 3 days, starting from the earliest sale date.",
-    "setup": "\n      DROP TABLE IF EXISTS sales;\n      DROP TABLE IF EXISTS products;\n      CREATE TABLE products (\n         id SERIAL PRIMARY KEY,\n         name VARCHAR(255) NOT NULL\n      );\n      CREATE TABLE sales (\n         id SERIAL PRIMARY KEY,\n         product_id INTEGER NOT NULL,\n         sale_date DATE NOT NULL,\n         amount DECIMAL(10,2) NOT NULL,\n         FOREIGN KEY (product_id) REFERENCES products(id)\n      );\n      INSERT INTO products (name) VALUES ('Product A'), ('Product B'), ('Product C');\n      INSERT INTO sales (product_id, sale_date, amount) VALUES\n         (1, '2022-01-01', 100.00),\n         (1, '2022-01-02', 120.00),\n         (1, '2022-01-03', 150.00),\n         (2, '2022-01-01', 80.00),\n         (2, '2022-01-02', 90.00),\n         (3, '2022-01-03', 200.00);\n   ",
+    "topic": "Consecutive Sequences",
+    "desc": "Given a table of student IDs and their respective scores, identify the student IDs that have consecutive scores in ascending order. The sequence must be at least 3 scores long.",
+    "setup": "DROP TABLE IF EXISTS student_scores; CREATE TABLE student_scores (student_id INTEGER, score INTEGER); INSERT INTO student_scores (student_id, score) VALUES (1, 10), (1, 20), (1, 30), (2, 5), (2, 10), (2, 15), (3, 20), (3, 25), (3, 30);",
     "tables": [
-      "products",
-      "sales"
+      "student_scores"
     ],
     "cols": [
-      "product_name",
-      "sale_date",
-      "cumulative_total"
+      "student_id"
     ],
     "rows": [
       [
-        "Product A",
-        "2022-01-01",
-        100
+        1
       ],
       [
-        "Product A",
-        "2022-01-02",
-        220
-      ],
-      [
-        "Product A",
-        "2022-01-03",
-        370
-      ],
-      [
-        "Product B",
-        "2022-01-01",
-        80
-      ],
-      [
-        "Product B",
-        "2022-01-02",
-        170
-      ],
-      [
-        "Product C",
-        "2022-01-03",
-        200
+        3
       ]
     ],
-    "solution": "\n      WITH ranked_sales AS (\n         SELECT p.name AS product_name, s.sale_date, s.amount,\n                ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY s.sale_date) AS row_num\n         FROM sales s\n         JOIN products p ON s.product_id = p.id\n      )\n      SELECT product_name, sale_date, SUM(amount) OVER (PARTITION BY product_name ORDER BY row_num) AS cumulative_total\n      FROM (\n         SELECT product_name, sale_date, amount,\n                ROW_NUMBER() OVER (PARTITION BY product_name ORDER BY sale_date) AS row_num\n         FROM ranked_sales\n      ) sub\n      ORDER BY product_name, sale_date;\n   ",
-    "tips": "Use window functions to calculate cumulative totals and row numbering to ensure correct ordering.",
+    "solution": "WITH ranked_scores AS ( SELECT student_id, score, LAG(score) OVER (PARTITION BY student_id ORDER BY score) AS prev_score, LEAD(score) OVER (PARTITION BY student_id ORDER BY score) AS next_score FROM student_scores ) SELECT DISTINCT student_id FROM ranked_scores WHERE score - prev_score = 10 AND next_score - score = 10;",
+    "tips": "Consider using window functions to compare adjacent scores.",
     "hints": [
-      "You'll need to join the sales and products tables to get the product names.",
-      "Use a window function to calculate the cumulative total for each product over time.",
-      "To ensure the correct ordering, use ROW_NUMBER() to assign a row number to each sale date for each product."
+      "You will need to use window functions to compare scores.",
+      "Use LAG and LEAD functions to compare the current score with the previous and next scores.",
+      "Filter the results to include only student IDs where the difference between consecutive scores is 10."
     ],
     "tests": [
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            DROP TABLE IF EXISTS products;\n            CREATE TABLE products (\n               id SERIAL PRIMARY KEY,\n               name VARCHAR(255) NOT NULL\n            );\n            CREATE TABLE sales (\n               id SERIAL PRIMARY KEY,\n               product_id INTEGER NOT NULL,\n               sale_date DATE NOT NULL,\n               amount DECIMAL(10,2) NOT NULL,\n               FOREIGN KEY (product_id) REFERENCES products(id)\n            );\n            INSERT INTO products (name) VALUES ('Product X'), ('Product Y');\n            INSERT INTO sales (product_id, sale_date, amount) VALUES\n               (1, '2022-02-01', 50.00),\n               (1, '2022-02-02', 60.00),\n               (2, '2022-02-03', 70.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS student_scores; CREATE TABLE student_scores (student_id INTEGER, score INTEGER); INSERT INTO student_scores (student_id, score) VALUES (4, 50), (4, 60), (4, 70), (5, 15), (5, 25), (5, 35);",
         "rows": [
           [
-            "Product X",
-            "2022-02-01",
-            50
-          ],
-          [
-            "Product X",
-            "2022-02-02",
-            110
-          ],
-          [
-            "Product Y",
-            "2022-02-03",
-            70
+            4
           ]
         ]
       },
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            DROP TABLE IF EXISTS products;\n            CREATE TABLE products (\n               id SERIAL PRIMARY KEY,\n               name VARCHAR(255) NOT NULL\n            );\n            CREATE TABLE sales (\n               id SERIAL PRIMARY KEY,\n               product_id INTEGER NOT NULL,\n               sale_date DATE NOT NULL,\n               amount DECIMAL(10,2) NOT NULL,\n               FOREIGN KEY (product_id) REFERENCES products(id)\n            );\n            INSERT INTO products (name) VALUES ('Product M'), ('Product N');\n            INSERT INTO sales (product_id, sale_date, amount) VALUES\n               (1, '2022-03-01', 200.00),\n               (1, '2022-03-02', 250.00),\n               (2, '2022-03-03', 300.00),\n               (1, '2022-03-04', 350.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS student_scores; CREATE TABLE student_scores (student_id INTEGER, score INTEGER); INSERT INTO student_scores (student_id, score) VALUES (6, 100), (6, 110), (6, 120), (7, 200), (7, 210), (7, 220);",
         "rows": [
           [
-            "Product M",
-            "2022-03-01",
-            200
+            6
           ],
           [
-            "Product M",
-            "2022-03-02",
-            450
-          ],
-          [
-            "Product M",
-            "2022-03-04",
-            1000
-          ],
-          [
-            "Product N",
-            "2022-03-03",
-            300
+            7
           ]
         ]
       }
