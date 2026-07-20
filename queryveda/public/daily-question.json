@@ -1,49 +1,67 @@
 {
-  "date": "2026-07-19",
+  "date": "2026-07-20",
   "question": {
-    "title": "Identify Consecutive Sequences",
+    "title": "Top Performing Employees by Department",
     "difficulty": "Medium",
-    "topic": "Consecutive Sequences",
-    "desc": "Given a table of student IDs and their respective scores, identify the student IDs that have consecutive scores in ascending order. The sequence must be at least 3 scores long.",
-    "setup": "DROP TABLE IF EXISTS student_scores; CREATE TABLE student_scores (student_id INTEGER, score INTEGER); INSERT INTO student_scores (student_id, score) VALUES (1, 10), (1, 20), (1, 30), (2, 5), (2, 10), (2, 15), (3, 20), (3, 25), (3, 30);",
+    "topic": "Advanced Analytics",
+    "desc": "Find the top performing employee in each department based on their total sales. If there are multiple employees with the same highest sales in a department, return all of them.",
+    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER, sales_amount DECIMAL(10,2), FOREIGN KEY (employee_id) REFERENCES employees(id)); INSERT INTO employees (name, department) VALUES ('John Doe', 'Sales'), ('Jane Doe', 'Marketing'), ('Bob Smith', 'Sales'), ('Alice Johnson', 'Marketing'); INSERT INTO sales (employee_id, sales_amount) VALUES (1, 1000.00), (1, 2000.00), (2, 500.00), (3, 1500.00), (3, 2500.00), (4, 1000.00), (4, 2000.00);",
     "tables": [
-      "student_scores"
+      "employees",
+      "sales"
     ],
     "cols": [
-      "student_id"
+      "department",
+      "name",
+      "total_sales"
     ],
     "rows": [
       [
-        1
+        "Marketing",
+        "Alice Johnson",
+        3000
       ],
       [
-        3
+        "Sales",
+        "Bob Smith",
+        4000
       ]
     ],
-    "solution": "WITH ranked_scores AS ( SELECT student_id, score, LAG(score) OVER (PARTITION BY student_id ORDER BY score) AS prev_score, LEAD(score) OVER (PARTITION BY student_id ORDER BY score) AS next_score FROM student_scores ) SELECT DISTINCT student_id FROM ranked_scores WHERE score - prev_score = 10 AND next_score - score = 10;",
-    "tips": "Consider using window functions to compare adjacent scores.",
+    "solution": "WITH ranked_employees AS ( SELECT e.department, e.name, SUM(s.sales_amount) AS total_sales, DENSE_RANK() OVER (PARTITION BY e.department ORDER BY SUM(s.sales_amount) DESC) AS sales_rank FROM employees e JOIN sales s ON e.id = s.employee_id GROUP BY e.department, e.name ) SELECT department, name, total_sales FROM ranked_employees WHERE sales_rank = 1;",
+    "tips": "Consider using window functions to efficiently rank employees by sales amount within each department.",
     "hints": [
-      "You will need to use window functions to compare scores.",
-      "Use LAG and LEAD functions to compare the current score with the previous and next scores.",
-      "Filter the results to include only student IDs where the difference between consecutive scores is 10."
+      "Use a window function like DENSE_RANK() to rank employees based on their total sales within each department.",
+      "Join the employees and sales tables on the employee_id field to calculate total sales per employee.",
+      "Use a Common Table Expression (CTE) to first calculate the total sales and ranking for each employee, then select the top-ranked employees from the CTE."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS student_scores; CREATE TABLE student_scores (student_id INTEGER, score INTEGER); INSERT INTO student_scores (student_id, score) VALUES (4, 50), (4, 60), (4, 70), (5, 15), (5, 25), (5, 35);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER, sales_amount DECIMAL(10,2), FOREIGN KEY (employee_id) REFERENCES employees(id)); INSERT INTO employees (name, department) VALUES ('Mike Brown', 'IT'), ('Emily Davis', 'HR'); INSERT INTO sales (employee_id, sales_amount) VALUES (1, 800.00), (1, 1200.00), (2, 900.00), (2, 1100.00);",
         "rows": [
           [
-            4
+            "HR",
+            "Emily Davis",
+            2000
+          ],
+          [
+            "IT",
+            "Mike Brown",
+            2000
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS student_scores; CREATE TABLE student_scores (student_id INTEGER, score INTEGER); INSERT INTO student_scores (student_id, score) VALUES (6, 100), (6, 110), (6, 120), (7, 200), (7, 210), (7, 220);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER, sales_amount DECIMAL(10,2), FOREIGN KEY (employee_id) REFERENCES employees(id)); INSERT INTO employees (name, department) VALUES ('Tom White', 'Finance'), ('Linda Lee', 'Finance'), ('Kevin Hall', 'Operations'); INSERT INTO sales (employee_id, sales_amount) VALUES (1, 2500.00), (2, 2200.00), (3, 1800.00);",
         "rows": [
           [
-            6
+            "Finance",
+            "Tom White",
+            2500
           ],
           [
-            7
+            "Operations",
+            "Kevin Hall",
+            1800
           ]
         ]
       }
