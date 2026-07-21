@@ -1,67 +1,83 @@
 {
-  "date": "2026-07-20",
+  "date": "2026-07-21",
   "question": {
-    "title": "Top Performing Employees by Department",
+    "title": "Customer Order Totals with Product Information",
     "difficulty": "Medium",
-    "topic": "Advanced Analytics",
-    "desc": "Find the top performing employee in each department based on their total sales. If there are multiple employees with the same highest sales in a department, return all of them.",
-    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER, sales_amount DECIMAL(10,2), FOREIGN KEY (employee_id) REFERENCES employees(id)); INSERT INTO employees (name, department) VALUES ('John Doe', 'Sales'), ('Jane Doe', 'Marketing'), ('Bob Smith', 'Sales'), ('Alice Johnson', 'Marketing'); INSERT INTO sales (employee_id, sales_amount) VALUES (1, 1000.00), (1, 2000.00), (2, 500.00), (3, 1500.00), (3, 2500.00), (4, 1000.00), (4, 2000.00);",
+    "topic": "Aggregations & JOINs",
+    "desc": "Find the total amount spent by each customer, along with their name and the name of the products they purchased, ordered by total spent in descending order.",
+    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('John'), ('Jane'), ('Bob'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, product_id INTEGER, total DECIMAL(10, 2)); INSERT INTO orders (customer_id, product_id, total) VALUES (1, 1, 10.99), (1, 2, 5.99), (2, 3, 7.99), (3, 1, 10.99), (1, 1, 10.99); DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (name) VALUES ('Product A'), ('Product B'), ('Product C');",
     "tables": [
-      "employees",
-      "sales"
+      "customers",
+      "orders",
+      "products"
     ],
     "cols": [
-      "department",
       "name",
-      "total_sales"
+      "product_name",
+      "total_spent"
     ],
     "rows": [
       [
-        "Marketing",
-        "Alice Johnson",
-        3000
+        "John",
+        "Product A",
+        32.97
       ],
       [
-        "Sales",
-        "Bob Smith",
-        4000
+        "John",
+        "Product B",
+        5.99
+      ],
+      [
+        "Bob",
+        "Product A",
+        10.99
+      ],
+      [
+        "Jane",
+        "Product C",
+        7.99
       ]
     ],
-    "solution": "WITH ranked_employees AS ( SELECT e.department, e.name, SUM(s.sales_amount) AS total_sales, DENSE_RANK() OVER (PARTITION BY e.department ORDER BY SUM(s.sales_amount) DESC) AS sales_rank FROM employees e JOIN sales s ON e.id = s.employee_id GROUP BY e.department, e.name ) SELECT department, name, total_sales FROM ranked_employees WHERE sales_rank = 1;",
-    "tips": "Consider using window functions to efficiently rank employees by sales amount within each department.",
+    "solution": "WITH customer_orders AS (SELECT c.name, p.name AS product_name, o.total FROM customers c JOIN orders o ON c.id = o.customer_id JOIN products p ON o.product_id = p.id) SELECT name, product_name, SUM(total) AS total_spent FROM customer_orders GROUP BY name, product_name ORDER BY total_spent DESC;",
+    "tips": "Consider using window functions for more complex aggregations.",
     "hints": [
-      "Use a window function like DENSE_RANK() to rank employees based on their total sales within each department.",
-      "Join the employees and sales tables on the employee_id field to calculate total sales per employee.",
-      "Use a Common Table Expression (CTE) to first calculate the total sales and ranking for each employee, then select the top-ranked employees from the CTE."
+      "Start by joining the customers, orders, and products tables based on their relationships.",
+      "Use a Common Table Expression (CTE) to simplify the query and improve readability.",
+      "Group the results by customer name and product name, and use the SUM aggregation function to calculate the total spent."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER, sales_amount DECIMAL(10,2), FOREIGN KEY (employee_id) REFERENCES employees(id)); INSERT INTO employees (name, department) VALUES ('Mike Brown', 'IT'), ('Emily Davis', 'HR'); INSERT INTO sales (employee_id, sales_amount) VALUES (1, 800.00), (1, 1200.00), (2, 900.00), (2, 1100.00);",
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Alice'), ('Charlie'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, product_id INTEGER, total DECIMAL(10, 2)); INSERT INTO orders (customer_id, product_id, total) VALUES (1, 1, 20.99), (2, 2, 15.99); DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (name) VALUES ('Product D'), ('Product E');",
         "rows": [
           [
-            "HR",
-            "Emily Davis",
-            2000
+            "Alice",
+            "Product D",
+            20.99
           ],
           [
-            "IT",
-            "Mike Brown",
-            2000
+            "Charlie",
+            "Product E",
+            15.99
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255)); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER, sales_amount DECIMAL(10,2), FOREIGN KEY (employee_id) REFERENCES employees(id)); INSERT INTO employees (name, department) VALUES ('Tom White', 'Finance'), ('Linda Lee', 'Finance'), ('Kevin Hall', 'Operations'); INSERT INTO sales (employee_id, sales_amount) VALUES (1, 2500.00), (2, 2200.00), (3, 1800.00);",
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('David'), ('Emily'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, product_id INTEGER, total DECIMAL(10, 2)); INSERT INTO orders (customer_id, product_id, total) VALUES (1, 1, 30.99), (1, 2, 25.99), (2, 3, 12.99); DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (name) VALUES ('Product F'), ('Product G'), ('Product H');",
         "rows": [
           [
-            "Finance",
-            "Tom White",
-            2500
+            "David",
+            "Product F",
+            30.99
           ],
           [
-            "Operations",
-            "Kevin Hall",
-            1800
+            "David",
+            "Product G",
+            25.99
+          ],
+          [
+            "Emily",
+            "Product H",
+            12.99
           ]
         ]
       }
