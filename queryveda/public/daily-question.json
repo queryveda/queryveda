@@ -1,83 +1,134 @@
 {
-  "date": "2026-07-21",
+  "date": "2026-07-22",
   "question": {
-    "title": "Customer Order Totals with Product Information",
+    "title": "Ranking Student Scores",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the total amount spent by each customer, along with their name and the name of the products they purchased, ordered by total spent in descending order.",
-    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('John'), ('Jane'), ('Bob'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, product_id INTEGER, total DECIMAL(10, 2)); INSERT INTO orders (customer_id, product_id, total) VALUES (1, 1, 10.99), (1, 2, 5.99), (2, 3, 7.99), (3, 1, 10.99), (1, 1, 10.99); DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (name) VALUES ('Product A'), ('Product B'), ('Product C');",
+    "topic": "Window Functions",
+    "desc": "Write a SQL query to rank students based on their scores in each subject. You are given two tables, 'students' and 'scores', where 'students' contains student information and 'scores' contains scores for each student in different subjects. Use a window function to assign a rank to each score within its subject.",
+    "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('Alice'), ('Bob'), ('Charlie'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER, FOREIGN KEY (student_id) REFERENCES students(id)); INSERT INTO scores (student_id, subject, score) VALUES (1, 'Math', 90), (1, 'Science', 85), (2, 'Math', 80), (2, 'Science', 95), (3, 'Math', 70), (3, 'Science', 80);",
     "tables": [
-      "customers",
-      "orders",
-      "products"
+      "students",
+      "scores"
     ],
     "cols": [
       "name",
-      "product_name",
-      "total_spent"
+      "subject",
+      "score",
+      "rank"
     ],
     "rows": [
       [
-        "John",
-        "Product A",
-        32.97
-      ],
-      [
-        "John",
-        "Product B",
-        5.99
+        "Alice",
+        "Math",
+        90,
+        1
       ],
       [
         "Bob",
-        "Product A",
-        10.99
+        "Math",
+        80,
+        2
       ],
       [
-        "Jane",
-        "Product C",
-        7.99
+        "Charlie",
+        "Math",
+        70,
+        3
+      ],
+      [
+        "Alice",
+        "Science",
+        85,
+        2
+      ],
+      [
+        "Bob",
+        "Science",
+        95,
+        1
+      ],
+      [
+        "Charlie",
+        "Science",
+        80,
+        3
       ]
     ],
-    "solution": "WITH customer_orders AS (SELECT c.name, p.name AS product_name, o.total FROM customers c JOIN orders o ON c.id = o.customer_id JOIN products p ON o.product_id = p.id) SELECT name, product_name, SUM(total) AS total_spent FROM customer_orders GROUP BY name, product_name ORDER BY total_spent DESC;",
-    "tips": "Consider using window functions for more complex aggregations.",
+    "solution": "SELECT s.name, sc.subject, sc.score, DENSE_RANK() OVER (PARTITION BY sc.subject ORDER BY sc.score DESC) AS rank FROM students s JOIN scores sc ON s.id = sc.student_id ORDER BY sc.subject, sc.score DESC;",
+    "tips": "Consider using DENSE_RANK() instead of RANK() to avoid gaps in the ranking.",
     "hints": [
-      "Start by joining the customers, orders, and products tables based on their relationships.",
-      "Use a Common Table Expression (CTE) to simplify the query and improve readability.",
-      "Group the results by customer name and product name, and use the SUM aggregation function to calculate the total spent."
+      "You will need to join the 'students' and 'scores' tables based on the 'student_id' column.",
+      "Use a window function to assign a rank to each score within its subject, partitioning by the 'subject' column and ordering by the 'score' column in descending order.",
+      "The DENSE_RANK() window function is particularly useful here because it will assign consecutive ranks even if there are ties in the scores."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Alice'), ('Charlie'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, product_id INTEGER, total DECIMAL(10, 2)); INSERT INTO orders (customer_id, product_id, total) VALUES (1, 1, 20.99), (2, 2, 15.99); DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (name) VALUES ('Product D'), ('Product E');",
+        "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('David'), ('Eva'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER, FOREIGN KEY (student_id) REFERENCES students(id)); INSERT INTO scores (student_id, subject, score) VALUES (1, 'English', 92), (1, 'History', 88), (2, 'English', 89), (2, 'History', 91);",
         "rows": [
           [
-            "Alice",
-            "Product D",
-            20.99
+            "David",
+            "English",
+            92,
+            1
           ],
           [
-            "Charlie",
-            "Product E",
-            15.99
+            "Eva",
+            "English",
+            89,
+            2
+          ],
+          [
+            "Eva",
+            "History",
+            91,
+            1
+          ],
+          [
+            "David",
+            "History",
+            88,
+            2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('David'), ('Emily'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, product_id INTEGER, total DECIMAL(10, 2)); INSERT INTO orders (customer_id, product_id, total) VALUES (1, 1, 30.99), (1, 2, 25.99), (2, 3, 12.99); DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (name) VALUES ('Product F'), ('Product G'), ('Product H');",
+        "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('Frank'), ('George'), ('Hannah'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER, FOREIGN KEY (student_id) REFERENCES students(id)); INSERT INTO scores (student_id, subject, score) VALUES (1, 'Physics', 76), (1, 'Chemistry', 81), (2, 'Physics', 78), (2, 'Chemistry', 84), (3, 'Physics', 79), (3, 'Chemistry', 82);",
         "rows": [
           [
-            "David",
-            "Product F",
-            30.99
+            "Hannah",
+            "Physics",
+            79,
+            1
           ],
           [
-            "David",
-            "Product G",
-            25.99
+            "George",
+            "Physics",
+            78,
+            2
           ],
           [
-            "Emily",
-            "Product H",
-            12.99
+            "Frank",
+            "Physics",
+            76,
+            3
+          ],
+          [
+            "Hannah",
+            "Chemistry",
+            82,
+            1
+          ],
+          [
+            "George",
+            "Chemistry",
+            84,
+            2
+          ],
+          [
+            "Frank",
+            "Chemistry",
+            81,
+            3
           ]
         ]
       }
