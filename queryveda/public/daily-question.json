@@ -1,134 +1,142 @@
 {
-  "date": "2026-07-22",
+  "date": "2026-07-23",
   "question": {
-    "title": "Ranking Student Scores",
+    "title": "Cumulative Sales by Region",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "Write a SQL query to rank students based on their scores in each subject. You are given two tables, 'students' and 'scores', where 'students' contains student information and 'scores' contains scores for each student in different subjects. Use a window function to assign a rank to each score within its subject.",
-    "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('Alice'), ('Bob'), ('Charlie'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER, FOREIGN KEY (student_id) REFERENCES students(id)); INSERT INTO scores (student_id, subject, score) VALUES (1, 'Math', 90), (1, 'Science', 85), (2, 'Math', 80), (2, 'Science', 95), (3, 'Math', 70), (3, 'Science', 80);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Find the cumulative sales for each region over a 3-day window. The sales data is stored in the 'sales' table and the region information is stored in the 'regions' table.",
+    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_date DATE, amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'), (3, 'East'); INSERT INTO sales (region_id, sales_date, amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-02', 200.00), (1, '2022-01-03', 300.00), (2, '2022-01-01', 50.00), (2, '2022-01-02', 75.00), (2, '2022-01-03', 100.00), (3, '2022-01-01', 25.00), (3, '2022-01-02', 50.00), (3, '2022-01-03', 75.00);",
     "tables": [
-      "students",
-      "scores"
+      "sales",
+      "regions"
     ],
     "cols": [
-      "name",
-      "subject",
-      "score",
-      "rank"
+      "region_name",
+      "sales_date",
+      "cumulative_sales"
     ],
     "rows": [
       [
-        "Alice",
-        "Math",
-        90,
-        1
+        "North",
+        "2022-01-01",
+        100
       ],
       [
-        "Bob",
-        "Math",
-        80,
-        2
+        "North",
+        "2022-01-02",
+        300
       ],
       [
-        "Charlie",
-        "Math",
-        70,
-        3
+        "North",
+        "2022-01-03",
+        600
       ],
       [
-        "Alice",
-        "Science",
-        85,
-        2
+        "South",
+        "2022-01-01",
+        50
       ],
       [
-        "Bob",
-        "Science",
-        95,
-        1
+        "South",
+        "2022-01-02",
+        125
       ],
       [
-        "Charlie",
-        "Science",
-        80,
-        3
+        "South",
+        "2022-01-03",
+        225
+      ],
+      [
+        "East",
+        "2022-01-01",
+        25
+      ],
+      [
+        "East",
+        "2022-01-02",
+        75
+      ],
+      [
+        "East",
+        "2022-01-03",
+        150
       ]
     ],
-    "solution": "SELECT s.name, sc.subject, sc.score, DENSE_RANK() OVER (PARTITION BY sc.subject ORDER BY sc.score DESC) AS rank FROM students s JOIN scores sc ON s.id = sc.student_id ORDER BY sc.subject, sc.score DESC;",
-    "tips": "Consider using DENSE_RANK() instead of RANK() to avoid gaps in the ranking.",
+    "solution": "SELECT r.name AS region_name, s.sales_date, SUM(s.amount) OVER (PARTITION BY r.id ORDER BY s.sales_date ROWS 2 PRECEDING) AS cumulative_sales FROM sales s JOIN regions r ON s.region_id = r.id ORDER BY r.name, s.sales_date;",
+    "tips": "Use window functions to calculate cumulative sums and consider using ROWS or RANGE to specify the window frame.",
     "hints": [
-      "You will need to join the 'students' and 'scores' tables based on the 'student_id' column.",
-      "Use a window function to assign a rank to each score within its subject, partitioning by the 'subject' column and ordering by the 'score' column in descending order.",
-      "The DENSE_RANK() window function is particularly useful here because it will assign consecutive ranks even if there are ties in the scores."
+      "Consider joining the sales and regions tables to access region information.",
+      "Use a window function with PARTITION BY to calculate cumulative sales for each region separately.",
+      "Specify a window frame using ROWS or RANGE to include the current and preceding rows in the calculation."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('David'), ('Eva'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER, FOREIGN KEY (student_id) REFERENCES students(id)); INSERT INTO scores (student_id, subject, score) VALUES (1, 'English', 92), (1, 'History', 88), (2, 'English', 89), (2, 'History', 91);",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_date DATE, amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'); INSERT INTO sales (region_id, sales_date, amount) VALUES (1, '2022-02-01', 500.00), (1, '2022-02-02', 750.00), (1, '2022-02-03', 1000.00), (2, '2022-02-01', 250.00), (2, '2022-02-02', 375.00), (2, '2022-02-03', 500.00);",
         "rows": [
           [
-            "David",
-            "English",
-            92,
-            1
+            "North",
+            "2022-02-01",
+            500
           ],
           [
-            "Eva",
-            "English",
-            89,
-            2
+            "North",
+            "2022-02-02",
+            1250
           ],
           [
-            "Eva",
-            "History",
-            91,
-            1
+            "North",
+            "2022-02-03",
+            2250
           ],
           [
-            "David",
-            "History",
-            88,
-            2
+            "South",
+            "2022-02-01",
+            250
+          ],
+          [
+            "South",
+            "2022-02-02",
+            625
+          ],
+          [
+            "South",
+            "2022-02-03",
+            1125
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS students; CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO students (name) VALUES ('Frank'), ('George'), ('Hannah'); DROP TABLE IF EXISTS scores; CREATE TABLE scores (id SERIAL PRIMARY KEY, student_id INTEGER, subject VARCHAR(255), score INTEGER, FOREIGN KEY (student_id) REFERENCES students(id)); INSERT INTO scores (student_id, subject, score) VALUES (1, 'Physics', 76), (1, 'Chemistry', 81), (2, 'Physics', 78), (2, 'Chemistry', 84), (3, 'Physics', 79), (3, 'Chemistry', 82);",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_date DATE, amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'East'), (2, 'West'); INSERT INTO sales (region_id, sales_date, amount) VALUES (1, '2022-03-01', 1000.00), (1, '2022-03-02', 1500.00), (1, '2022-03-03', 2000.00), (2, '2022-03-01', 500.00), (2, '2022-03-02', 750.00), (2, '2022-03-03', 1000.00);",
         "rows": [
           [
-            "Hannah",
-            "Physics",
-            79,
-            1
+            "East",
+            "2022-03-01",
+            1000
           ],
           [
-            "George",
-            "Physics",
-            78,
-            2
+            "East",
+            "2022-03-02",
+            2500
           ],
           [
-            "Frank",
-            "Physics",
-            76,
-            3
+            "East",
+            "2022-03-03",
+            4500
           ],
           [
-            "Hannah",
-            "Chemistry",
-            82,
-            1
+            "West",
+            "2022-03-01",
+            500
           ],
           [
-            "George",
-            "Chemistry",
-            84,
-            2
+            "West",
+            "2022-03-02",
+            1250
           ],
           [
-            "Frank",
-            "Chemistry",
-            81,
-            3
+            "West",
+            "2022-03-03",
+            2250
           ]
         ]
       }
