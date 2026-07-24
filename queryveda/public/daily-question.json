@@ -1,142 +1,47 @@
 {
-  "date": "2026-07-23",
+  "date": "2026-07-24",
   "question": {
-    "title": "Cumulative Sales by Region",
+    "title": "Consecutive Logins",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "Find the cumulative sales for each region over a 3-day window. The sales data is stored in the 'sales' table and the region information is stored in the 'regions' table.",
-    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_date DATE, amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'), (3, 'East'); INSERT INTO sales (region_id, sales_date, amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-02', 200.00), (1, '2022-01-03', 300.00), (2, '2022-01-01', 50.00), (2, '2022-01-02', 75.00), (2, '2022-01-03', 100.00), (3, '2022-01-01', 25.00), (3, '2022-01-02', 50.00), (3, '2022-01-03', 75.00);",
+    "topic": "Consecutive Sequences",
+    "desc": "Given a table of user logins, write a query to find the users who have logged in for at least three consecutive days. The query should return the user id and the start date of their consecutive login streak.",
+    "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (2, '2022-01-04');",
     "tables": [
-      "sales",
-      "regions"
+      "logins"
     ],
     "cols": [
-      "region_name",
-      "sales_date",
-      "cumulative_sales"
+      "user_id",
+      "start_date"
     ],
     "rows": [
       [
-        "North",
-        "2022-01-01",
-        100
-      ],
-      [
-        "North",
-        "2022-01-02",
-        300
-      ],
-      [
-        "North",
-        "2022-01-03",
-        600
-      ],
-      [
-        "South",
-        "2022-01-01",
-        50
-      ],
-      [
-        "South",
-        "2022-01-02",
-        125
-      ],
-      [
-        "South",
-        "2022-01-03",
-        225
-      ],
-      [
-        "East",
-        "2022-01-01",
-        25
-      ],
-      [
-        "East",
-        "2022-01-02",
-        75
-      ],
-      [
-        "East",
-        "2022-01-03",
-        150
+        1,
+        "2022-01-01"
       ]
     ],
-    "solution": "SELECT r.name AS region_name, s.sales_date, SUM(s.amount) OVER (PARTITION BY r.id ORDER BY s.sales_date ROWS 2 PRECEDING) AS cumulative_sales FROM sales s JOIN regions r ON s.region_id = r.id ORDER BY r.name, s.sales_date;",
-    "tips": "Use window functions to calculate cumulative sums and consider using ROWS or RANGE to specify the window frame.",
+    "solution": "WITH ranked_logins AS ( SELECT user_id, login_date, DATE_TRUNC('day', login_date) - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS day_rank FROM logins ) SELECT user_id, MIN(login_date) AS start_date FROM ranked_logins GROUP BY user_id, day_rank HAVING COUNT(*) >= 3;",
+    "tips": "Consider using window functions to assign a rank to each login date for each user, then group by this rank to find consecutive streaks.",
     "hints": [
-      "Consider joining the sales and regions tables to access region information.",
-      "Use a window function with PARTITION BY to calculate cumulative sales for each region separately.",
-      "Specify a window frame using ROWS or RANGE to include the current and preceding rows in the calculation."
+      "You'll need to use a combination of window functions and grouping to solve this problem.",
+      "Consider using the ROW_NUMBER() function to assign a rank to each login date for each user, then use this rank to identify consecutive streaks.",
+      "The key to solving this problem is to use the DATE_TRUNC function to truncate the login date to the day, then subtract the row number from this truncated date to get a constant value for consecutive days."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_date DATE, amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'); INSERT INTO sales (region_id, sales_date, amount) VALUES (1, '2022-02-01', 500.00), (1, '2022-02-02', 750.00), (1, '2022-02-03', 1000.00), (2, '2022-02-01', 250.00), (2, '2022-02-02', 375.00), (2, '2022-02-03', 500.00);",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (3, '2022-02-01'), (3, '2022-02-02'), (3, '2022-02-03'), (3, '2022-02-04'), (4, '2022-02-01'), (4, '2022-02-02');",
         "rows": [
           [
-            "North",
-            "2022-02-01",
-            500
-          ],
-          [
-            "North",
-            "2022-02-02",
-            1250
-          ],
-          [
-            "North",
-            "2022-02-03",
-            2250
-          ],
-          [
-            "South",
-            "2022-02-01",
-            250
-          ],
-          [
-            "South",
-            "2022-02-02",
-            625
-          ],
-          [
-            "South",
-            "2022-02-03",
-            1125
+            3,
+            "2022-02-01"
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_date DATE, amount DECIMAL(10, 2)); CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'East'), (2, 'West'); INSERT INTO sales (region_id, sales_date, amount) VALUES (1, '2022-03-01', 1000.00), (1, '2022-03-02', 1500.00), (1, '2022-03-03', 2000.00), (2, '2022-03-01', 500.00), (2, '2022-03-02', 750.00), (2, '2022-03-03', 1000.00);",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (5, '2022-03-01'), (5, '2022-03-02'), (5, '2022-03-04'), (6, '2022-03-01'), (6, '2022-03-02'), (6, '2022-03-03');",
         "rows": [
           [
-            "East",
-            "2022-03-01",
-            1000
-          ],
-          [
-            "East",
-            "2022-03-02",
-            2500
-          ],
-          [
-            "East",
-            "2022-03-03",
-            4500
-          ],
-          [
-            "West",
-            "2022-03-01",
-            500
-          ],
-          [
-            "West",
-            "2022-03-02",
-            1250
-          ],
-          [
-            "West",
-            "2022-03-03",
-            2250
+            6,
+            "2022-03-01"
           ]
         ]
       }
