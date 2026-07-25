@@ -1,47 +1,131 @@
 {
-  "date": "2026-07-24",
+  "date": "2026-07-25",
   "question": {
-    "title": "Consecutive Logins",
+    "title": "Average Salary by Department and Job Title",
     "difficulty": "Medium",
-    "topic": "Consecutive Sequences",
-    "desc": "Given a table of user logins, write a query to find the users who have logged in for at least three consecutive days. The query should return the user id and the start date of their consecutive login streak.",
-    "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (2, '2022-01-04');",
+    "topic": "Advanced Analytics",
+    "desc": "Find the average salary for each department and job title, including the overall average salary for the company. Sort the results by department and job title.",
+    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, department VARCHAR(255), job_title VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (department, job_title, salary) VALUES ('Sales', 'Manager', 100000.00), ('Sales', 'Salesperson', 50000.00), ('Marketing', 'Manager', 120000.00), ('Marketing', 'Marketing Specialist', 60000.00), ('IT', 'Developer', 80000.00), ('IT', 'Manager', 110000.00), ('HR', 'Generalist', 40000.00), ('HR', 'Manager', 70000.00), ('Finance', 'Accountant', 55000.00), ('Finance', 'Manager', 90000.00);",
     "tables": [
-      "logins"
+      "employees"
     ],
     "cols": [
-      "user_id",
-      "start_date"
+      "department",
+      "job_title",
+      "average_salary"
     ],
     "rows": [
       [
-        1,
-        "2022-01-01"
+        "Finance",
+        "Accountant",
+        55000
+      ],
+      [
+        "Finance",
+        "Manager",
+        90000
+      ],
+      [
+        "HR",
+        "Generalist",
+        40000
+      ],
+      [
+        "HR",
+        "Manager",
+        70000
+      ],
+      [
+        "IT",
+        "Developer",
+        80000
+      ],
+      [
+        "IT",
+        "Manager",
+        110000
+      ],
+      [
+        "Marketing",
+        "Manager",
+        120000
+      ],
+      [
+        "Marketing",
+        "Marketing Specialist",
+        60000
+      ],
+      [
+        "Sales",
+        "Manager",
+        100000
+      ],
+      [
+        "Sales",
+        "Salesperson",
+        50000
       ]
     ],
-    "solution": "WITH ranked_logins AS ( SELECT user_id, login_date, DATE_TRUNC('day', login_date) - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS day_rank FROM logins ) SELECT user_id, MIN(login_date) AS start_date FROM ranked_logins GROUP BY user_id, day_rank HAVING COUNT(*) >= 3;",
-    "tips": "Consider using window functions to assign a rank to each login date for each user, then group by this rank to find consecutive streaks.",
+    "solution": "SELECT department, job_title, AVG(salary) AS average_salary FROM employees GROUP BY department, job_title ORDER BY department, job_title;",
+    "tips": "Using window functions can provide more detailed insights, but for this problem, a simple GROUP BY will suffice.",
     "hints": [
-      "You'll need to use a combination of window functions and grouping to solve this problem.",
-      "Consider using the ROW_NUMBER() function to assign a rank to each login date for each user, then use this rank to identify consecutive streaks.",
-      "The key to solving this problem is to use the DATE_TRUNC function to truncate the login date to the day, then subtract the row number from this truncated date to get a constant value for consecutive days."
+      "Start by grouping the data by department and job title.",
+      "Use the AVG function to calculate the average salary for each group.",
+      "The final query should include a GROUP BY clause and an ORDER BY clause to sort the results."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (3, '2022-02-01'), (3, '2022-02-02'), (3, '2022-02-03'), (3, '2022-02-04'), (4, '2022-02-01'), (4, '2022-02-02');",
+        "setup": "DROP TABLE IF EXISTS employees_test; CREATE TABLE employees_test (id SERIAL PRIMARY KEY, department VARCHAR(255), job_title VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees_test (department, job_title, salary) VALUES ('Sales', 'Manager', 120000.00), ('Sales', 'Salesperson', 60000.00), ('Marketing', 'Manager', 150000.00), ('Marketing', 'Marketing Specialist', 70000.00);",
         "rows": [
           [
-            3,
-            "2022-02-01"
+            "Marketing",
+            "Manager",
+            150000
+          ],
+          [
+            "Marketing",
+            "Marketing Specialist",
+            70000
+          ],
+          [
+            "Sales",
+            "Manager",
+            120000
+          ],
+          [
+            "Sales",
+            "Salesperson",
+            60000
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (5, '2022-03-01'), (5, '2022-03-02'), (5, '2022-03-04'), (6, '2022-03-01'), (6, '2022-03-02'), (6, '2022-03-03');",
+        "setup": "DROP TABLE IF EXISTS employees_test2; CREATE TABLE employees_test2 (id SERIAL PRIMARY KEY, department VARCHAR(255), job_title VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees_test2 (department, job_title, salary) VALUES ('IT', 'Developer', 90000.00), ('IT', 'Manager', 130000.00), ('HR', 'Generalist', 50000.00), ('HR', 'Manager', 80000.00), ('Finance', 'Accountant', 65000.00);",
         "rows": [
           [
-            6,
-            "2022-03-01"
+            "Finance",
+            "Accountant",
+            65000
+          ],
+          [
+            "HR",
+            "Generalist",
+            50000
+          ],
+          [
+            "HR",
+            "Manager",
+            80000
+          ],
+          [
+            "IT",
+            "Developer",
+            90000
+          ],
+          [
+            "IT",
+            "Manager",
+            130000
           ]
         ]
       }
