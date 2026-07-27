@@ -1,62 +1,128 @@
 {
-  "date": "2026-07-26",
+  "date": "2026-07-27",
   "question": {
-    "title": "Employee Department Sales",
+    "title": "Rank Employee Salaries by Department",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the total sales for each department, along with the employee who made the most sales in that department, using realistic sales data for a small company with two departments and five employees.",
-    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255)); INSERT INTO employees (name, department) VALUES ('John Doe', 'Sales'), ('Jane Doe', 'Marketing'), ('Alice Smith', 'Sales'), ('Bob Johnson', 'Marketing'), ('Eve Brown', 'Sales'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER, amount DECIMAL(10, 2), FOREIGN KEY (employee_id) REFERENCES employees(id)); INSERT INTO sales (employee_id, amount) VALUES (1, 1000.00), (2, 500.00), (3, 2000.00), (4, 1500.00), (5, 3000.00), (1, 800.00), (3, 2500.00), (5, 1000.00);",
+    "topic": "Window Functions",
+    "desc": "Write a query that ranks employee salaries within each department. The output should include the department name, employee name, salary, and their rank in the department by salary. The rank should be determined by the salary in descending order.",
+    "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), salary DECIMAL(10,2), department_id INTEGER, FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); INSERT INTO employees (name, salary, department_id) VALUES ('John Doe', 50000.00, 1), ('Jane Doe', 60000.00, 1), ('Alice Smith', 40000.00, 2), ('Bob Johnson', 70000.00, 2), ('Charlie Brown', 55000.00, 3), ('David Lee', 45000.00, 3)",
     "tables": [
-      "employees",
-      "sales"
+      "departments",
+      "employees"
     ],
     "cols": [
-      "department",
-      "total_sales",
-      "top_employee"
+      "department_name",
+      "employee_name",
+      "salary",
+      "rank"
     ],
     "rows": [
       [
-        "Marketing",
-        2000,
-        "Bob Johnson"
+        "Sales",
+        "Jane Doe",
+        60000,
+        1
       ],
       [
         "Sales",
-        8500,
-        "Eve Brown"
+        "John Doe",
+        50000,
+        2
+      ],
+      [
+        "Marketing",
+        "Bob Johnson",
+        70000,
+        1
+      ],
+      [
+        "Marketing",
+        "Alice Smith",
+        40000,
+        2
+      ],
+      [
+        "IT",
+        "Charlie Brown",
+        55000,
+        1
+      ],
+      [
+        "IT",
+        "David Lee",
+        45000,
+        2
       ]
     ],
-    "solution": "WITH department_sales AS (SELECT e.department, SUM(s.amount) AS total_sales, ROW_NUMBER() OVER (PARTITION BY e.department ORDER BY SUM(s.amount) DESC) AS sales_rank, e.name AS employee_name FROM employees e JOIN sales s ON e.id = s.employee_id GROUP BY e.department, e.name) SELECT department, total_sales, employee_name AS top_employee FROM department_sales WHERE sales_rank = 1;",
-    "tips": "Consider using window functions to simplify the query and improve performance.",
+    "solution": "SELECT d.name AS department_name, e.name AS employee_name, e.salary, DENSE_RANK() OVER (PARTITION BY d.id ORDER BY e.salary DESC) AS rank FROM employees e JOIN departments d ON e.department_id = d.id ORDER BY d.name, e.salary DESC",
+    "tips": "Consider using DENSE_RANK() instead of RANK() if there are ties in salary and you want to avoid gaps in the ranking.",
     "hints": [
-      "Use a Common Table Expression (CTE) to calculate the total sales for each department.",
-      "Join the employees table with the sales table to link employees to their sales data.",
-      "Use the ROW_NUMBER() function to rank employees by their sales within each department."
+      "You will need to use a JOIN to combine data from the departments and employees tables.",
+      "Use a window function to rank the salaries within each department. The PARTITION BY clause will help you group the data by department.",
+      "Use DENSE_RANK() to assign a unique rank to each salary within a department, even if there are ties. Then, order the results by department and salary in descending order."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255)); INSERT INTO employees (name, department) VALUES ('Mike Davis', 'IT'), ('Emily Chen', 'HR'), ('David Lee', 'IT'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER, amount DECIMAL(10, 2), FOREIGN KEY (employee_id) REFERENCES employees(id)); INSERT INTO sales (employee_id, amount) VALUES (1, 1200.00), (2, 800.00), (3, 2800.00), (1, 1500.00), (3, 2000.00);",
+        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), salary DECIMAL(10,2), department_id INTEGER, FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'); INSERT INTO employees (name, salary, department_id) VALUES ('Emily Chen', 65000.00, 1), ('Frank Kim', 58000.00, 1), ('Grace Patel', 72000.00, 2), ('Hannah Lee', 62000.00, 2)",
         "rows": [
           [
             "HR",
-            800,
-            "Emily Chen"
+            "Emily Chen",
+            65000,
+            1
           ],
           [
-            "IT",
-            6500,
-            "David Lee"
+            "HR",
+            "Frank Kim",
+            58000,
+            2
+          ],
+          [
+            "Finance",
+            "Grace Patel",
+            72000,
+            1
+          ],
+          [
+            "Finance",
+            "Hannah Lee",
+            62000,
+            2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255)); INSERT INTO employees (name, department) VALUES ('Tom White', 'Finance'), ('Linda Hall', 'Finance'), ('Kevin Kim', 'Finance'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER, amount DECIMAL(10, 2), FOREIGN KEY (employee_id) REFERENCES employees(id)); INSERT INTO sales (employee_id, amount) VALUES (1, 2500.00), (2, 3000.00), (3, 2000.00), (1, 1000.00), (2, 1500.00), (3, 1200.00);",
+        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), salary DECIMAL(10,2), department_id INTEGER, FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('Operations'), ('Customer Service'); INSERT INTO employees (name, salary, department_id) VALUES ('Isabella Garcia', 68000.00, 1), ('Jackson Hall', 59000.00, 1), ('Kevin White', 75000.00, 2), ('Lauren Davis', 63000.00, 2), ('Matthew Martin', 69000.00, 1)",
         "rows": [
           [
-            "Finance",
-            10200,
-            "Linda Hall"
+            "Operations",
+            "Matthew Martin",
+            69000,
+            1
+          ],
+          [
+            "Operations",
+            "Isabella Garcia",
+            68000,
+            2
+          ],
+          [
+            "Operations",
+            "Jackson Hall",
+            59000,
+            3
+          ],
+          [
+            "Customer Service",
+            "Kevin White",
+            75000,
+            1
+          ],
+          [
+            "Customer Service",
+            "Lauren Davis",
+            63000,
+            2
           ]
         ]
       }
