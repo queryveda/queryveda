@@ -1,128 +1,96 @@
 {
-  "date": "2026-07-27",
+  "date": "2026-07-28",
   "question": {
-    "title": "Rank Employee Salaries by Department",
+    "title": "Cumulative Sales by Region",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "Write a query that ranks employee salaries within each department. The output should include the department name, employee name, salary, and their rank in the department by salary. The rank should be determined by the salary in descending order.",
-    "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), salary DECIMAL(10,2), department_id INTEGER, FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); INSERT INTO employees (name, salary, department_id) VALUES ('John Doe', 50000.00, 1), ('Jane Doe', 60000.00, 1), ('Alice Smith', 40000.00, 2), ('Bob Johnson', 70000.00, 2), ('Charlie Brown', 55000.00, 3), ('David Lee', 45000.00, 3)",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Find the cumulative sales for each region over the given dates, considering only the sales amounts for products with a price greater than 10.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (date DATE, region VARCHAR(50), product VARCHAR(50), price DECIMAL(10,2), amount INT); INSERT INTO sales (date, region, product, price, amount) VALUES ('2022-01-01', 'North', 'A', 15.00, 100), ('2022-01-02', 'North', 'B', 8.00, 200), ('2022-01-03', 'North', 'A', 15.00, 150), ('2022-01-01', 'South', 'C', 12.00, 120), ('2022-01-02', 'South', 'D', 20.00, 180), ('2022-01-03', 'South', 'C', 12.00, 220);",
     "tables": [
-      "departments",
-      "employees"
+      "sales"
     ],
     "cols": [
-      "department_name",
-      "employee_name",
-      "salary",
-      "rank"
+      "region",
+      "date",
+      "cumulative_sales"
     ],
     "rows": [
       [
-        "Sales",
-        "Jane Doe",
-        60000,
-        1
+        "North",
+        "2022-01-01",
+        1500
       ],
       [
-        "Sales",
-        "John Doe",
-        50000,
-        2
+        "North",
+        "2022-01-02",
+        1500
       ],
       [
-        "Marketing",
-        "Bob Johnson",
-        70000,
-        1
+        "North",
+        "2022-01-03",
+        3000
       ],
       [
-        "Marketing",
-        "Alice Smith",
-        40000,
-        2
+        "South",
+        "2022-01-01",
+        1440
       ],
       [
-        "IT",
-        "Charlie Brown",
-        55000,
-        1
+        "South",
+        "2022-01-02",
+        3960
       ],
       [
-        "IT",
-        "David Lee",
-        45000,
-        2
+        "South",
+        "2022-01-03",
+        7200
       ]
     ],
-    "solution": "SELECT d.name AS department_name, e.name AS employee_name, e.salary, DENSE_RANK() OVER (PARTITION BY d.id ORDER BY e.salary DESC) AS rank FROM employees e JOIN departments d ON e.department_id = d.id ORDER BY d.name, e.salary DESC",
-    "tips": "Consider using DENSE_RANK() instead of RANK() if there are ties in salary and you want to avoid gaps in the ranking.",
+    "solution": "WITH filtered_sales AS (SELECT date, region, amount * price AS sales FROM sales WHERE price > 10) SELECT region, date, SUM(sales) OVER (PARTITION BY region ORDER BY date) AS cumulative_sales FROM filtered_sales ORDER BY region, date;",
+    "tips": "Using a Common Table Expression (CTE) simplifies the query by first filtering out the products with a price less than or equal to 10.",
     "hints": [
-      "You will need to use a JOIN to combine data from the departments and employees tables.",
-      "Use a window function to rank the salaries within each department. The PARTITION BY clause will help you group the data by department.",
-      "Use DENSE_RANK() to assign a unique rank to each salary within a department, even if there are ties. Then, order the results by department and salary in descending order."
+      "Consider using window functions to calculate cumulative sums.",
+      "You might need to filter the sales data before calculating the cumulative sales.",
+      "Use a CTE to first calculate the sales amount for each row by multiplying the price and amount, then filter based on price."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), salary DECIMAL(10,2), department_id INTEGER, FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'); INSERT INTO employees (name, salary, department_id) VALUES ('Emily Chen', 65000.00, 1), ('Frank Kim', 58000.00, 1), ('Grace Patel', 72000.00, 2), ('Hannah Lee', 62000.00, 2)",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (date DATE, region VARCHAR(50), product VARCHAR(50), price DECIMAL(10,2), amount INT); INSERT INTO sales (date, region, product, price, amount) VALUES ('2022-02-01', 'East', 'E', 18.00, 300), ('2022-02-02', 'East', 'F', 22.00, 250), ('2022-02-03', 'East', 'E', 18.00, 320);",
         "rows": [
           [
-            "HR",
-            "Emily Chen",
-            65000,
-            1
+            "East",
+            "2022-02-01",
+            5400
           ],
           [
-            "HR",
-            "Frank Kim",
-            58000,
-            2
+            "East",
+            "2022-02-02",
+            11000
           ],
           [
-            "Finance",
-            "Grace Patel",
-            72000,
-            1
-          ],
-          [
-            "Finance",
-            "Hannah Lee",
-            62000,
-            2
+            "East",
+            "2022-02-03",
+            17600
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), salary DECIMAL(10,2), department_id INTEGER, FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO departments (name) VALUES ('Operations'), ('Customer Service'); INSERT INTO employees (name, salary, department_id) VALUES ('Isabella Garcia', 68000.00, 1), ('Jackson Hall', 59000.00, 1), ('Kevin White', 75000.00, 2), ('Lauren Davis', 63000.00, 2), ('Matthew Martin', 69000.00, 1)",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (date DATE, region VARCHAR(50), product VARCHAR(50), price DECIMAL(10,2), amount INT); INSERT INTO sales (date, region, product, price, amount) VALUES ('2022-03-01', 'West', 'G', 11.00, 400), ('2022-03-02', 'West', 'H', 9.00, 500), ('2022-03-03', 'West', 'G', 11.00, 450);",
         "rows": [
           [
-            "Operations",
-            "Matthew Martin",
-            69000,
-            1
+            "West",
+            "2022-03-01",
+            4400
           ],
           [
-            "Operations",
-            "Isabella Garcia",
-            68000,
-            2
+            "West",
+            "2022-03-02",
+            4400
           ],
           [
-            "Operations",
-            "Jackson Hall",
-            59000,
-            3
-          ],
-          [
-            "Customer Service",
-            "Kevin White",
-            75000,
-            1
-          ],
-          [
-            "Customer Service",
-            "Lauren Davis",
-            63000,
-            2
+            "West",
+            "2022-03-03",
+            8800
           ]
         ]
       }
