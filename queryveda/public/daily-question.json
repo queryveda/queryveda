@@ -1,96 +1,43 @@
 {
-  "date": "2026-07-28",
+  "date": "2026-07-29",
   "question": {
-    "title": "Cumulative Sales by Region",
+    "title": "Identifying Consecutive Logins",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "Find the cumulative sales for each region over the given dates, considering only the sales amounts for products with a price greater than 10.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (date DATE, region VARCHAR(50), product VARCHAR(50), price DECIMAL(10,2), amount INT); INSERT INTO sales (date, region, product, price, amount) VALUES ('2022-01-01', 'North', 'A', 15.00, 100), ('2022-01-02', 'North', 'B', 8.00, 200), ('2022-01-03', 'North', 'A', 15.00, 150), ('2022-01-01', 'South', 'C', 12.00, 120), ('2022-01-02', 'South', 'D', 20.00, 180), ('2022-01-03', 'South', 'C', 12.00, 220);",
+    "topic": "Consecutive Sequences",
+    "desc": "Given a table of user logins, identify the users who have logged in for three consecutive days.",
+    "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (2, '2022-01-05');",
     "tables": [
-      "sales"
+      "logins"
     ],
     "cols": [
-      "region",
-      "date",
-      "cumulative_sales"
+      "user_id"
     ],
     "rows": [
       [
-        "North",
-        "2022-01-01",
-        1500
-      ],
-      [
-        "North",
-        "2022-01-02",
-        1500
-      ],
-      [
-        "North",
-        "2022-01-03",
-        3000
-      ],
-      [
-        "South",
-        "2022-01-01",
-        1440
-      ],
-      [
-        "South",
-        "2022-01-02",
-        3960
-      ],
-      [
-        "South",
-        "2022-01-03",
-        7200
+        1
       ]
     ],
-    "solution": "WITH filtered_sales AS (SELECT date, region, amount * price AS sales FROM sales WHERE price > 10) SELECT region, date, SUM(sales) OVER (PARTITION BY region ORDER BY date) AS cumulative_sales FROM filtered_sales ORDER BY region, date;",
-    "tips": "Using a Common Table Expression (CTE) simplifies the query by first filtering out the products with a price less than or equal to 10.",
+    "solution": "WITH ranked_logins AS ( SELECT user_id, login_date, DATE_TRUNC('day', login_date) - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS rank FROM logins ) SELECT user_id FROM ranked_logins GROUP BY user_id, rank HAVING COUNT(*) >= 3",
+    "tips": "Consider using window functions to assign a rank to each login date for each user.",
     "hints": [
-      "Consider using window functions to calculate cumulative sums.",
-      "You might need to filter the sales data before calculating the cumulative sales.",
-      "Use a CTE to first calculate the sales amount for each row by multiplying the price and amount, then filter based on price."
+      "You'll need to use a window function to assign a rank to each login date.",
+      "Consider using a Common Table Expression (CTE) to simplify your query.",
+      "Use the `DATE_TRUNC` function to remove the time component from the login date and then subtract the row number from it to get a rank."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (date DATE, region VARCHAR(50), product VARCHAR(50), price DECIMAL(10,2), amount INT); INSERT INTO sales (date, region, product, price, amount) VALUES ('2022-02-01', 'East', 'E', 18.00, 300), ('2022-02-02', 'East', 'F', 22.00, 250), ('2022-02-03', 'East', 'E', 18.00, 320);",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (3, '2022-02-01'), (3, '2022-02-02'), (3, '2022-02-04'), (4, '2022-02-01'), (4, '2022-02-02'), (4, '2022-02-03');",
         "rows": [
           [
-            "East",
-            "2022-02-01",
-            5400
-          ],
-          [
-            "East",
-            "2022-02-02",
-            11000
-          ],
-          [
-            "East",
-            "2022-02-03",
-            17600
+            4
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (date DATE, region VARCHAR(50), product VARCHAR(50), price DECIMAL(10,2), amount INT); INSERT INTO sales (date, region, product, price, amount) VALUES ('2022-03-01', 'West', 'G', 11.00, 400), ('2022-03-02', 'West', 'H', 9.00, 500), ('2022-03-03', 'West', 'G', 11.00, 450);",
+        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (5, '2022-03-01'), (5, '2022-03-02'), (5, '2022-03-03'), (6, '2022-03-01'), (6, '2022-03-02'), (6, '2022-03-04');",
         "rows": [
           [
-            "West",
-            "2022-03-01",
-            4400
-          ],
-          [
-            "West",
-            "2022-03-02",
-            4400
-          ],
-          [
-            "West",
-            "2022-03-03",
-            8800
+            5
           ]
         ]
       }
