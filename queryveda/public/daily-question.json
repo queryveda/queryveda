@@ -1,43 +1,77 @@
 {
-  "date": "2026-07-29",
+  "date": "2026-07-30",
   "question": {
-    "title": "Identifying Consecutive Logins",
+    "title": "Ranking Products by Sales",
     "difficulty": "Medium",
-    "topic": "Consecutive Sequences",
-    "desc": "Given a table of user logins, identify the users who have logged in for three consecutive days.",
-    "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (2, '2022-01-05');",
+    "topic": "Advanced Analytics",
+    "desc": "You have two tables, one for products and one for sales. The sales table tracks the product_id, date, and amount sold. You need to rank products by their total sales and include the date of the first sale for each product.",
+    "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (name) VALUES ('Product A'), ('Product B'), ('Product C'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, date DATE, amount INTEGER); INSERT INTO sales (product_id, date, amount) VALUES (1, '2022-01-01', 100), (1, '2022-01-15', 200), (2, '2022-02-01', 50), (3, '2022-03-01', 150), (1, '2022-04-01', 300);",
     "tables": [
-      "logins"
+      "products",
+      "sales"
     ],
     "cols": [
-      "user_id"
+      "name",
+      "total_sales",
+      "first_sale_date"
     ],
     "rows": [
       [
-        1
+        "Product A",
+        600,
+        "2022-01-01"
+      ],
+      [
+        "Product C",
+        150,
+        "2022-03-01"
+      ],
+      [
+        "Product B",
+        50,
+        "2022-02-01"
       ]
     ],
-    "solution": "WITH ranked_logins AS ( SELECT user_id, login_date, DATE_TRUNC('day', login_date) - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS rank FROM logins ) SELECT user_id FROM ranked_logins GROUP BY user_id, rank HAVING COUNT(*) >= 3",
-    "tips": "Consider using window functions to assign a rank to each login date for each user.",
+    "solution": "WITH sales_per_product AS ( SELECT p.name, SUM(s.amount) AS total_sales, MIN(s.date) AS first_sale_date FROM products p JOIN sales s ON p.id = s.product_id GROUP BY p.name ) SELECT name, total_sales, first_sale_date FROM sales_per_product ORDER BY total_sales DESC;",
+    "tips": "Consider using window functions for more complex ranking scenarios.",
     "hints": [
-      "You'll need to use a window function to assign a rank to each login date.",
-      "Consider using a Common Table Expression (CTE) to simplify your query.",
-      "Use the `DATE_TRUNC` function to remove the time component from the login date and then subtract the row number from it to get a rank."
+      "Use a Common Table Expression (CTE) to simplify the calculation of total sales and first sale date for each product.",
+      "Join the products table with the sales table based on the product_id to combine product information with sales data.",
+      "Apply the MIN and SUM aggregation functions to the sales data within the CTE to find the first sale date and total sales for each product."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (3, '2022-02-01'), (3, '2022-02-02'), (3, '2022-02-04'), (4, '2022-02-01'), (4, '2022-02-02'), (4, '2022-02-03');",
+        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (name) VALUES ('Product X'), ('Product Y'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, date DATE, amount INTEGER); INSERT INTO sales (product_id, date, amount) VALUES (1, '2023-01-01', 400), (2, '2023-02-01', 250);",
         "rows": [
           [
-            4
+            "Product X",
+            400,
+            "2023-01-01"
+          ],
+          [
+            "Product Y",
+            250,
+            "2023-02-01"
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS logins; CREATE TABLE logins (user_id INT, login_date DATE); INSERT INTO logins (user_id, login_date) VALUES (5, '2022-03-01'), (5, '2022-03-02'), (5, '2022-03-03'), (6, '2022-03-01'), (6, '2022-03-02'), (6, '2022-03-04');",
+        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO products (name) VALUES ('Product M'), ('Product N'), ('Product O'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, date DATE, amount INTEGER); INSERT INTO sales (product_id, date, amount) VALUES (1, '2024-01-01', 500), (2, '2024-01-15', 300), (3, '2024-02-01', 200), (1, '2024-03-01', 100);",
         "rows": [
           [
-            5
+            "Product M",
+            600,
+            "2024-01-01"
+          ],
+          [
+            "Product N",
+            300,
+            "2024-01-15"
+          ],
+          [
+            "Product O",
+            200,
+            "2024-02-01"
           ]
         ]
       }
