@@ -1,72 +1,76 @@
 {
-  "date": "2026-07-31",
+  "date": "2026-08-01",
   "question": {
-    "title": "Average Order Value by Customer",
+    "title": "Ranking Sales by Region",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the average order value for each customer and rank them by this average value in descending order. Include the customer name and their total number of orders.",
-    "setup": "DROP TABLE IF EXISTS customers; DROP TABLE IF EXISTS orders; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100)); CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO customers (id, name) VALUES (1, 'John Doe'), (2, 'Jane Doe'), (3, 'Bob Smith'); INSERT INTO orders (id, customer_id, order_value) VALUES (1, 1, 100.00), (2, 1, 200.00), (3, 2, 50.00), (4, 3, 150.00), (5, 1, 300.00);",
+    "topic": "Window Functions",
+    "desc": "You are given two tables, regions and sales. The regions table contains information about different regions, and the sales table contains sales data for each region. You need to write a query that ranks the sales for each region and returns the region name and its corresponding sales rank.",
+    "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East'), (4, 'West'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, sales_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, sales_amount) VALUES (1, 1, 1000.00), (2, 1, 2000.00), (3, 2, 1500.00), (4, 3, 1200.00), (5, 4, 1800.00), (6, 1, 2500.00), (7, 2, 1000.00), (8, 3, 2000.00), (9, 4, 1500.00), (10, 1, 3000.00);",
     "tables": [
-      "customers",
-      "orders"
+      "regions",
+      "sales"
     ],
     "cols": [
-      "name",
-      "average_order_value",
-      "total_orders"
+      "region_name",
+      "sales_rank"
     ],
     "rows": [
       [
-        "John Doe",
-        200,
+        "North",
+        1
+      ],
+      [
+        "South",
         3
       ],
       [
-        "Bob Smith",
-        150,
-        1
+        "East",
+        2
       ],
       [
-        "Jane Doe",
-        50,
-        1
+        "West",
+        4
       ]
     ],
-    "solution": "SELECT c.name, AVG(o.order_value) AS average_order_value, COUNT(o.id) AS total_orders FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.name ORDER BY average_order_value DESC;",
-    "tips": "Consider using window functions for more complex ranking scenarios.",
+    "solution": "SELECT r.region_name, DENSE_RANK() OVER (ORDER BY SUM(s.sales_amount) DESC) AS sales_rank FROM regions r JOIN sales s ON r.region_id = s.region_id GROUP BY r.region_name ORDER BY sales_rank;",
+    "tips": "Using DENSE_RANK() instead of RANK() will prevent gaps in the ranking.",
     "hints": [
-      "You will need to join the customers and orders tables based on the customer ID.",
-      "Use the AVG function to calculate the average order value for each customer, and COUNT to find the total number of orders.",
-      "Finally, order the results by the average order value in descending order using the ORDER BY clause."
+      "You will need to join the two tables on the region_id column.",
+      "Use a window function to rank the sales amounts for each region.",
+      "The DENSE_RANK() function will give you the desired ranking without gaps."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS customers; DROP TABLE IF EXISTS orders; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100)); CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO customers (id, name) VALUES (4, 'Alice Johnson'), (5, 'Mike Brown'); INSERT INTO orders (id, customer_id, order_value) VALUES (6, 4, 250.00), (7, 5, 120.00), (8, 4, 350.00);",
+        "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'New York'), (2, 'Los Angeles'), (3, 'Chicago'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, sales_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, sales_amount) VALUES (1, 1, 5000.00), (2, 2, 3000.00), (3, 3, 4000.00), (4, 1, 6000.00), (5, 2, 2000.00), (6, 3, 5000.00);",
         "rows": [
           [
-            "Alice Johnson",
-            300,
+            "New York",
+            1
+          ],
+          [
+            "Chicago",
             2
           ],
           [
-            "Mike Brown",
-            120,
-            1
+            "Los Angeles",
+            3
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS customers; DROP TABLE IF EXISTS orders; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100)); CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO customers (id, name) VALUES (6, 'Emily Chen'), (7, 'David Lee'); INSERT INTO orders (id, customer_id, order_value) VALUES (9, 6, 400.00), (10, 7, 90.00), (11, 6, 500.00), (12, 7, 110.00);",
+        "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'London'), (2, 'Paris'), (3, 'Berlin'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, sales_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, sales_amount) VALUES (1, 1, 8000.00), (2, 2, 4000.00), (3, 3, 6000.00), (4, 1, 9000.00), (5, 2, 3000.00), (6, 3, 7000.00), (7, 1, 10000.00);",
         "rows": [
           [
-            "Emily Chen",
-            450,
+            "London",
+            1
+          ],
+          [
+            "Berlin",
             2
           ],
           [
-            "David Lee",
-            100,
-            2
+            "Paris",
+            3
           ]
         ]
       }
