@@ -6,8 +6,10 @@ export type TableMeta = { name: string; rows: number; cols: ColMeta[] };
 export type RunResult = { cols: string[]; rows: unknown[][]; rowCount: number; ms: number };
 
 const PYODIDE_VERSION = "0.28.3";
-const DEFAULT_INDEX = "/pyodide/";
 const CDN_INDEX = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+// Currently loading from the CDN. To self-host, vendor Pyodide into
+// public/pyodide/ and switch DEFAULT_INDEX to "/pyodide/".
+const DEFAULT_INDEX = CDN_INDEX;
 
 interface PyodideInterface {
   runPython(code: string): string;
@@ -53,7 +55,7 @@ function ensure(): PyodideInterface {
 export async function loadRuntime(indexURL?: string): Promise<void> {
   if (pyodide) return;
   if (loadingPromise) return loadingPromise;
-  // Prefer the self-hosted copy; if it 404s during dev, fall back to the CDN.
+  // Prefer the configured index; if it 404s, fall back to the CDN.
   const primary = indexURL ?? DEFAULT_INDEX;
   loadingPromise = (async () => {
     let usedIndex = primary;
