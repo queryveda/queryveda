@@ -1,8 +1,6 @@
 """Tests the exact Python glue that pyodide-runtime.ts injects, against local
 pandas. Covers CSV register, _serialize, the sqlite SQL path, and the AST-based
 PySpark exec harness — the browser-independent (and highest-risk) logic."""
-import importlib.util
-import os
 import json
 import io
 import sqlite3
@@ -10,13 +8,11 @@ import ast
 import textwrap
 import pandas as pd
 
-SHIM = os.path.join(os.path.dirname(__file__), "..", "..", "public", "pyspark_shim.py")
+from shim_loader import load_module
 
 
 def make_env():
-    spec = importlib.util.spec_from_file_location("pyspark_shim", SHIM)
-    m = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(m)
+    m = load_module()
     ns = {
         "pd": pd, "io": io, "json": json,
         "SparkSession": m.SparkSession, "functions": m.functions,

@@ -1,4 +1,9 @@
-"""Pandas-backed emulation of a subset of the PySpark DataFrame API.
+// Source of truth for the PySpark shim, inlined into the JS bundle so the
+// runtime never has to fetch a .py file at runtime (which fails on static
+// hosts that 404 or redirect .py requests). The Python below is executed
+// inside Pyodide via runPython(). Kept in sync with the pytest suite under
+// scripts/shim_tests/, which extracts and exercises this exact string.
+export const PYSPARK_SHIM = `"""Pandas-backed emulation of a subset of the PySpark DataFrame API.
 
 NOT real Spark: no lazy evaluation, no partitioning. Intended for practicing
 DataFrame syntax and transformations in the browser (via Pyodide).
@@ -192,3 +197,4 @@ class SparkSession:
 
     def createDataFrame(self, pdf):
         return DataFrame(pd.DataFrame(pdf))
+`;

@@ -1,16 +1,7 @@
-import importlib.util
-import os
 import pandas as pd
 import pytest
 
-SHIM = os.path.join(os.path.dirname(__file__), "..", "..", "public", "pyspark_shim.py")
-
-
-def load():
-    spec = importlib.util.spec_from_file_location("pyspark_shim", SHIM)
-    m = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(m)
-    return m
+from shim_loader import load_module as load
 
 
 @pytest.fixture

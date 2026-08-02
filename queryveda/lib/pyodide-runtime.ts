@@ -1,6 +1,8 @@
 // Client-only Pyodide runtime for the data playground.
 // Loads Pyodide, holds uploaded CSVs as pandas DataFrames, runs SQL + PySpark.
 
+import { PYSPARK_SHIM } from "./pyspark-shim-source";
+
 export type ColMeta = { name: string; type: string };
 export type TableMeta = { name: string; rows: number; cols: ColMeta[] };
 export type RunResult = { cols: string[]; rows: unknown[][]; rowCount: number; ms: number };
@@ -81,8 +83,7 @@ import duckdb
       sqlEngine = "sqlite";
       await pyodide.loadPackage(["sqlite3"]);
     }
-    const shimSrc = await (await fetch("/pyspark_shim.py")).text();
-    pyodide.runPython(shimSrc);
+    pyodide.runPython(PYSPARK_SHIM);
     pyodide.runPython(`
 import pandas as pd, io, json
 _tables = {}
