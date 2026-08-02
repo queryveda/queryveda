@@ -2376,6 +2376,219 @@ INSERT INTO ClubInvites VALUES
  ('accepted','2025-06-05','T','U');`,
    rows:[["2025-06-01",0.33],["2025-06-02",1.00]]}
  ]},
+
+{id:92,title:"Q92 · Regional Premium Subscriber Share",difficulty:"Medium",topic:"Ratios & Rates",
+ desc:"CreatorSubs(sub_id INT, region TEXT, plan_status TEXT)\n\nOut of every subscriber on file, work out what share is BOTH based in the 'APAC' region AND currently on the 'premium' plan_status. Express the result as a percentage of the whole subscriber base, rounded to two decimal places.\nReturn: pct_apac_premium",
+ setup:`DROP TABLE IF EXISTS CreatorSubs;
+CREATE TABLE CreatorSubs(sub_id INT, region TEXT, plan_status TEXT);
+INSERT INTO CreatorSubs VALUES
+ (1,'APAC','premium'),
+ (2,'APAC','premium'),
+ (3,'APAC','free'),
+ (4,'EU','premium'),
+ (5,'EU','free'),
+ (6,'NA','premium'),
+ (7,'NA','trial'),
+ (8,NULL,'premium'),
+ (9,'APAC',NULL),
+ (10,'APAC','premium');`,
+ tables:["creatorsubs"],
+ cols:["pct_apac_premium"],
+ rows:[[30.00]],
+ solution:`SELECT ROUND(100.0 * SUM(CASE WHEN region = 'APAC' AND plan_status = 'premium' THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_apac_premium
+FROM CreatorSubs`,
+ tips:"Sum a 1/0 CASE expression that requires both conditions at once, then divide by COUNT(*) over the whole table. Multiply by 100.0 (not 100) up front so the division doesn't truncate to an integer.",
+ hints:["A row counts toward the numerator only if BOTH region = 'APAC' AND plan_status = 'premium' are true — combine them in one CASE/AND, not two separate checks.","The denominator is every subscriber, COUNT(*) over the full table, regardless of region or status.","Multiply by 100.0 before dividing so PostgreSQL doesn't perform integer division, then ROUND to 2 decimal places."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS CreatorSubs;
+CREATE TABLE CreatorSubs(sub_id INT, region TEXT, plan_status TEXT);
+INSERT INTO CreatorSubs VALUES
+ (20,'APAC','premium'),
+ (21,'APAC','trial'),
+ (22,'EU','premium'),
+ (23,'EU','premium'),
+ (24,'NA','free');`,
+   rows:[[20.00]]}
+ ]},
+
+{id:93,title:"Q93 · Reporter Diversity Rate Per Post",difficulty:"Medium",topic:"Ratios & Rates",
+ desc:"ContentReports(report_id TEXT, reporter_first TEXT, reporter_last TEXT, post_id TEXT)\n\nEvery flag submitted against a post gets a row here; a NULL report_id marks a placeholder row where no flag was actually filed, so drop those first. For each post that has at least one real flag, compute what percentage of its flag rows came from distinct reporters (a reporter is identified by their first+last name pair) versus the total number of flag rows for that post. A post flagged five times by the same person scores low; a post where every flag comes from a different person scores 100. Round to two decimal places and skip posts with zero real flags.\nReturn: post_id, reporter_diversity_pct",
+ setup:`DROP TABLE IF EXISTS ContentReports;
+CREATE TABLE ContentReports(report_id TEXT, reporter_first TEXT, reporter_last TEXT, post_id TEXT);
+INSERT INTO ContentReports VALUES
+ ('1','Amy','Lee','P100'),
+ ('2','Amy','Lee','P100'),
+ ('3','Ben','Cruz','P100'),
+ ('4','Cara','Diaz','P100'),
+ (NULL,'Xan','Yu','P100'),
+ ('5','Dan','Fox','P200'),
+ ('6','Dan','Fox','P200'),
+ ('7','Dan','Fox','P200'),
+ (NULL,'Zed','Quinn','P300'),
+ ('8','Eve','Gomez','P400');`,
+ tables:["contentreports"],
+ cols:["post_id","reporter_diversity_pct"],
+ rows:[["P100",75.00],["P200",33.33],["P400",100.00]],
+ solution:`SELECT post_id,
+ ROUND(100.0 * COUNT(DISTINCT reporter_first || '|' || reporter_last) / COUNT(*), 2) AS reporter_diversity_pct
+FROM ContentReports
+WHERE report_id IS NOT NULL
+GROUP BY post_id
+ORDER BY post_id`,
+ tips:"Filter out the placeholder (NULL report_id) rows in a WHERE clause before grouping, so posts with only placeholders naturally disappear. Combine first+last name into one key for COUNT(DISTINCT ...) so two different people who happen to share a first name aren't merged.",
+ hints:["WHERE report_id IS NOT NULL removes placeholder rows before any grouping happens — apply it before GROUP BY, not after.","Identify a unique reporter by combining reporter_first and reporter_last (e.g. with ||) so COUNT(DISTINCT ...) treats the pair as one identity.","Per post_id, divide COUNT(DISTINCT combined name) by COUNT(*) of the remaining rows, multiply by 100.0, and ROUND to 2 decimals; a post left with zero rows after the WHERE filter won't appear in the GROUP BY output at all."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS ContentReports;
+CREATE TABLE ContentReports(report_id TEXT, reporter_first TEXT, reporter_last TEXT, post_id TEXT);
+INSERT INTO ContentReports VALUES
+ ('10','Gia','Hall','Q1'),
+ ('11','Gia','Hall','Q1'),
+ ('12','Gia','Hall','Q1'),
+ ('13','Gia','Hall','Q1'),
+ ('14','Ivy','Jax','Q2'),
+ ('15','Ken','Loo','Q2'),
+ (NULL,'Mia','Noor','Q3');`,
+   rows:[["Q1",25.00],["Q2",100.00]]}
+ ]},
+
+{id:94,title:"Q94 · Month-over-Month Revenue Swing",difficulty:"Hard",topic:"Ratios & Rates",
+ desc:"SubRevenue(payment_id INT, txn_date DATE, amount INT)\n\nGroup all payments by calendar month and total the amount collected in each. For every month after the first one present in the data, work out how much that month's total changed versus the prior month, expressed as a percentage of the prior month's total: ((this month - last month) / last month) * 100, rounded to two decimal places. The very first month in the data has no prior month to compare against, so leave it blank. If a prior month's total was exactly zero, the percentage change is undefined — leave that month blank too instead of erroring. Order the result from the earliest month to the latest.\nReturn: ym, pct_change",
+ setup:`DROP TABLE IF EXISTS SubRevenue;
+CREATE TABLE SubRevenue(payment_id INT, txn_date DATE, amount INT);
+INSERT INTO SubRevenue VALUES
+ (1,'2025-01-05',600),
+ (2,'2025-01-20',400),
+ (3,'2025-02-10',0),
+ (4,'2025-03-15',500),
+ (5,'2025-04-01',700),
+ (6,'2025-04-25',300);`,
+ tables:["subrevenue"],
+ cols:["ym","pct_change"],
+ rows:[["2025-01",null],["2025-02",-100.00],["2025-03",null],["2025-04",100.00]],
+ solution:`WITH monthly AS (
+  SELECT TO_CHAR(txn_date, 'YYYY-MM') AS ym, SUM(amount) AS revenue
+  FROM SubRevenue
+  GROUP BY TO_CHAR(txn_date, 'YYYY-MM')
+)
+SELECT ym,
+ ROUND(100.0 * (revenue - LAG(revenue) OVER (ORDER BY ym)) / NULLIF(LAG(revenue) OVER (ORDER BY ym), 0), 2) AS pct_change
+FROM monthly
+ORDER BY ym`,
+ tips:"Aggregate to one row per calendar month first (TO_CHAR(txn_date,'YYYY-MM') with SUM), then use LAG() over that monthly series to compare each month to the one before it. Wrap the LAG denominator in NULLIF(...,0) so a zero-revenue prior month produces NULL instead of a division-by-zero error.",
+ hints:["First collapse the raw payments into one row per month: GROUP BY TO_CHAR(txn_date, 'YYYY-MM') with SUM(amount).","Use LAG(revenue) OVER (ORDER BY ym) on that monthly series to fetch the previous month's total for the pct-change formula.","Divide by NULLIF(LAG(revenue) OVER (ORDER BY ym), 0) rather than the raw LAG value — this turns a zero prior-month total into NULL instead of throwing a division-by-zero error, which also naturally leaves the first month blank since its LAG is NULL."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS SubRevenue;
+CREATE TABLE SubRevenue(payment_id INT, txn_date DATE, amount INT);
+INSERT INTO SubRevenue VALUES
+ (10,'2025-06-01',1000),
+ (11,'2025-07-01',1500),
+ (12,'2025-08-01',750);`,
+   rows:[["2025-06",null],["2025-07",50.00],["2025-08",-50.00]]}
+ ]},
+
+{id:95,title:"Q95 · Top Earners in Back-Office Departments",difficulty:"Easy",topic:"Filtering & Conditionals",
+ desc:"WarehouseStaff(staff_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT)\n\nLeadership wants a compensation snapshot limited to two back-office teams. Pull every employee who works in either the 'Logistics' or 'Facilities' department AND earns more than 75000.\nReturn: first_name, last_name, department, salary",
+ setup:`DROP TABLE IF EXISTS WarehouseStaff;
+CREATE TABLE WarehouseStaff(staff_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT);
+INSERT INTO WarehouseStaff VALUES
+ (1,'Nina','Ortiz','Logistics',82000),
+ (2,'Omar','Price','Logistics',70000),
+ (3,'Paula','Quinn','Facilities',90000),
+ (4,'Raj','Singh','Facilities',75000),
+ (5,'Sara','Tuck','Sales',120000),
+ (6,'Tom','Ura','Logistics',76500),
+ (7,'Vera','West','Facilities',60000);`,
+ tables:["warehousestaff"],
+ cols:["first_name","last_name","department","salary"],
+ rows:[["Nina","Ortiz","Logistics",82000],["Paula","Quinn","Facilities",90000],["Tom","Ura","Logistics",76500]],
+ solution:`SELECT first_name, last_name, department, salary
+FROM WarehouseStaff
+WHERE department IN ('Logistics', 'Facilities') AND salary > 75000
+ORDER BY staff_id`,
+ tips:"A row must satisfy both conditions at once, so combine the department check and the salary check with AND. IN (...) is a clean way to test membership in the two eligible departments instead of chaining OR.",
+ hints:["Use WHERE department IN ('Logistics', 'Facilities') to match either eligible department in one condition.","The salary bar is strictly 'more than' 75000, so use > not >=.","Combine both conditions with AND — a row needs the right department AND the qualifying salary to appear."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS WarehouseStaff;
+CREATE TABLE WarehouseStaff(staff_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT);
+INSERT INTO WarehouseStaff VALUES
+ (10,'Amy','Byrd','Facilities',75000),
+ (11,'Cole','Diaz','Logistics',95000),
+ (12,'Ella','Frost','Sales',200000),
+ (13,'Gabe','Hu','Logistics',40000);`,
+   rows:[["Cole","Diaz","Logistics",95000]]}
+ ]},
+
+{id:96,title:"Q96 · Veteran Medalists Over 40",difficulty:"Easy",topic:"Filtering & Conditionals",
+ desc:"TrackResults(entry_id INT, athlete_name TEXT, age INT, event TEXT, medal TEXT)\n\nA masters-circuit historian wants a list of athletes who were still winning medals well past their prime. Find every entry where the athlete's age at the time was over 40 AND the medal awarded was either 'Bronze' or 'Silver' — gold-medal entries and entries with no medal don't belong on this list, regardless of age.\nReturn: athlete_name, age, event, medal",
+ setup:`DROP TABLE IF EXISTS TrackResults;
+CREATE TABLE TrackResults(entry_id INT, athlete_name TEXT, age INT, event TEXT, medal TEXT);
+INSERT INTO TrackResults VALUES
+ (1,'Ana Fields',42,'Marathon','Bronze'),
+ (2,'Bo Chen',45,'Marathon','Gold'),
+ (3,'Cid Nunes',38,'800m','Silver'),
+ (4,'Dara Voss',41,'Shot Put','Silver'),
+ (5,'Eli Marsh',50,'Javelin',NULL),
+ (6,'Fay Osei',40,'Marathon','Bronze'),
+ (7,'Gus Reyes',60,'800m','Bronze');`,
+ tables:["trackresults"],
+ cols:["athlete_name","age","event","medal"],
+ rows:[["Ana Fields",42,"Marathon","Bronze"],["Dara Voss",41,"Shot Put","Silver"],["Gus Reyes",60,"800m","Bronze"]],
+ solution:`SELECT athlete_name, age, event, medal
+FROM TrackResults
+WHERE age > 40 AND medal IN ('Bronze', 'Silver')
+ORDER BY entry_id`,
+ tips:"Two independent filters joined by AND: a strict age cutoff (> 40, so exactly 40 doesn't qualify) and a medal membership check with IN. NULL medals automatically fail the IN test without any extra NULL handling.",
+ hints:["The age condition is strictly 'over 40', so age > 40 — an athlete who was exactly 40 does not qualify.","Use medal IN ('Bronze', 'Silver') to accept either medal color in one condition.","AND the two conditions together; rows with a NULL medal or a Gold medal are excluded automatically by the IN check."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS TrackResults;
+CREATE TABLE TrackResults(entry_id INT, athlete_name TEXT, age INT, event TEXT, medal TEXT);
+INSERT INTO TrackResults VALUES
+ (10,'Hana Volk',55,'Discus','Gold'),
+ (11,'Ivo Kade',44,'Discus','Bronze'),
+ (12,'Jool Amis',30,'Discus','Silver'),
+ (13,'Kira Ott',40,'Discus','Bronze');`,
+   rows:[["Ivo Kade",44,"Discus","Bronze"]]}
+ ]},
+
+{id:97,title:"Q97 · Survival Counts by Cabin Tier",difficulty:"Medium",topic:"Filtering & Conditionals",
+ desc:"CruisePassengers(passenger_id INT, cabin_tier INT, survived INT)\n\ncabin_tier holds 1, 2, or 3; survived holds 1 for a survivor and 0 otherwise. Translate each cabin_tier into its label — 1 = 'First', 2 = 'Second', 3 = 'Third' — using a CASE expression, then for each label count how many passengers in that tier survived and how many did not.\nReturn: class_label, survivors, non_survivors",
+ setup:`DROP TABLE IF EXISTS CruisePassengers;
+CREATE TABLE CruisePassengers(passenger_id INT, cabin_tier INT, survived INT);
+INSERT INTO CruisePassengers VALUES
+ (1,1,1),
+ (2,1,1),
+ (3,1,0),
+ (4,2,1),
+ (5,2,0),
+ (6,2,0),
+ (7,3,0),
+ (8,3,0),
+ (9,3,0),
+ (10,3,1);`,
+ tables:["cruisepassengers"],
+ cols:["class_label","survivors","non_survivors"],
+ rows:[["First",2,1],["Second",1,2],["Third",1,3]],
+ solution:`SELECT
+ CASE cabin_tier WHEN 1 THEN 'First' WHEN 2 THEN 'Second' WHEN 3 THEN 'Third' END AS class_label,
+ SUM(CASE WHEN survived = 1 THEN 1 ELSE 0 END) AS survivors,
+ SUM(CASE WHEN survived = 1 THEN 0 ELSE 1 END) AS non_survivors
+FROM CruisePassengers
+GROUP BY cabin_tier
+ORDER BY cabin_tier`,
+ tips:"A CASE expression maps the numeric cabin_tier to a readable label right in the SELECT list, and GROUP BY the underlying cabin_tier (not the label) keeps the grouping simple. Two more CASE expressions inside SUM() split survived/non-survived counts out of the same grouped rows.",
+ hints:["Build the label with CASE cabin_tier WHEN 1 THEN 'First' WHEN 2 THEN 'Second' WHEN 3 THEN 'Third' END in the SELECT list.","GROUP BY the original cabin_tier column (not the CASE result) so each tier's rows are aggregated together.","Count survivors and non-survivors with two SUM(CASE WHEN survived = 1 THEN ... ELSE ... END) expressions in the same SELECT."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS CruisePassengers;
+CREATE TABLE CruisePassengers(passenger_id INT, cabin_tier INT, survived INT);
+INSERT INTO CruisePassengers VALUES
+ (20,1,0),
+ (21,2,1),
+ (22,2,1),
+ (23,3,1),
+ (24,3,0),
+ (25,1,1);`,
+   rows:[["First",1,1],["Second",2,0],["Third",1,1]]}
+ ]},
 ];
 
 export function getQuestionById(id: number): Question | undefined {
