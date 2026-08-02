@@ -171,6 +171,12 @@ function drawCard(canvas: HTMLCanvasElement, displayName: string, stats: Profile
     "Cumulative & Sliding Windows": "Cumulative",
     "Consecutive Sequences": "Sequences",
     "Advanced Analytics": "Analytics",
+    "Filtering & Conditionals": "Filter",
+    "String & Text": "Strings",
+    "Date & Time": "Dates",
+    "Ratios & Rates": "Ratios",
+    "Self-Joins & Comparisons": "Self-Join",
+    "Set Operations": "Set Ops",
   };
   for (const t of stats.byTopic) {
     ctx.fillStyle = "#94a3b8";

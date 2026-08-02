@@ -6,6 +6,12 @@ export const TOPICS: Topic[] = [
   "Cumulative & Sliding Windows",
   "Consecutive Sequences",
   "Advanced Analytics",
+  "Filtering & Conditionals",
+  "String & Text",
+  "Date & Time",
+  "Ratios & Rates",
+  "Self-Joins & Comparisons",
+  "Set Operations",
 ];
 
 export const TOPIC_COLORS: Record<Topic, string> = {
@@ -14,6 +20,12 @@ export const TOPIC_COLORS: Record<Topic, string> = {
   "Cumulative & Sliding Windows": "#06b6d4",
   "Consecutive Sequences": "#f59e0b",
   "Advanced Analytics": "#ec4899",
+  "Filtering & Conditionals": "#0ea5e9",
+  "String & Text": "#14b8a6",
+  "Date & Time": "#a855f7",
+  "Ratios & Rates": "#f43f5e",
+  "Self-Joins & Comparisons": "#f97316",
+  "Set Operations": "#84cc16",
 };
 
 export const DIFFICULTY_COLORS: Record<Difficulty, string> = {

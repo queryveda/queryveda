@@ -5,7 +5,13 @@ export type Topic =
   | "Window Functions"
   | "Cumulative & Sliding Windows"
   | "Consecutive Sequences"
-  | "Advanced Analytics";
+  | "Advanced Analytics"
+  | "Filtering & Conditionals"
+  | "String & Text"
+  | "Date & Time"
+  | "Ratios & Rates"
+  | "Self-Joins & Comparisons"
+  | "Set Operations";
 
 export interface TestCase {
   setup: string;

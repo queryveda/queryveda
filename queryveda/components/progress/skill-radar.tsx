@@ -112,6 +112,12 @@ export function SkillRadar({ byTopic }: SkillRadarProps) {
               "Cumulative & Sliding Windows": "Cumulative",
               "Consecutive Sequences": "Sequences",
               "Advanced Analytics": "Analytics",
+              "Filtering & Conditionals": "Filter",
+              "String & Text": "Strings",
+              "Date & Time": "Dates",
+              "Ratios & Rates": "Ratios",
+              "Self-Joins & Comparisons": "Self-Join",
+              "Set Operations": "Set Ops",
             };
             return (
               <text
