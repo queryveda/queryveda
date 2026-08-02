@@ -67,7 +67,9 @@ export async function loadRuntime(indexURL?: string): Promise<void> {
     }
     pyodide = await window.loadPyodide!({ indexURL: usedIndex });
     await pyodide.loadPackage(["pandas", "micropip"]);
-    // Best-effort DuckDB; fall back to sqlite3 (stdlib) if unavailable.
+    // Best-effort DuckDB; fall back to sqlite3 if its wheel is unavailable.
+    // NOTE: sqlite3 is *unvendored* in Pyodide, so it must be loaded as a
+    // package before it can be imported.
     try {
       await pyodide.runPythonAsync(`
 import micropip
@@ -77,6 +79,7 @@ import duckdb
       sqlEngine = "duckdb";
     } catch {
       sqlEngine = "sqlite";
+      await pyodide.loadPackage(["sqlite3"]);
     }
     const shimSrc = await (await fetch("/pyspark_shim.py")).text();
     pyodide.runPython(shimSrc);
