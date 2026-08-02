@@ -1960,7 +1960,7 @@ INSERT INTO WorkspaceEvents VALUES
    rows:[[300,4,2],[300,5,2],[400,4,1]]}
  ]},
 
-{id:80,title:"Q80 · Hour of Highest Fuel Cost",difficulty:"Easy",topic:"Date & Time",
+{id:80,title:"Q80 · Hour of Highest Fuel Cost",difficulty:"Easy",topic:"Aggregations & JOINs",
  desc:"DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT)\n\nOne trip in the log burned more fuel than every other, and no two trips tie for that top spot. Report the hour of the day during which that single costliest trip ran.\nReturn: hour_of_day",
  setup:`DROP TABLE IF EXISTS DeliveryTrips;
 CREATE TABLE DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT);
@@ -2017,7 +2017,7 @@ INSERT INTO Documents VALUES
    rows:[[10,'Draft_Budget'],[13,'DRAFT_final']]}
  ]},
 
-{id:82,title:"Q82 · Six-Letter First Names Ending in N",difficulty:"Medium",topic:"String & Text",
+{id:82,title:"Q82 · Six-Letter First Names Ending in N",difficulty:"Easy",topic:"String & Text",
  desc:"Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE)\n\nPick out the employees whose first name is made up of precisely six letters and whose final letter is 'n'. For each one, bring back every column the table stores.\nReturn: emp_id, first_name, last_name, department, salary, hire_date",
  setup:`DROP TABLE IF EXISTS Employees;
 CREATE TABLE Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE);
@@ -2155,6 +2155,224 @@ INSERT INTO AppUsers VALUES
  (12,'Ivy',NULL),
  (13,'Jack','777-0004');`,
    rows:[[11,'Hank'],[12,'Ivy']]}
+ ]},
+
+{id:86,title:"Q86 · Word Frequency in Meeting Notes",difficulty:"Medium",topic:"String & Text",
+ desc:"MeetingNotes(note_id INT, contents TEXT)\n\nBreak every note's contents into individual words on whitespace, strip any punctuation stuck to a word, and lowercase everything so capitalization doesn't create duplicate entries. Tally how many times each resulting word shows up across the whole table.\nReturn: word, occurrences",
+ setup:`DROP TABLE IF EXISTS MeetingNotes;
+CREATE TABLE MeetingNotes(note_id INT, contents TEXT);
+INSERT INTO MeetingNotes VALUES
+ (1,'Ship the release, ship it today.'),
+ (2,'Release day is today!'),
+ (3,'Today we ship.'),
+ (4,NULL),
+ (5,''),
+ (6,'SHIP ship Ship'),
+ (7,'Blocked: waiting on QA sign-off.');`,
+ tables:["meetingnotes"],
+ cols:["word","occurrences"],
+ rows:[["ship",6],["today",3],["release",2],["blocked",1],["day",1],["is",1],["it",1],["on",1],["qa",1],["signoff",1],["the",1],["waiting",1],["we",1]],
+ solution:`SELECT word, COUNT(*) AS occurrences
+FROM (
+  SELECT lower(regexp_replace(w, '[^a-zA-Z0-9]', '', 'g')) AS word
+  FROM MeetingNotes, regexp_split_to_table(contents, '\\s+') AS w
+  WHERE contents IS NOT NULL AND contents <> ''
+) t
+WHERE word <> ''
+GROUP BY word
+ORDER BY occurrences DESC, word`,
+ tips:"regexp_split_to_table breaks each row's text into a word per output row (a set-returning function used directly in the FROM list). Lowercase and strip non-alphanumeric characters before grouping so 'Ship,' and 'ship' count as the same word.",
+ hints:["regexp_split_to_table(contents, '\\\\s+') turns one note into one row per whitespace-separated token — use it directly in the FROM clause alongside MeetingNotes.","Punctuation attached to a word (commas, periods, colons) needs stripping and casing needs normalizing before you can group correctly: regexp_replace(lower(w), '[^a-zA-Z0-9]', '', 'g').","Skip NULL/empty contents and empty tokens produced by stripping, then GROUP BY the cleaned word and COUNT(*)."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS MeetingNotes;
+CREATE TABLE MeetingNotes(note_id INT, contents TEXT);
+INSERT INTO MeetingNotes VALUES
+ (10,'Deploy now, deploy fast.'),
+ (11,'Now is the time.'),
+ (12,'DEPLOY!'),
+ (13,NULL);`,
+   rows:[["deploy",3],["now",2],["fast",1],["is",1],["the",1],["time",1]]}
+ ]},
+
+{id:87,title:"Q87 · Bean Varieties Reviewed By a Taster",difficulty:"Easy",topic:"String & Text",
+ desc:"CoffeeTastings(review_id INT, taster_name TEXT, bean_variety TEXT, farm_region TEXT)\n\nAmong the reviews written by taster 'Naomi Reyes', find the bean varieties for which the farm_region is filled in (not NULL). List each qualifying variety once.\nReturn: bean_variety",
+ setup:`DROP TABLE IF EXISTS CoffeeTastings;
+CREATE TABLE CoffeeTastings(review_id INT, taster_name TEXT, bean_variety TEXT, farm_region TEXT);
+INSERT INTO CoffeeTastings VALUES
+ (1,'Naomi Reyes','Bourbon','Yirgacheffe'),
+ (2,'Naomi Reyes','Bourbon','Sidama'),
+ (3,'Naomi Reyes','Typica',NULL),
+ (4,'Naomi Reyes','Geisha','Huila'),
+ (5,'Marcus Ide','Caturra','Antioquia'),
+ (6,'Naomi Reyes','Pacamara',NULL),
+ (7,'Naomi Reyes','Caturra','Tarrazu');`,
+ tables:["coffeetastings"],
+ cols:["bean_variety"],
+ rows:[["Bourbon"],["Caturra"],["Geisha"]],
+ solution:`SELECT DISTINCT bean_variety
+FROM CoffeeTastings
+WHERE taster_name = 'Naomi Reyes' AND farm_region IS NOT NULL
+ORDER BY bean_variety`,
+ tips:"Filter to the one taster and a non-NULL farm_region, then DISTINCT collapses the repeated 'Bourbon' rows into a single result.",
+ hints:["Filter rows to taster_name = 'Naomi Reyes' first.","Add farm_region IS NOT NULL — reviews with no region on file don't count.","Wrap in SELECT DISTINCT since the same variety can appear in more than one qualifying review."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS CoffeeTastings;
+CREATE TABLE CoffeeTastings(review_id INT, taster_name TEXT, bean_variety TEXT, farm_region TEXT);
+INSERT INTO CoffeeTastings VALUES
+ (10,'Naomi Reyes','SL28','Nyeri'),
+ (11,'Naomi Reyes','SL28',NULL),
+ (12,'Priya Anand','SL34','Kirinyaga'),
+ (13,'Naomi Reyes','Java','Nyeri');`,
+   rows:[["Java"],["SL28"]]}
+ ]},
+
+{id:88,title:"Q88 · Counting Bull and Bear Mentions",difficulty:"Hard",topic:"String & Text",
+ desc:"MarketNotes(note_id INT, snippet TEXT)\n\nCount, case-insensitively, how many times the exact words \"bull\" and \"bear\" occur in the snippet column across all rows — count every occurrence within a row, not just whether it appears. A match must be a standalone word: substrings inside longer words like \"bullish\" or \"bearing\" don't count, even though hyphenated forms like \"bull-run\" do.\nReturn: word, occurrences",
+ setup:`DROP TABLE IF EXISTS MarketNotes;
+CREATE TABLE MarketNotes(note_id INT, snippet TEXT);
+INSERT INTO MarketNotes VALUES
+ (1,'Traders call this a bull market, and the bull-run may continue.'),
+ (2,'A bearish tone crept in, though nobody said bear outright.'),
+ (3,'BULL BULL everywhere, one commentator shouted.'),
+ (4,'The bear market bruised confidence; another bear signal followed.'),
+ (5,'Bullish and bearing are not the same as Bull or Bear.'),
+ (6,'No commentary today.');`,
+ tables:["marketnotes"],
+ cols:["word","occurrences"],
+ rows:[["bear",4],["bull",5]],
+ solution:`WITH words AS (SELECT unnest(ARRAY['bull','bear']) AS word)
+SELECT w.word,
+ COALESCE(SUM((SELECT COUNT(*) FROM regexp_matches(lower(m.snippet), '\\m' || w.word || '\\M', 'g'))), 0) AS occurrences
+FROM words w
+CROSS JOIN MarketNotes m
+GROUP BY w.word
+ORDER BY w.word`,
+ tips:"regexp_matches(..., 'g') returns one row per match, so wrapping it in COUNT(*) inside a correlated subquery gives the per-row occurrence count; the \\m and \\M anchors mark a word's start and end so 'bullish' can't match 'bull'.",
+ hints:["Lowercase the snippet first so the match is case-insensitive.","Postgres regex word-boundary anchors \\m and \\M mark the start/end of a word — '\\mbull\\M' matches 'bull' and 'bull-run' but not 'bullish'.","regexp_matches(text, pattern, 'g') returns one row per occurrence; count those rows per snippet and SUM across all rows, per word."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS MarketNotes;
+CREATE TABLE MarketNotes(note_id INT, snippet TEXT);
+INSERT INTO MarketNotes VALUES
+ (10,'A bear, then a bull, then a bear again.'),
+ (11,'Bearish sentiment, no bull talk.'),
+ (12,'bull-market bull-run bear-trap');`,
+   rows:[["bear",3],["bull",4]]}
+ ]},
+
+{id:89,title:"Q89 · Distinct Shipments Per Month",difficulty:"Easy",topic:"Date & Time",
+ desc:"WarehouseShipments(shipment_id INT, parcel_id INT, ship_date DATE, weight INT)\n\nA shipment is uniquely identified by the pair (shipment_id, parcel_id); the same pair can appear on more than one row due to duplicate logging. For each calendar month, count the distinct shipments that went out.\nReturn: year_month (format YYYY-MM), shipment_count",
+ setup:`DROP TABLE IF EXISTS WarehouseShipments;
+CREATE TABLE WarehouseShipments(shipment_id INT, parcel_id INT, ship_date DATE, weight INT);
+INSERT INTO WarehouseShipments VALUES
+ (1,1,'2025-01-05',10),
+ (1,1,'2025-01-05',10),
+ (1,2,'2025-01-20',15),
+ (2,1,'2025-02-01',20),
+ (2,2,'2025-02-14',5),
+ (2,2,'2025-02-14',5),
+ (3,1,'2025-02-28',8),
+ (3,1,'2025-03-01',9);`,
+ tables:["warehouseshipments"],
+ cols:["year_month","shipment_count"],
+ rows:[["2025-01",2],["2025-02",3],["2025-03",1]],
+ solution:`SELECT TO_CHAR(ship_date, 'YYYY-MM') AS year_month,
+ COUNT(DISTINCT (shipment_id, parcel_id)) AS shipment_count
+FROM WarehouseShipments
+GROUP BY year_month
+ORDER BY year_month`,
+ tips:"TO_CHAR formats a date into the YYYY-MM bucket to group by month. COUNT(DISTINCT (a, b)) counts distinct row-value pairs, which collapses the duplicated logging rows for the same shipment.",
+ hints:["TO_CHAR(ship_date, 'YYYY-MM') turns a date into its calendar-month bucket for grouping.","The same (shipment_id, parcel_id) pair can be logged more than once — a plain COUNT(*) would overcount.","COUNT(DISTINCT (shipment_id, parcel_id)) counts each unique pair once per month, using a row constructor inside DISTINCT."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS WarehouseShipments;
+CREATE TABLE WarehouseShipments(shipment_id INT, parcel_id INT, ship_date DATE, weight INT);
+INSERT INTO WarehouseShipments VALUES
+ (10,1,'2025-04-02',12),
+ (10,1,'2025-04-02',12),
+ (10,1,'2025-04-02',12),
+ (11,1,'2025-04-15',7),
+ (12,1,'2025-05-01',6);`,
+   rows:[["2025-04",2],["2025-05",1]]}
+ ]},
+
+{id:90,title:"Q90 · Bike Rentals in Rain Before Noon",difficulty:"Medium",topic:"Date & Time",
+ desc:"BikeRentals(ride_id INT, ride_time TIMESTAMP, weather TEXT, distance_km NUMERIC)\n\nA ride qualifies when the weather logged for it is 'Rain' AND its ride_time falls strictly before 12:00 noon on whatever day it happened (the calendar date doesn't matter, only the time of day). Return the full row for every qualifying ride.\nReturn: ride_id, ride_time, weather, distance_km",
+ setup:`DROP TABLE IF EXISTS BikeRentals;
+CREATE TABLE BikeRentals(ride_id INT, ride_time TIMESTAMP, weather TEXT, distance_km NUMERIC);
+INSERT INTO BikeRentals VALUES
+ (1,'2025-03-01 00:05:00','Rain',2.5),
+ (2,'2025-03-01 08:30:00','Rain',3.1),
+ (3,'2025-03-01 11:59:59','Rain',1.2),
+ (4,'2025-03-01 12:00:00','Rain',4.0),
+ (5,'2025-03-01 09:15:00','Clear',2.0),
+ (6,'2025-03-02 07:00:00','Rain',5.5),
+ (7,'2025-03-02 18:00:00','Rain',2.2),
+ (8,'2025-03-02 06:45:00','Cloudy',1.9);`,
+ tables:["bikerentals"],
+ cols:["ride_id","ride_time","weather","distance_km"],
+ rows:[[1,"2025-03-01 00:05:00","Rain",2.5],[2,"2025-03-01 08:30:00","Rain",3.1],[3,"2025-03-01 11:59:59","Rain",1.2],[6,"2025-03-02 07:00:00","Rain",5.5]],
+ solution:`SELECT ride_id, ride_time, weather, distance_km
+FROM BikeRentals
+WHERE weather = 'Rain' AND EXTRACT(HOUR FROM ride_time) * 60 + EXTRACT(MINUTE FROM ride_time) < 720
+ORDER BY ride_id`,
+ tips:"Extract the hour and minute from the timestamp and compare against 720 minutes (12:00 noon) rather than comparing the whole timestamp, since the calendar date shouldn't matter — only the time of day.",
+ hints:["'Before noon' is about the time-of-day component of ride_time, not the date — EXTRACT(HOUR FROM ride_time) and EXTRACT(MINUTE FROM ride_time) give you that.","Convert hour and minute into total minutes since midnight and compare against 720 (12:00 noon) with a strict less-than.","Combine with weather = 'Rain' using AND; a ride_time of exactly 12:00:00 is noon, not before it, so it's excluded."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS BikeRentals;
+CREATE TABLE BikeRentals(ride_id INT, ride_time TIMESTAMP, weather TEXT, distance_km NUMERIC);
+INSERT INTO BikeRentals VALUES
+ (10,'2025-04-10 05:00:00','Rain',3.3),
+ (11,'2025-04-10 12:00:01','Rain',2.1),
+ (12,'2025-04-10 10:00:00','Clear',1.5),
+ (13,'2025-04-11 23:59:00','Rain',4.4);`,
+   rows:[[10,"2025-04-10 05:00:00","Rain",3.3]]}
+ ]},
+
+{id:91,title:"Q91 · Club Invite Acceptance Rate By Date",difficulty:"Medium",topic:"Date & Time",
+ desc:"ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT)\n\nEach row is either an invite being 'sent' or later 'accepted', identified by the same (sender_id, receiver_id) pair; acceptance can land on any date on or after the date it was sent, and an unaccepted invite simply has no matching 'accepted' row. For every date on which at least one invite was sent, compute the fraction of that date's sent invites that were eventually accepted (2 decimal places). Skip any sent date where none of its invites were ever accepted.\nReturn: invite_date, acceptance_rate",
+ setup:`DROP TABLE IF EXISTS ClubInvites;
+CREATE TABLE ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT);
+INSERT INTO ClubInvites VALUES
+ ('sent','2025-05-01','A','B'),
+ ('sent','2025-05-01','A','C'),
+ ('accepted','2025-05-03','A','B'),
+ ('sent','2025-05-02','D','E'),
+ ('sent','2025-05-02','D','F'),
+ ('accepted','2025-05-02','D','E'),
+ ('accepted','2025-05-04','D','F'),
+ ('sent','2025-05-05','G','H'),
+ ('sent','2025-05-06','I','J'),
+ ('accepted','2025-05-07','I','J');`,
+ tables:["clubinvites"],
+ cols:["invite_date","acceptance_rate"],
+ rows:[["2025-05-01",0.50],["2025-05-02",1.00],["2025-05-06",1.00]],
+ solution:`WITH sent AS (
+  SELECT sender_id, receiver_id, invite_date AS sent_date
+  FROM ClubInvites WHERE action = 'sent'
+),
+accepted AS (
+  SELECT DISTINCT sender_id, receiver_id
+  FROM ClubInvites WHERE action = 'accepted'
+)
+SELECT s.sent_date AS invite_date,
+ ROUND(1.0 * SUM(CASE WHEN a.sender_id IS NOT NULL THEN 1 ELSE 0 END) / COUNT(*), 2) AS acceptance_rate
+FROM sent s
+LEFT JOIN accepted a ON a.sender_id = s.sender_id AND a.receiver_id = s.receiver_id
+GROUP BY s.sent_date
+HAVING SUM(CASE WHEN a.sender_id IS NOT NULL THEN 1 ELSE 0 END) > 0
+ORDER BY s.sent_date`,
+ tips:"Since acceptance can arrive on a different date than the send, join sent rows to a distinct set of ever-accepted (sender, receiver) pairs rather than matching on date. HAVING filters out send-dates with zero acceptances after the join.",
+ hints:["Separate the rows into 'sent' events (keyed by sender/receiver, dated) and a distinct set of (sender, receiver) pairs that were ever 'accepted' — acceptance date doesn't have to match send date.","LEFT JOIN the sent events to the accepted-pairs set on (sender_id, receiver_id); a NULL on the accepted side means that particular sent invite was never accepted.","Group by the sent date, compute accepted/total as a ROUND(...,2) ratio, and use HAVING to drop dates where nothing was ever accepted."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS ClubInvites;
+CREATE TABLE ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT);
+INSERT INTO ClubInvites VALUES
+ ('sent','2025-06-01','P','Q'),
+ ('sent','2025-06-01','P','R'),
+ ('sent','2025-06-01','P','S'),
+ ('accepted','2025-06-02','P','Q'),
+ ('sent','2025-06-02','T','U'),
+ ('accepted','2025-06-05','T','U');`,
+   rows:[["2025-06-01",0.33],["2025-06-02",1.00]]}
  ]},
 ];
 
