@@ -1895,7 +1895,7 @@ GROUP BY u.signup_date`,
    rows:[['2025-02-01',5,3,2,1,60.00,40.00,20.00]]}
  ]},
 {id:78,title:"Q78 · Returning Customers Within a Week",difficulty:"Medium",topic:"Date & Time",
- desc:"Orders(order_id INT, customer_id INT, ordered_at DATE, dish TEXT, amount INT)\n\nA returning customer placed another order 1 to 7 days after their FIRST order (same-day orders don't count).\nReturn: customer_id",
+ desc:"Orders(order_id INT, customer_id INT, ordered_at DATE, dish TEXT, amount INT)\n\nTake each customer's earliest order as their starting point. List every customer who came back with a follow-up order somewhere in the week that follows — strictly later than the starting day, and no more than seven days past it. Anything ordered on the starting day itself is ignored.\nReturn: customer_id",
  setup:`DROP TABLE IF EXISTS Orders;
 CREATE TABLE Orders(order_id INT, customer_id INT, ordered_at DATE, dish TEXT, amount INT);
 INSERT INTO Orders VALUES
@@ -1961,7 +1961,7 @@ INSERT INTO WorkspaceEvents VALUES
  ]},
 
 {id:80,title:"Q80 · Hour of Highest Fuel Cost",difficulty:"Easy",topic:"Date & Time",
- desc:"DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT)\n\nFind the hour of the single trip with the highest fuel cost. Assume exactly one trip has the maximum, so exactly one hour qualifies.\nReturn: hour_of_day",
+ desc:"DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT)\n\nOne trip in the log burned more fuel than every other, and no two trips tie for that top spot. Report the hour of the day during which that single costliest trip ran.\nReturn: hour_of_day",
  setup:`DROP TABLE IF EXISTS DeliveryTrips;
 CREATE TABLE DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT);
 INSERT INTO DeliveryTrips VALUES
@@ -2018,7 +2018,7 @@ INSERT INTO Documents VALUES
  ]},
 
 {id:82,title:"Q82 · Six-Letter First Names Ending in N",difficulty:"Medium",topic:"String & Text",
- desc:"Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE)\n\nFind all employees whose first name is exactly 6 letters long AND ends with the letter 'n'. Display all columns.\nReturn: emp_id, first_name, last_name, department, salary, hire_date",
+ desc:"Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE)\n\nPick out the employees whose first name is made up of precisely six letters and whose final letter is 'n'. For each one, bring back every column the table stores.\nReturn: emp_id, first_name, last_name, department, salary, hire_date",
  setup:`DROP TABLE IF EXISTS Employees;
 CREATE TABLE Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE);
 INSERT INTO Employees VALUES
@@ -2052,7 +2052,7 @@ INSERT INTO Employees VALUES
  ]},
 
 {id:83,title:"Q83 · Support Ticket Resolution Rate By Category",difficulty:"Medium",topic:"Ratios & Rates",
- desc:"SupportTickets(ticket_id INT, category TEXT, resolved BOOLEAN)\n\nFor each category, find the resolution rate: the number of resolved tickets divided by the total number of tickets for that category. Round to two decimal places.\nReturn: category, resolution_rate",
+ desc:"SupportTickets(ticket_id INT, category TEXT, resolved BOOLEAN)\n\nCategory by category, measure how well tickets get closed out. For a given category, that measure is the share of its tickets marked resolved out of every ticket filed under it. Give each result to two decimal places.\nReturn: category, resolution_rate",
  setup:`DROP TABLE IF EXISTS SupportTickets;
 CREATE TABLE SupportTickets(ticket_id INT, category TEXT, resolved BOOLEAN);
 INSERT INTO SupportTickets VALUES
@@ -2090,7 +2090,7 @@ INSERT INTO SupportTickets VALUES
  ]},
 
 {id:84,title:"Q84 · Percentage of Shipable Orders",difficulty:"Medium",topic:"Ratios & Rates",
- desc:"CustOrders(order_id INT, customer_id INT, order_date DATE, item TEXT, cost INT)\nCustomers(customer_id INT, name TEXT, address TEXT)\n\nAn order is shipable if the customer's address is known (not NULL and not an empty string). Orders whose customer_id has no matching row in Customers are also not shipable. Find the percentage of all orders that are shipable, rounded to two decimal places.\nReturn: shipable_pct",
+ desc:"CustOrders(order_id INT, customer_id INT, order_date DATE, item TEXT, cost INT)\nCustomers(customer_id INT, name TEXT, address TEXT)\n\nAn order can only go out the door when we hold a usable mailing address for the customer behind it — the address field must be filled in, meaning neither NULL nor an empty string. An order pointing at a customer_id we have no record of cannot ship either. Out of the whole order book, what percentage is ready to ship? Round to two decimal places.\nReturn: shipable_pct",
  setup:`DROP TABLE IF EXISTS CustOrders; DROP TABLE IF EXISTS Customers;
 CREATE TABLE Customers(customer_id INT, name TEXT, address TEXT);
 CREATE TABLE CustOrders(order_id INT, customer_id INT, order_date DATE, item TEXT, cost INT);
@@ -2130,7 +2130,7 @@ INSERT INTO CustOrders VALUES
  ]},
 
 {id:85,title:"Q85 · Users Missing Phone Numbers",difficulty:"Easy",topic:"Filtering & Conditionals",
- desc:"AppUsers(user_id INT, user_name TEXT, phone_number TEXT)\n\nThe product team wants to prompt users who haven't provided a phone number to add one. A phone number counts as missing if it is NULL or an empty string.\nReturn: user_id, user_name",
+ desc:"AppUsers(user_id INT, user_name TEXT, phone_number TEXT)\n\nSome accounts were set up without a contact number ever being saved. Track those accounts down and list them. Treat a number as absent whenever the field holds NULL or is left blank (an empty string).\nReturn: user_id, user_name",
  setup:`DROP TABLE IF EXISTS AppUsers;
 CREATE TABLE AppUsers(user_id INT, user_name TEXT, phone_number TEXT);
 INSERT INTO AppUsers VALUES
