@@ -1,76 +1,55 @@
 {
-  "date": "2026-08-01",
+  "date": "2026-08-02",
   "question": {
-    "title": "Ranking Sales by Region",
+    "title": "Cumulative Sales by Region",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "You are given two tables, regions and sales. The regions table contains information about different regions, and the sales table contains sales data for each region. You need to write a query that ranks the sales for each region and returns the region name and its corresponding sales rank.",
-    "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East'), (4, 'West'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, sales_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, sales_amount) VALUES (1, 1, 1000.00), (2, 1, 2000.00), (3, 2, 1500.00), (4, 3, 1200.00), (5, 4, 1800.00), (6, 1, 2500.00), (7, 2, 1000.00), (8, 3, 2000.00), (9, 4, 1500.00), (10, 1, 3000.00);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Calculate the cumulative sales for each region over time. You should return the region name and the cumulative sales amount for each month in the data.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(255), sales_date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, sales_date, sales_amount) VALUES ('North', '2022-01-01', 100.00), ('South', '2022-01-01', 200.00), ('North', '2022-02-01', 150.00), ('South', '2022-02-01', 250.00), ('North', '2022-03-01', 120.00), ('South', '2022-03-01', 220.00);",
     "tables": [
-      "regions",
       "sales"
     ],
     "cols": [
-      "region_name",
-      "sales_rank"
+      "region",
+      "cumulative_sales"
     ],
     "rows": [
       [
         "North",
-        1
+        370
       ],
       [
         "South",
-        3
-      ],
-      [
-        "East",
-        2
-      ],
-      [
-        "West",
-        4
+        670
       ]
     ],
-    "solution": "SELECT r.region_name, DENSE_RANK() OVER (ORDER BY SUM(s.sales_amount) DESC) AS sales_rank FROM regions r JOIN sales s ON r.region_id = s.region_id GROUP BY r.region_name ORDER BY sales_rank;",
-    "tips": "Using DENSE_RANK() instead of RANK() will prevent gaps in the ranking.",
+    "solution": "WITH monthly_sales AS (SELECT region, EXTRACT(MONTH FROM sales_date) AS sales_month, SUM(sales_amount) AS total_sales FROM sales GROUP BY region, EXTRACT(MONTH FROM sales_date)) SELECT region, SUM(total_sales) OVER (PARTITION BY region ORDER BY sales_month) AS cumulative_sales FROM monthly_sales ORDER BY region, sales_month;",
+    "tips": "Using window functions can simplify cumulative calculations.",
     "hints": [
-      "You will need to join the two tables on the region_id column.",
-      "Use a window function to rank the sales amounts for each region.",
-      "The DENSE_RANK() function will give you the desired ranking without gaps."
+      "Consider using window functions to calculate cumulative sums.",
+      "You might need to use a subquery or CTE to first calculate monthly sales before applying the window function.",
+      "Look into the PARTITION BY and ORDER BY clauses within window functions to group and sort your data appropriately."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'New York'), (2, 'Los Angeles'), (3, 'Chicago'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, sales_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, sales_amount) VALUES (1, 1, 5000.00), (2, 2, 3000.00), (3, 3, 4000.00), (4, 1, 6000.00), (5, 2, 2000.00), (6, 3, 5000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(255), sales_date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, sales_date, sales_amount) VALUES ('East', '2023-01-01', 500.00), ('West', '2023-01-01', 600.00), ('East', '2023-02-01', 550.00), ('West', '2023-02-01', 650.00);",
         "rows": [
           [
-            "New York",
-            1
+            "East",
+            1050
           ],
           [
-            "Chicago",
-            2
-          ],
-          [
-            "Los Angeles",
-            3
+            "West",
+            1250
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS regions; CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'London'), (2, 'Paris'), (3, 'Berlin'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (sale_id INT, region_id INT, sales_amount DECIMAL(10, 2)); INSERT INTO sales (sale_id, region_id, sales_amount) VALUES (1, 1, 8000.00), (2, 2, 4000.00), (3, 3, 6000.00), (4, 1, 9000.00), (5, 2, 3000.00), (6, 3, 7000.00), (7, 1, 10000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(255), sales_date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, sales_date, sales_amount) VALUES ('Central', '2022-04-01', 800.00), ('Central', '2022-05-01', 900.00);",
         "rows": [
           [
-            "London",
-            1
-          ],
-          [
-            "Berlin",
-            2
-          ],
-          [
-            "Paris",
-            3
+            "Central",
+            1700
           ]
         ]
       }
