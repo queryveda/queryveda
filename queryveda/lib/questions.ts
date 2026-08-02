@@ -1894,6 +1894,268 @@ GROUP BY u.signup_date`,
    INSERT INTO Activity VALUES (1,'2025-02-04'),(2,'2025-02-04'),(3,'2025-02-04'),(1,'2025-02-08'),(2,'2025-02-08'),(1,'2025-02-15');`,
    rows:[['2025-02-01',5,3,2,1,60.00,40.00,20.00]]}
  ]},
+{id:78,title:"Q78 · Returning Customers Within a Week",difficulty:"Medium",topic:"Date & Time",
+ desc:"Orders(order_id INT, customer_id INT, ordered_at DATE, dish TEXT, amount INT)\n\nA returning customer placed another order 1 to 7 days after their FIRST order (same-day orders don't count).\nReturn: customer_id",
+ setup:`DROP TABLE IF EXISTS Orders;
+CREATE TABLE Orders(order_id INT, customer_id INT, ordered_at DATE, dish TEXT, amount INT);
+INSERT INTO Orders VALUES
+ (1,1,'2025-01-01','Ramen',400),(2,1,'2025-01-05','Sushi',600),
+ (3,2,'2025-02-01','Tacos',300),(4,2,'2025-02-01','Burrito',350),(5,2,'2025-02-15','Nachos',250),
+ (6,3,'2025-03-01','Pizza',500),(7,3,'2025-03-08','Pasta',450),
+ (8,4,'2025-04-01','Curry',550),(9,4,'2025-04-09','Naan',150),
+ (10,5,'2025-05-01','Salad',200);`,
+ tables:["orders"],
+ cols:["customer_id"],
+ rows:[[1],[3]],
+ solution:`SELECT DISTINCT f.customer_id
+FROM (SELECT customer_id, MIN(ordered_at) AS first_dt FROM Orders GROUP BY customer_id) f
+JOIN Orders o ON o.customer_id = f.customer_id
+ AND o.ordered_at > f.first_dt
+ AND o.ordered_at <= f.first_dt + 7`,
+ tips:"Find each customer's first order date with MIN(...) GROUP BY, then join back to look for any order in the (first, first+7] window. DISTINCT collapses multiple qualifying orders.",
+ hints:["Get each customer's first order date using MIN(ordered_at) with GROUP BY customer_id.","Join that back to Orders to find any order strictly after the first date.","Keep only orders where ordered_at <= first_date + 7 days; wrap in DISTINCT for the id list."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Orders;
+CREATE TABLE Orders(order_id INT, customer_id INT, ordered_at DATE, dish TEXT, amount INT);
+INSERT INTO Orders VALUES
+ (1,10,'2025-06-01','A',100),(2,10,'2025-06-02','B',100),
+ (3,20,'2025-06-01','C',100),(4,20,'2025-06-08','D',100),
+ (5,30,'2025-06-01','E',100),(6,30,'2025-06-10','F',100);`,
+   rows:[[10],[20]]}
+ ]},
+
+{id:79,title:"Q79 · Unique Active Members Per Month",difficulty:"Easy",topic:"Date & Time",
+ desc:"WorkspaceEvents(event_id INT, workspace_id INT, member_id INT, event_type TEXT, event_at DATE)\n\nAll events happen within the same year. For each workspace, find the number of unique members who logged at least one event in each calendar month.\nReturn: workspace_id, month (1-12), unique_members",
+ setup:`DROP TABLE IF EXISTS WorkspaceEvents;
+CREATE TABLE WorkspaceEvents(event_id INT, workspace_id INT, member_id INT, event_type TEXT, event_at DATE);
+INSERT INTO WorkspaceEvents VALUES
+ (1,100,1,'click','2025-01-05'),
+ (2,100,1,'click','2025-01-20'),
+ (3,100,2,'view','2025-01-10'),
+ (4,100,1,'view','2025-02-01'),
+ (5,100,3,'click','2025-02-01'),
+ (6,200,1,'click','2025-01-15'),
+ (7,200,3,'click','2025-01-16'),
+ (8,200,3,'click','2025-03-01');`,
+ tables:["workspaceevents"],
+ cols:["workspace_id","month","unique_members"],
+ rows:[[100,1,2],[100,2,2],[200,1,2],[200,3,1]],
+ solution:`SELECT workspace_id, EXTRACT(MONTH FROM event_at)::INT AS month, COUNT(DISTINCT member_id) AS unique_members
+FROM WorkspaceEvents
+GROUP BY workspace_id, EXTRACT(MONTH FROM event_at)
+ORDER BY workspace_id, month`,
+ tips:"Extract the month number from event_at and group by workspace_id plus that month. COUNT(DISTINCT member_id) avoids double-counting a member who logged multiple events in the same month.",
+ hints:["Use EXTRACT(MONTH FROM event_at) to turn each event's date into a month number.","GROUP BY both workspace_id and the extracted month.","Use COUNT(DISTINCT member_id), not COUNT(*) — a member can have several events in one month."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS WorkspaceEvents;
+CREATE TABLE WorkspaceEvents(event_id INT, workspace_id INT, member_id INT, event_type TEXT, event_at DATE);
+INSERT INTO WorkspaceEvents VALUES
+ (1,300,5,'click','2025-04-01'),
+ (2,300,5,'click','2025-04-02'),
+ (3,300,6,'click','2025-04-03'),
+ (4,300,6,'click','2025-05-01'),
+ (5,300,7,'click','2025-05-01'),
+ (6,300,7,'click','2025-05-02'),
+ (7,400,9,'view','2025-04-10');`,
+   rows:[[300,4,2],[300,5,2],[400,4,1]]}
+ ]},
+
+{id:80,title:"Q80 · Hour of Highest Fuel Cost",difficulty:"Easy",topic:"Date & Time",
+ desc:"DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT)\n\nFind the hour of the single trip with the highest fuel cost. Assume exactly one trip has the maximum, so exactly one hour qualifies.\nReturn: hour_of_day",
+ setup:`DROP TABLE IF EXISTS DeliveryTrips;
+CREATE TABLE DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT);
+INSERT INTO DeliveryTrips VALUES
+ (1,8,12.50,10.2,'Clear'),
+ (2,9,15.75,12.0,'Rain'),
+ (3,13,22.40,25.5,'Clear'),
+ (4,17,18.30,20.1,'Cloudy'),
+ (5,19,9.90,5.0,'Clear'),
+ (6,22,14.20,11.3,'Rain');`,
+ tables:["deliverytrips"],
+ cols:["hour_of_day"],
+ rows:[[13]],
+ solution:`SELECT hour_of_day FROM DeliveryTrips ORDER BY fuel_cost DESC LIMIT 1`,
+ tips:"Sort by fuel_cost descending and take the top row's hour_of_day. No need to GROUP BY since only one trip holds the maximum.",
+ hints:["You need the row with the maximum fuel_cost, not an aggregate.","ORDER BY fuel_cost DESC puts the priciest trip first.","LIMIT 1 keeps just that top row; select its hour_of_day."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS DeliveryTrips;
+CREATE TABLE DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT);
+INSERT INTO DeliveryTrips VALUES
+ (1,6,8.00,6.0,'Clear'),
+ (2,11,31.20,40.0,'Rain'),
+ (3,15,10.10,9.5,'Cloudy'),
+ (4,21,7.60,4.2,'Clear');`,
+   rows:[[11]]}
+ ]},
+
+{id:81,title:"Q81 · Draft Documents Mentioning Renewal",difficulty:"Easy",topic:"String & Text",
+ desc:"Documents(doc_id INT, filename TEXT, body TEXT)\n\nFind all documents whose filename starts with \"draft\" (case-insensitive) AND whose body contains the word \"renewal\" anywhere (case-insensitive).\nReturn: doc_id, filename",
+ setup:`DROP TABLE IF EXISTS Documents;
+CREATE TABLE Documents(doc_id INT, filename TEXT, body TEXT);
+INSERT INTO Documents VALUES
+ (1,'draft_contract','This mentions renewal terms.'),
+ (2,'Draft_Notes','Nothing about that topic here.'),
+ (3,'DRAFT_v2','RENEWAL policy included below.'),
+ (4,'my_draft_old','Contains renewal word but wrong filename prefix.'),
+ (5,'final_report','Renewal clause attached.'),
+ (6,'draftsman_plan','General plans, no mention.'),
+ (7,'DRAFT_summary','Discusses lease renewal decisions.');`,
+ tables:["documents"],
+ cols:["doc_id","filename"],
+ rows:[[1,'draft_contract'],[3,'DRAFT_v2'],[7,'DRAFT_summary']],
+ solution:`SELECT doc_id, filename FROM Documents WHERE filename ILIKE 'draft%' AND body ILIKE '%renewal%' ORDER BY doc_id`,
+ tips:"ILIKE performs case-insensitive matching in Postgres. Anchor the filename pattern with 'draft%' for a prefix match and wrap 'renewal' in %...% since it can appear anywhere in the body.",
+ hints:["ILIKE matches case-insensitively, so 'Draft', 'DRAFT', and 'draft' all qualify.","'draft%' matches any filename starting with draft — but draftsman_plan also starts with draft, so filename alone isn't enough.","Add a second ILIKE condition on body: '%renewal%' matches the word appearing anywhere in the text."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Documents;
+CREATE TABLE Documents(doc_id INT, filename TEXT, body TEXT);
+INSERT INTO Documents VALUES
+ (10,'Draft_Budget','Q3 renewal figures inside.'),
+ (11,'draft_memo','No relevant keyword.'),
+ (12,'old_draft','renewal note here but bad prefix.'),
+ (13,'DRAFT_final','RENEWAL approved.');`,
+   rows:[[10,'Draft_Budget'],[13,'DRAFT_final']]}
+ ]},
+
+{id:82,title:"Q82 · Six-Letter First Names Ending in N",difficulty:"Medium",topic:"String & Text",
+ desc:"Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE)\n\nFind all employees whose first name is exactly 6 letters long AND ends with the letter 'n'. Display all columns.\nReturn: emp_id, first_name, last_name, department, salary, hire_date",
+ setup:`DROP TABLE IF EXISTS Employees;
+CREATE TABLE Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE);
+INSERT INTO Employees VALUES
+ (1,'Damian','Cole','Sales',62000,'2021-01-10'),
+ (2,'Steven','Wright','IT',71000,'2020-03-15'),
+ (3,'Alice','Kane','HR',55000,'2019-07-01'),
+ (4,'Justin','Hall','IT',68000,'2022-05-20'),
+ (5,'Susan','Blake','Sales',59000,'2018-11-11'),
+ (6,NULL,'Doe','HR',50000,'2020-01-01'),
+ (7,'Morgan','Lee','Finance',73000,'2021-09-09'),
+ (8,'Steven','Kim','Finance',70000,'2023-02-02');`,
+ tables:["employees"],
+ cols:["emp_id","first_name","last_name","department","salary","hire_date"],
+ rows:[[1,'Damian','Cole','Sales',62000,'2021-01-10'],[2,'Steven','Wright','IT',71000,'2020-03-15'],[4,'Justin','Hall','IT',68000,'2022-05-20'],[7,'Morgan','Lee','Finance',73000,'2021-09-09'],[8,'Steven','Kim','Finance',70000,'2023-02-02']],
+ solution:`SELECT emp_id, first_name, last_name, department, salary, hire_date
+FROM Employees
+WHERE LENGTH(first_name) = 6 AND first_name LIKE '%n'
+ORDER BY emp_id`,
+ tips:"LENGTH(first_name) = 6 filters on exact character count, and LIKE '%n' checks the last character. NULL first names automatically fail the LENGTH comparison and are excluded.",
+ hints:["LENGTH(first_name) gives the character count — filter for exactly 6.","LIKE '%n' matches any string ending in the letter n (case-sensitive).","Combine both conditions with AND; NULL names are excluded automatically since LENGTH(NULL) is NULL."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Employees;
+CREATE TABLE Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE);
+INSERT INTO Employees VALUES
+ (10,'Karen','Doyle','Ops',60000,'2022-01-01'),
+ (11,'Warren','Fox','Ops',66000,'2021-06-06'),
+ (12,'Meghan','Ray','Legal',64000,'2020-02-02'),
+ (13,'Brian','Vance','Legal',58000,'2019-09-09'),
+ (14,'Alanna','Brooks','Sales',61000,'2023-03-03');`,
+   rows:[[11,'Warren','Fox','Ops',66000,'2021-06-06'],[12,'Meghan','Ray','Legal',64000,'2020-02-02']]}
+ ]},
+
+{id:83,title:"Q83 · Support Ticket Resolution Rate By Category",difficulty:"Medium",topic:"Ratios & Rates",
+ desc:"SupportTickets(ticket_id INT, category TEXT, resolved BOOLEAN)\n\nFor each category, find the resolution rate: the number of resolved tickets divided by the total number of tickets for that category. Round to two decimal places.\nReturn: category, resolution_rate",
+ setup:`DROP TABLE IF EXISTS SupportTickets;
+CREATE TABLE SupportTickets(ticket_id INT, category TEXT, resolved BOOLEAN);
+INSERT INTO SupportTickets VALUES
+ (1,'Billing',TRUE),
+ (2,'Billing',TRUE),
+ (3,'Billing',FALSE),
+ (4,'Billing',FALSE),
+ (5,'Technical',TRUE),
+ (6,'Technical',TRUE),
+ (7,'Technical',TRUE),
+ (8,'Account',FALSE),
+ (9,'Account',FALSE),
+ (10,'Shipping',TRUE);`,
+ tables:["supporttickets"],
+ cols:["category","resolution_rate"],
+ rows:[['Account',0.00],['Billing',0.50],['Shipping',1.00],['Technical',1.00]],
+ solution:`SELECT category, ROUND(AVG(CASE WHEN resolved THEN 1.0 ELSE 0.0 END), 2) AS resolution_rate
+FROM SupportTickets
+GROUP BY category
+ORDER BY category`,
+ tips:"AVG of a 1/0 CASE expression is a quick way to compute a per-group proportion. Cast to a decimal (1.0/0.0) so integer division doesn't truncate.",
+ hints:["Turn the boolean into a number per row: 1 if resolved, 0 otherwise, using a CASE expression.","AVG() of those 0/1 values across a GROUP BY category gives the fraction resolved.","Wrap the AVG in ROUND(..., 2) for two decimal places; use 1.0/0.0 (not 1/0) so the division isn't integer division."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS SupportTickets;
+CREATE TABLE SupportTickets(ticket_id INT, category TEXT, resolved BOOLEAN);
+INSERT INTO SupportTickets VALUES
+ (11,'Refunds',TRUE),
+ (12,'Refunds',FALSE),
+ (13,'Refunds',FALSE),
+ (14,'Login',TRUE),
+ (15,'Login',TRUE),
+ (16,'Login',FALSE),
+ (17,'Login',FALSE);`,
+   rows:[['Login',0.50],['Refunds',0.33]]}
+ ]},
+
+{id:84,title:"Q84 · Percentage of Shipable Orders",difficulty:"Medium",topic:"Ratios & Rates",
+ desc:"CustOrders(order_id INT, customer_id INT, order_date DATE, item TEXT, cost INT)\nCustomers(customer_id INT, name TEXT, address TEXT)\n\nAn order is shipable if the customer's address is known (not NULL and not an empty string). Orders whose customer_id has no matching row in Customers are also not shipable. Find the percentage of all orders that are shipable, rounded to two decimal places.\nReturn: shipable_pct",
+ setup:`DROP TABLE IF EXISTS CustOrders; DROP TABLE IF EXISTS Customers;
+CREATE TABLE Customers(customer_id INT, name TEXT, address TEXT);
+CREATE TABLE CustOrders(order_id INT, customer_id INT, order_date DATE, item TEXT, cost INT);
+INSERT INTO Customers VALUES
+ (101,'Alice','12 Elm St'),
+ (102,'Bob',NULL),
+ (103,'Cara',''),
+ (104,'Dan','9 Oak Ave');
+INSERT INTO CustOrders VALUES
+ (1,101,'2025-01-01','Widget',20),
+ (2,102,'2025-01-02','Gadget',30),
+ (3,103,'2025-01-03','Gizmo',15),
+ (4,104,'2025-01-04','Thing',25),
+ (5,105,'2025-01-05','Doohickey',10);`,
+ tables:["customorders","customers"],
+ cols:["shipable_pct"],
+ rows:[[40.00]],
+ solution:`SELECT ROUND(100.0 * SUM(CASE WHEN c.address IS NOT NULL AND c.address <> '' THEN 1 ELSE 0 END) / COUNT(*), 2) AS shipable_pct
+FROM CustOrders o
+LEFT JOIN Customers c ON o.customer_id = c.customer_id`,
+ tips:"Use a LEFT JOIN from orders to customers so orders with no matching customer still count in the denominator (and are correctly excluded from the shipable numerator). Guard against empty-string addresses, not just NULL.",
+ hints:["LEFT JOIN CustOrders to Customers so every order stays in the result even if the customer_id doesn't match.","An address is 'known' only if it's not NULL and not an empty string — check both.","Divide the count of shipable orders by the total order count (COUNT(*) over the joined rows), multiply by 100, and ROUND to 2 decimals."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS CustOrders; DROP TABLE IF EXISTS Customers;
+CREATE TABLE Customers(customer_id INT, name TEXT, address TEXT);
+CREATE TABLE CustOrders(order_id INT, customer_id INT, order_date DATE, item TEXT, cost INT);
+INSERT INTO Customers VALUES
+ (201,'Eve','4 Pine Rd'),
+ (202,'Frank','7 Birch Ln'),
+ (203,'Gina',NULL);
+INSERT INTO CustOrders VALUES
+ (10,201,'2025-02-01','Chair',40),
+ (11,202,'2025-02-02','Table',60),
+ (12,203,'2025-02-03','Lamp',20),
+ (13,201,'2025-02-04','Desk',80);`,
+   rows:[[75.00]]}
+ ]},
+
+{id:85,title:"Q85 · Users Missing Phone Numbers",difficulty:"Easy",topic:"Filtering & Conditionals",
+ desc:"AppUsers(user_id INT, user_name TEXT, phone_number TEXT)\n\nThe product team wants to prompt users who haven't provided a phone number to add one. A phone number counts as missing if it is NULL or an empty string.\nReturn: user_id, user_name",
+ setup:`DROP TABLE IF EXISTS AppUsers;
+CREATE TABLE AppUsers(user_id INT, user_name TEXT, phone_number TEXT);
+INSERT INTO AppUsers VALUES
+ (1,'Alice','555-1234'),
+ (2,'Bob',NULL),
+ (3,'Cara',''),
+ (4,'Dan','555-5678'),
+ (5,'Eve',NULL),
+ (6,'Frank','555-9999');`,
+ tables:["appusers"],
+ cols:["user_id","user_name"],
+ rows:[[2,'Bob'],[3,'Cara'],[5,'Eve']],
+ solution:`SELECT user_id, user_name FROM AppUsers WHERE phone_number IS NULL OR phone_number = '' ORDER BY user_id`,
+ tips:"NULL and empty string are different values in SQL and both must be checked explicitly — IS NULL alone would miss the empty-string rows.",
+ hints:["IS NULL alone won't catch empty-string phone numbers — they aren't NULL, they're ''.","Check both conditions with OR: phone_number IS NULL OR phone_number = ''.","Return just user_id and user_name for the matching rows, ordered however you like (grading is order-independent)."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS AppUsers;
+CREATE TABLE AppUsers(user_id INT, user_name TEXT, phone_number TEXT);
+INSERT INTO AppUsers VALUES
+ (10,'Gina','777-0001'),
+ (11,'Hank',''),
+ (12,'Ivy',NULL),
+ (13,'Jack','777-0004');`,
+   rows:[[11,'Hank'],[12,'Ivy']]}
+ ]},
 ];
 
 export function getQuestionById(id: number): Question | undefined {
