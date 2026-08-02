@@ -2589,6 +2589,225 @@ INSERT INTO CruisePassengers VALUES
  (25,1,1);`,
    rows:[["First",1,1],["Second",2,0],["Third",1,1]]}
  ]},
+{id:98,title:"Q98 · Consultants Outearning Their Supervisor",difficulty:"Medium",topic:"Self-Joins & Comparisons",
+ desc:"Staff(staff_id INT, name TEXT, supervisor_id INT, salary INT)\n\nEach row is a consulting staff member; supervisor_id points to another row's staff_id (NULL for a managing partner who has no supervisor). Find every staff member who earns strictly more than their own supervisor.\nReturn: name, salary",
+ setup:`DROP TABLE IF EXISTS Staff;
+CREATE TABLE Staff(staff_id INT, name TEXT, supervisor_id INT, salary INT);
+INSERT INTO Staff VALUES
+ (1,'Nina Cole',NULL,190000),
+ (2,'Omar Diaz',1,150000),
+ (3,'Priya Nair',1,210000),
+ (4,'Liam Ortiz',2,140000),
+ (5,'Sara Kim',2,155000),
+ (6,'Tomas Silva',3,210000),
+ (7,'Yuki Tanaka',3,225000),
+ (8,'Amara Bello',5,100000),
+ (9,'Dev Patel',NULL,300000);`,
+ tables:["staff"],
+ cols:["name","salary"],
+ rows:[["Priya Nair",210000],["Sara Kim",155000],["Yuki Tanaka",225000]],
+ solution:`SELECT s.name, s.salary
+FROM Staff s
+JOIN Staff sup ON s.supervisor_id = sup.staff_id
+WHERE s.salary > sup.salary
+ORDER BY s.staff_id`,
+ tips:"Self-join Staff to itself, matching each row's supervisor_id to the supervisor's staff_id, then keep rows where the employee's salary exceeds the supervisor's. Rows with a NULL supervisor_id drop out of the join automatically.",
+ hints:["Join the Staff table to itself: one copy for the employee, one for their supervisor, matching supervisor_id to staff_id.","Filter to rows where the employee's salary is strictly greater than the matched supervisor's salary.","Top-level staff with a NULL supervisor_id have no join partner and are correctly excluded; equal salaries should not qualify."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Staff;
+CREATE TABLE Staff(staff_id INT, name TEXT, supervisor_id INT, salary INT);
+INSERT INTO Staff VALUES
+ (1,'A',NULL,500000),
+ (2,'B',1,400000),
+ (3,'C',1,600000),
+ (4,'D',2,410000),
+ (5,'E',2,390000);`,
+   rows:[["C",600000],["D",410000]]}
+ ]},
+{id:99,title:"Q99 · Top Achiever Under a Regional Lead",difficulty:"Medium",topic:"Self-Joins & Comparisons",
+ desc:"SalesReps(rep_id INT, name TEXT, manager_id INT, quota_achieved INT)\n\nEvery sales rep reports to a manager, who is also a row in this same table (manager_id references another rep's rep_id). Among the reps who report directly to the manager named 'Dana Cho', find the rep(s) with the highest quota_achieved — there may be a tie.\nReturn: name, quota_achieved for every rep tied for the top value",
+ setup:`DROP TABLE IF EXISTS SalesReps;
+CREATE TABLE SalesReps(rep_id INT, name TEXT, manager_id INT, quota_achieved INT);
+INSERT INTO SalesReps VALUES
+ (1,'Dana Cho',NULL,0),
+ (2,'Evan Brooks',1,85),
+ (3,'Farah Idris',1,120),
+ (4,'Grace Lin',1,120),
+ (5,'Hugo Vance',1,95),
+ (6,'Ivy Chen',NULL,300),
+ (7,'Jack Ono',6,400),
+ (8,'Karin Voss',1,60);`,
+ tables:["salesreps"],
+ cols:["name","quota_achieved"],
+ rows:[["Farah Idris",120],["Grace Lin",120]],
+ solution:`SELECT r.name, r.quota_achieved
+FROM SalesReps r
+JOIN SalesReps m ON r.manager_id = m.rep_id
+WHERE m.name = 'Dana Cho'
+AND r.quota_achieved = (
+  SELECT MAX(r2.quota_achieved)
+  FROM SalesReps r2
+  JOIN SalesReps m2 ON r2.manager_id = m2.rep_id
+  WHERE m2.name = 'Dana Cho'
+)
+ORDER BY r.name`,
+ tips:"Self-join SalesReps to itself to resolve each rep's manager_id to the manager's name, filter to reports of 'Dana Cho', then compare each report's quota_achieved to the MAX over that same filtered set (computed with a matching subquery) so ties are all returned.",
+ hints:["Self-join SalesReps to itself so you can filter rows where the matched manager's name is 'Dana Cho'.","Compute the maximum quota_achieved among only that filtered group of direct reports, e.g. with a subquery repeating the same join and filter.","Keep every report whose quota_achieved equals that maximum, so ties produce multiple rows instead of just one."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS SalesReps;
+CREATE TABLE SalesReps(rep_id INT, name TEXT, manager_id INT, quota_achieved INT);
+INSERT INTO SalesReps VALUES
+ (1,'Dana Cho',NULL,0),
+ (2,'Nora Silva',1,200),
+ (3,'Omar Reyes',1,150),
+ (4,'Pia Novak',1,199),
+ (5,'Quinn Ashe',NULL,500),
+ (6,'Remy Chu',5,600);`,
+   rows:[["Nora Silva",200]]}
+ ]},
+{id:100,title:"Q100 · Compatible Roommate Pairs",difficulty:"Hard",topic:"Self-Joins & Comparisons",
+ desc:"Applicants(applicant_id INT, name TEXT, hometown TEXT, age INT, gender TEXT, is_early_riser BOOLEAN)\n\nA roommate-matching service treats two applicants as compatible when they share the same hometown, share the same gender, have different ages, and have different sleep schedules (one is_early_riser is true and the other false). Find every compatible pair.\nReturn: applicant_id_1, applicant_id_2 for each compatible pair, with applicant_id_1 < applicant_id_2 so each pair is listed exactly once (no reversed duplicate, no applicant paired with themselves)",
+ setup:`DROP TABLE IF EXISTS Applicants;
+CREATE TABLE Applicants(applicant_id INT, name TEXT, hometown TEXT, age INT, gender TEXT, is_early_riser BOOLEAN);
+INSERT INTO Applicants VALUES
+ (1,'Ana','Austin',22,'F',true),
+ (2,'Bea','Austin',25,'F',false),
+ (3,'Cleo','Austin',22,'F',false),
+ (4,'Dana','Austin',30,'F',true),
+ (5,'Evan','Austin',25,'M',false),
+ (6,'Felix','Austin',28,'M',true),
+ (7,'Gia','Denver',25,'F',false),
+ (8,'Hana','Austin',25,'F',true);`,
+ tables:["applicants"],
+ cols:["applicant_id_1","applicant_id_2"],
+ rows:[[1,2],[2,4],[3,4],[3,8],[5,6]],
+ solution:`SELECT a.applicant_id AS applicant_id_1, b.applicant_id AS applicant_id_2
+FROM Applicants a
+JOIN Applicants b ON a.applicant_id < b.applicant_id
+ AND a.hometown = b.hometown
+ AND a.gender = b.gender
+ AND a.age <> b.age
+ AND a.is_early_riser <> b.is_early_riser
+ORDER BY 1, 2`,
+ tips:"Self-join Applicants to itself with a < b on applicant_id to enumerate each unordered pair exactly once, then require same hometown, same gender, different age, and different is_early_riser in the join condition.",
+ hints:["Self-join Applicants to itself using a.applicant_id < b.applicant_id so each pair is generated only once, in a fixed order, and no one is paired with themselves.","Add equality conditions for hometown and gender to the join.","Add a.age <> b.age and a.is_early_riser <> b.is_early_riser to the join so only pairs differing on both of those attributes qualify."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Applicants;
+CREATE TABLE Applicants(applicant_id INT, name TEXT, hometown TEXT, age INT, gender TEXT, is_early_riser BOOLEAN);
+INSERT INTO Applicants VALUES
+ (1,'X','Boston',20,'M',true),
+ (2,'Y','Boston',22,'M',false),
+ (3,'Z','Boston',20,'M',false),
+ (4,'W','Boston',25,'F',true),
+ (5,'V','Chicago',22,'M',false);`,
+   rows:[[1,2]]}
+ ]},
+{id:101,title:"Q101 · Categories Sold at Either Branch",difficulty:"Easy",topic:"Set Operations",
+ desc:"DowntownInventory(product_id INT, category TEXT, price INT)\nUptownInventory(product_id INT, category TEXT, price INT)\n\nTwo branches of a bookstore keep separate, independently numbered catalogs. List every distinct category that appears in the downtown catalog, the uptown catalog, or both.\nReturn: category, one row per distinct value, ordered alphabetically ascending with no duplicates even if a category is stocked at both branches",
+ setup:`DROP TABLE IF EXISTS DowntownInventory;
+DROP TABLE IF EXISTS UptownInventory;
+CREATE TABLE DowntownInventory(product_id INT, category TEXT, price INT);
+CREATE TABLE UptownInventory(product_id INT, category TEXT, price INT);
+INSERT INTO DowntownInventory VALUES
+ (1,'Fiction',12),
+ (2,'Mystery',15),
+ (3,'Fiction',10),
+ (4,'Cookbooks',20),
+ (5,'Poetry',18);
+INSERT INTO UptownInventory VALUES
+ (1,'Mystery',14),
+ (2,'Sci-Fi',22),
+ (3,'Poetry',16),
+ (4,'Graphic Novels',25),
+ (5,'Sci-Fi',20);`,
+ tables:["downtowninventory","uptowninventory"],
+ cols:["category"],
+ rows:[["Cookbooks"],["Fiction"],["Graphic Novels"],["Mystery"],["Poetry"],["Sci-Fi"]],
+ solution:`SELECT category FROM DowntownInventory
+UNION
+SELECT category FROM UptownInventory
+ORDER BY category`,
+ tips:"UNION (not UNION ALL) combines both catalogs' category lists while automatically removing duplicates, both within a branch's own repeated categories and across the two branches.",
+ hints:["Select the category column from each table separately.","Combine the two SELECTs with UNION rather than UNION ALL so duplicate categories collapse into one row.","Add ORDER BY category to the combined result for alphabetical output."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS DowntownInventory;
+DROP TABLE IF EXISTS UptownInventory;
+CREATE TABLE DowntownInventory(product_id INT, category TEXT, price INT);
+CREATE TABLE UptownInventory(product_id INT, category TEXT, price INT);
+INSERT INTO DowntownInventory VALUES
+ (1,'Nonfiction',10),
+ (2,'Nonfiction',11),
+ (3,'Fiction',9);
+INSERT INTO UptownInventory VALUES
+ (1,'Fiction',13),
+ (2,'Kids',8);`,
+   rows:[["Fiction"],["Kids"],["Nonfiction"]]}
+ ]},
+{id:102,title:"Q102 · Current Payroll Snapshot",difficulty:"Medium",topic:"Set Operations",
+ desc:"PayrollSnapshots(emp_id INT, first_name TEXT, last_name TEXT, dept_id INT, salary INT)\n\nPayroll exports sometimes get re-uploaded, so the same emp_id can appear more than once with different salary snapshots. There is no timestamp column, but salary only ever increases over time, so an employee's current salary is the largest value recorded for their emp_id. Compute the result as a set difference: take every row, then subtract every row that is provably outdated because some other row for the same emp_id records a strictly higher salary.\nReturn: emp_id, first_name, last_name, dept_id, salary — exactly one row per employee, ordered by emp_id ascending",
+ setup:`DROP TABLE IF EXISTS PayrollSnapshots;
+CREATE TABLE PayrollSnapshots(emp_id INT, first_name TEXT, last_name TEXT, dept_id INT, salary INT);
+INSERT INTO PayrollSnapshots VALUES
+ (101,'Ada','Kwan',10,72000),
+ (101,'Ada','Kwan',10,78000),
+ (102,'Ben','Osei',20,65000),
+ (103,'Cara','Diaz',10,90000),
+ (103,'Cara','Diaz',10,95000),
+ (103,'Cara','Diaz',10,88000),
+ (104,'Deng','Wu',30,55000),
+ (105,'Elin','Farah',20,60000),
+ (105,'Elin','Farah',20,60000);`,
+ tables:["payrollsnapshots"],
+ cols:["emp_id","first_name","last_name","dept_id","salary"],
+ rows:[[101,"Ada","Kwan",10,78000],[102,"Ben","Osei",20,65000],[103,"Cara","Diaz",10,95000],[104,"Deng","Wu",30,55000],[105,"Elin","Farah",20,60000]],
+ solution:`SELECT * FROM PayrollSnapshots
+EXCEPT
+SELECT p1.* FROM PayrollSnapshots p1
+JOIN PayrollSnapshots p2 ON p1.emp_id = p2.emp_id AND p2.salary > p1.salary
+ORDER BY emp_id`,
+ tips:"The subtracted set (via the self-join) is every snapshot that some later, higher-salary snapshot for the same emp_id proves outdated; EXCEPT removes exactly those rows and also collapses exact duplicate rows, leaving one current row per employee.",
+ hints:["Self-join PayrollSnapshots to itself on emp_id to find pairs where one row's salary is strictly less than another row's salary for the same employee — those lower rows are outdated.","Use EXCEPT to subtract that outdated set from the full table.","EXCEPT also removes exact duplicate rows, so an employee with two identical snapshots still ends up with just one output row."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS PayrollSnapshots;
+CREATE TABLE PayrollSnapshots(emp_id INT, first_name TEXT, last_name TEXT, dept_id INT, salary INT);
+INSERT INTO PayrollSnapshots VALUES
+ (201,'X','Y',1,50000),
+ (202,'M','N',2,80000),
+ (202,'M','N',2,75000),
+ (203,'P','Q',3,60000),
+ (203,'P','Q',3,60000);`,
+   rows:[[201,"X","Y",1,50000],[202,"M","N",2,80000],[203,"P","Q",3,60000]]}
+ ]},
+{id:103,title:"Q103 · Symmetric Contact Network",difficulty:"Medium",topic:"Set Operations",
+ desc:"Connections(user_id INT, contact_id INT)\n\nA messaging app logs a row each time a user adds someone as a contact, but the logging is not always mirrored — sometimes only one direction of a friendship got recorded. Build the fully symmetric view of the network: if (user_id, contact_id) is logged, the result must contain both (user_id, contact_id) and (contact_id, user_id), without a duplicate row when both directions were already logged separately.\nReturn: user_id, contact_id — every symmetric edge exactly once, ordered by user_id then contact_id ascending",
+ setup:`DROP TABLE IF EXISTS Connections;
+CREATE TABLE Connections(user_id INT, contact_id INT);
+INSERT INTO Connections VALUES
+ (1,2),
+ (2,1),
+ (1,3),
+ (4,5),
+ (5,4),
+ (2,4),
+ (6,6);`,
+ tables:["connections"],
+ cols:["user_id","contact_id"],
+ rows:[[1,2],[1,3],[2,1],[2,4],[3,1],[4,2],[4,5],[5,4],[6,6]],
+ solution:`SELECT user_id, contact_id FROM Connections
+UNION
+SELECT contact_id AS user_id, user_id AS contact_id FROM Connections
+ORDER BY user_id, contact_id`,
+ tips:"UNION the table with its own column-swapped copy: this adds the missing reverse edge for one-directional rows while UNION's deduplication prevents already-symmetric pairs (and self-loops) from doubling up.",
+ hints:["Select user_id and contact_id as-is from Connections for one side of the UNION.","Select contact_id and user_id (swapped) from Connections for the other side.","Combine with UNION (not UNION ALL) so pairs that were already logged in both directions, or self-loops like (6,6), don't appear twice."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Connections;
+CREATE TABLE Connections(user_id INT, contact_id INT);
+INSERT INTO Connections VALUES
+ (10,20),
+ (20,10),
+ (10,30);`,
+   rows:[[10,20],[10,30],[20,10],[30,10]]}
+ ]},
 ];
 
 export function getQuestionById(id: number): Question | undefined {
