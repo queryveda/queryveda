@@ -1,98 +1,55 @@
 {
-  "date": "2026-07-02",
+  "date": "2026-08-02",
   "question": {
-    "title": "Ranking Sales by Product Category",
+    "title": "Cumulative Sales by Region",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "You are given two tables: products and sales. The products table contains information about each product, including its category. The sales table contains information about each sale, including the product_id and the sale amount. Your task is to write a query that ranks the sales of each product within its category. The ranking should be based on the total sales amount for each product.",
-    "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), category VARCHAR(100)); INSERT INTO products (name, category) VALUES ('Product A', 'Electronics'), ('Product B', 'Electronics'), ('Product C', 'Clothing'), ('Product D', 'Clothing'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sale_amount) VALUES (1, 100.00), (1, 200.00), (2, 50.00), (3, 75.00), (3, 125.00), (4, 25.00), (4, 50.00);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Calculate the cumulative sales for each region over time. You should return the region name and the cumulative sales amount for each month in the data.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(255), sales_date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, sales_date, sales_amount) VALUES ('North', '2022-01-01', 100.00), ('South', '2022-01-01', 200.00), ('North', '2022-02-01', 150.00), ('South', '2022-02-01', 250.00), ('North', '2022-03-01', 120.00), ('South', '2022-03-01', 220.00);",
     "tables": [
-      "products",
       "sales"
     ],
     "cols": [
-      "product_name",
-      "category",
-      "total_sales",
-      "rank"
+      "region",
+      "cumulative_sales"
     ],
     "rows": [
       [
-        "Product A",
-        "Electronics",
-        300,
-        1
+        "North",
+        370
       ],
       [
-        "Product B",
-        "Electronics",
-        50,
-        2
-      ],
-      [
-        "Product C",
-        "Clothing",
-        200,
-        1
-      ],
-      [
-        "Product D",
-        "Clothing",
-        75,
-        2
+        "South",
+        670
       ]
     ],
-    "solution": "WITH product_sales AS (SELECT p.name AS product_name, p.category, SUM(s.sale_amount) AS total_sales FROM products p JOIN sales s ON p.id = s.product_id GROUP BY p.name, p.category) SELECT product_name, category, total_sales, ROW_NUMBER() OVER (PARTITION BY category ORDER BY total_sales DESC) AS rank FROM product_sales;",
-    "tips": "Consider using Common Table Expressions (CTEs) to simplify complex queries and improve readability.",
+    "solution": "WITH monthly_sales AS (SELECT region, EXTRACT(MONTH FROM sales_date) AS sales_month, SUM(sales_amount) AS total_sales FROM sales GROUP BY region, EXTRACT(MONTH FROM sales_date)) SELECT region, SUM(total_sales) OVER (PARTITION BY region ORDER BY sales_month) AS cumulative_sales FROM monthly_sales ORDER BY region, sales_month;",
+    "tips": "Using window functions can simplify cumulative calculations.",
     "hints": [
-      "You will need to use a window function to rank the sales of each product within its category.",
-      "First, join the products and sales tables to get the total sales amount for each product, then use a window function to rank the products within each category.",
-      "Use a CTE to calculate the total sales for each product, then use the ROW_NUMBER() window function to assign a rank to each product within its category based on the total sales amount."
+      "Consider using window functions to calculate cumulative sums.",
+      "You might need to use a subquery or CTE to first calculate monthly sales before applying the window function.",
+      "Look into the PARTITION BY and ORDER BY clauses within window functions to group and sort your data appropriately."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), category VARCHAR(100)); INSERT INTO products (name, category) VALUES ('Product E', 'Toys'), ('Product F', 'Toys'), ('Product G', 'Books'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sale_amount) VALUES (1, 150.00), (1, 100.00), (2, 200.00), (3, 50.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(255), sales_date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, sales_date, sales_amount) VALUES ('East', '2023-01-01', 500.00), ('West', '2023-01-01', 600.00), ('East', '2023-02-01', 550.00), ('West', '2023-02-01', 650.00);",
         "rows": [
           [
-            "Product F",
-            "Toys",
-            200,
-            1
+            "East",
+            1050
           ],
           [
-            "Product E",
-            "Toys",
-            250,
-            2
-          ],
-          [
-            "Product G",
-            "Books",
-            50,
-            1
+            "West",
+            1250
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS products; CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), category VARCHAR(100)); INSERT INTO products (name, category) VALUES ('Product H', 'Electronics'), ('Product I', 'Electronics'), ('Product J', 'Clothing'); DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, product_id INTEGER, sale_amount DECIMAL(10, 2)); INSERT INTO sales (product_id, sale_amount) VALUES (1, 300.00), (2, 100.00), (3, 200.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(255), sales_date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, sales_date, sales_amount) VALUES ('Central', '2022-04-01', 800.00), ('Central', '2022-05-01', 900.00);",
         "rows": [
           [
-            "Product H",
-            "Electronics",
-            300,
-            1
-          ],
-          [
-            "Product I",
-            "Electronics",
-            100,
-            2
-          ],
-          [
-            "Product J",
-            "Clothing",
-            200,
-            1
+            "Central",
+            1700
           ]
         ]
       }
