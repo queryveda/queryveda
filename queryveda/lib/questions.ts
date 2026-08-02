@@ -1,4 +1,4 @@
-import { Question } from "./types";
+import type { Question } from "./types";
 
 export const questions: Question[] = [
 {id:1,title:"Q1 · Consecutive Price Increase",difficulty:"Medium",topic:"Window Functions",
