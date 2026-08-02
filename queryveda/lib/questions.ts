@@ -2194,7 +2194,7 @@ INSERT INTO MeetingNotes VALUES
    rows:[["deploy",3],["now",2],["fast",1],["is",1],["the",1],["time",1]]}
  ]},
 
-{id:87,title:"Q87 · Bean Varieties Reviewed By a Taster",difficulty:"Easy",topic:"String & Text",
+{id:87,title:"Q87 · Bean Varieties Reviewed By a Taster",difficulty:"Easy",topic:"Filtering & Conditionals",
  desc:"CoffeeTastings(review_id INT, taster_name TEXT, bean_variety TEXT, farm_region TEXT)\n\nAmong the reviews written by taster 'Naomi Reyes', find the bean varieties for which the farm_region is filled in (not NULL). List each qualifying variety once.\nReturn: bean_variety",
  setup:`DROP TABLE IF EXISTS CoffeeTastings;
 CREATE TABLE CoffeeTastings(review_id INT, taster_name TEXT, bean_variety TEXT, farm_region TEXT);
@@ -2328,7 +2328,7 @@ INSERT INTO BikeRentals VALUES
  ]},
 
 {id:91,title:"Q91 · Club Invite Acceptance Rate By Date",difficulty:"Medium",topic:"Date & Time",
- desc:"ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT)\n\nEach row is either an invite being 'sent' or later 'accepted', identified by the same (sender_id, receiver_id) pair; acceptance can land on any date on or after the date it was sent, and an unaccepted invite simply has no matching 'accepted' row. For every date on which at least one invite was sent, compute the fraction of that date's sent invites that were eventually accepted (2 decimal places). Skip any sent date where none of its invites were ever accepted.\nReturn: invite_date, acceptance_rate",
+ desc:"ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT)\n\nEach row records either an invite being 'sent' or an invite being 'accepted', with the (sender_id, receiver_id) pair linking the two events; an unaccepted invite has no 'accepted' row. An acceptance only counts if its date falls within 7 days of the send date, inclusive (i.e. accepted on or after the send date and no later than the send date plus 7 days); acceptances that arrive later are ignored. For each date on which invites were sent, compute the fraction of those invites that were accepted inside that window, rounded to 2 decimal places. Omit any send date whose invites had no qualifying acceptance.\nReturn: invite_date, acceptance_rate",
  setup:`DROP TABLE IF EXISTS ClubInvites;
 CREATE TABLE ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT);
 INSERT INTO ClubInvites VALUES
@@ -2338,30 +2338,31 @@ INSERT INTO ClubInvites VALUES
  ('sent','2025-05-02','D','E'),
  ('sent','2025-05-02','D','F'),
  ('accepted','2025-05-02','D','E'),
- ('accepted','2025-05-04','D','F'),
+ ('accepted','2025-05-15','D','F'),
  ('sent','2025-05-05','G','H'),
  ('sent','2025-05-06','I','J'),
- ('accepted','2025-05-07','I','J');`,
+ ('accepted','2025-05-13','I','J');`,
  tables:["clubinvites"],
  cols:["invite_date","acceptance_rate"],
- rows:[["2025-05-01",0.50],["2025-05-02",1.00],["2025-05-06",1.00]],
+ rows:[["2025-05-01",0.50],["2025-05-02",0.50],["2025-05-06",1.00]],
  solution:`WITH sent AS (
   SELECT sender_id, receiver_id, invite_date AS sent_date
   FROM ClubInvites WHERE action = 'sent'
 ),
 accepted AS (
-  SELECT DISTINCT sender_id, receiver_id
+  SELECT sender_id, receiver_id, invite_date AS accepted_date
   FROM ClubInvites WHERE action = 'accepted'
 )
 SELECT s.sent_date AS invite_date,
  ROUND(1.0 * SUM(CASE WHEN a.sender_id IS NOT NULL THEN 1 ELSE 0 END) / COUNT(*), 2) AS acceptance_rate
 FROM sent s
 LEFT JOIN accepted a ON a.sender_id = s.sender_id AND a.receiver_id = s.receiver_id
+ AND a.accepted_date BETWEEN s.sent_date AND s.sent_date + 7
 GROUP BY s.sent_date
 HAVING SUM(CASE WHEN a.sender_id IS NOT NULL THEN 1 ELSE 0 END) > 0
 ORDER BY s.sent_date`,
- tips:"Since acceptance can arrive on a different date than the send, join sent rows to a distinct set of ever-accepted (sender, receiver) pairs rather than matching on date. HAVING filters out send-dates with zero acceptances after the join.",
- hints:["Separate the rows into 'sent' events (keyed by sender/receiver, dated) and a distinct set of (sender, receiver) pairs that were ever 'accepted' — acceptance date doesn't have to match send date.","LEFT JOIN the sent events to the accepted-pairs set on (sender_id, receiver_id); a NULL on the accepted side means that particular sent invite was never accepted.","Group by the sent date, compute accepted/total as a ROUND(...,2) ratio, and use HAVING to drop dates where nothing was ever accepted."],
+ tips:"Split the rows into sent events and accepted events, then LEFT JOIN on the (sender, receiver) pair with an extra date-window condition so only acceptances within 7 days of the send count. HAVING drops send-dates left with no qualifying acceptance.",
+ hints:["Separate the rows into 'sent' events and 'accepted' events, each keyed by (sender_id, receiver_id) and carrying its own date.","LEFT JOIN sent to accepted on the pair, and add a join condition that the accepted_date is BETWEEN the sent_date and sent_date + 7 — acceptances outside that window must not match.","Group by the send date, compute qualifying-accepted / total-sent as a ROUND(...,2) ratio, and use HAVING to drop dates with zero qualifying acceptances."],
  tests:[
   {setup:`DROP TABLE IF EXISTS ClubInvites;
 CREATE TABLE ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT);
@@ -2370,6 +2371,7 @@ INSERT INTO ClubInvites VALUES
  ('sent','2025-06-01','P','R'),
  ('sent','2025-06-01','P','S'),
  ('accepted','2025-06-02','P','Q'),
+ ('accepted','2025-06-20','P','R'),
  ('sent','2025-06-02','T','U'),
  ('accepted','2025-06-05','T','U');`,
    rows:[["2025-06-01",0.33],["2025-06-02",1.00]]}
