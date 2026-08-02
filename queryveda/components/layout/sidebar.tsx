@@ -15,6 +15,7 @@ import {
   Table2,
   Zap,
   ClipboardList,
+  FlaskConical,
   BarChart3,
   Trophy,
   User,
@@ -26,6 +27,7 @@ const mainNav = [
   { href: "/", label: "Home", icon: Home },
   { href: "/daily", label: "Daily", icon: Zap, hasBadge: true, tour: "daily" },
   { href: "/problems", label: "Problems", icon: ClipboardList, tour: "problems" },
+  { href: "/playground", label: "Playground", icon: FlaskConical, tour: "playground" },
   { href: "/progress", label: "Progress", icon: BarChart3, tour: "progress" },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy, tour: "leaderboard" },
 ];
