@@ -172,7 +172,7 @@ export function PlaygroundClient() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="flex flex-col gap-3">
           <DataUploader
             tables={tables}
@@ -188,7 +188,7 @@ export function PlaygroundClient() {
           </button>
         </aside>
 
-        <section className="flex flex-col gap-3">
+        <section className="flex min-w-0 flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="inline-flex rounded-lg border border-border p-0.5 text-sm">
               {(["sql", "python"] as const).map((l) => (
