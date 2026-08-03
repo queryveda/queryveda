@@ -1,15 +1,7 @@
 "use client";
-import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
 import type { Difficulty, Topic } from "@/lib/types";
-import { TOPICS, DIFFICULTY_COLORS, TOPIC_COLORS } from "@/lib/constants";
+import { TOPICS } from "@/lib/constants";
 
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 
@@ -24,14 +16,8 @@ interface FilterBarProps {
   onBookmarkFirstChange?: (v: boolean) => void;
 }
 
-function Dot({ color }: { color: string }) {
-  return (
-    <span
-      className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-      style={{ backgroundColor: color }}
-    />
-  );
-}
+const selectClass =
+  "h-8 rounded-full border bg-background px-3 pr-8 text-[0.8rem] cursor-pointer outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 hover:bg-muted";
 
 export function FilterBar({
   difficulty, topic, onDifficultyChange, onTopicChange,
@@ -40,63 +26,31 @@ export function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {/* Difficulty dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button size="sm" variant="outline" className="rounded-full gap-2" />
-          }
-        >
-          {difficulty !== "All" && <Dot color={DIFFICULTY_COLORS[difficulty]} />}
-          <span>{difficulty === "All" ? "Difficulty" : difficulty}</span>
-          <ChevronDown className="h-4 w-4 opacity-60" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="!w-auto min-w-[11rem]">
-          <DropdownMenuRadioGroup
-            value={difficulty}
-            onValueChange={(v) => onDifficultyChange(v as Difficulty | "All")}
-          >
-            <DropdownMenuRadioItem value="All">All difficulties</DropdownMenuRadioItem>
-            {DIFFICULTIES.map((d) => (
-              <DropdownMenuRadioItem key={d} value={d} className="gap-2">
-                <Dot color={DIFFICULTY_COLORS[d]} />
-                {d}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Difficulty select */}
+      <select
+        aria-label="Filter by difficulty"
+        value={difficulty}
+        onChange={(e) => onDifficultyChange(e.target.value as Difficulty | "All")}
+        className={selectClass}
+      >
+        <option value="All">All difficulties</option>
+        {DIFFICULTIES.map((d) => (
+          <option key={d} value={d}>{d}</option>
+        ))}
+      </select>
 
-      {/* Topic dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              size="sm"
-              variant="outline"
-              className="rounded-full gap-2 max-w-[15rem]"
-            />
-          }
-        >
-          {topic !== "All" && <Dot color={TOPIC_COLORS[topic]} />}
-          <span className="truncate">{topic === "All" ? "Topic" : topic}</span>
-          <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="!w-auto min-w-[16rem]">
-          <DropdownMenuRadioGroup
-            value={topic}
-            onValueChange={(v) => onTopicChange(v as Topic | "All")}
-          >
-            <DropdownMenuRadioItem value="All">All topics</DropdownMenuRadioItem>
-            {TOPICS.map((t) => (
-              <DropdownMenuRadioItem key={t} value={t} className="gap-2 whitespace-nowrap">
-                <Dot color={TOPIC_COLORS[t]} />
-                {t}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Topic select */}
+      <select
+        aria-label="Filter by topic"
+        value={topic}
+        onChange={(e) => onTopicChange(e.target.value as Topic | "All")}
+        className={`${selectClass} max-w-[15rem]`}
+      >
+        <option value="All">All topics</option>
+        {TOPICS.map((t) => (
+          <option key={t} value={t}>{t}</option>
+        ))}
+      </select>
 
       {/* Bookmark toggles */}
       {onBookmarkOnlyChange && onBookmarkFirstChange && (
