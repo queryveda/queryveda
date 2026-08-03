@@ -3286,6 +3286,33 @@ INSERT INTO Readings VALUES
  (20,'2024-02-01',9),(20,'2024-02-02',1),(20,'2024-02-03',9),(20,'2024-02-04',1);`,
    rows:[[10,4,2],[20,18,2]]}
  ]},
+
+{id:118,title:"Q118 · Sensor Reading Summary",difficulty:"Easy",topic:"Statistical Aggregates",
+ desc:"SensorReadings(sensor_id INT, reading INT)\n\nFor each sensor, report the lowest reading, the highest reading, and the mean reading rounded to 2 decimals.\nReturn: sensor_id, min_reading, max_reading, avg_reading (ordered by sensor_id)",
+ setup:`DROP TABLE IF EXISTS SensorReadings;
+CREATE TABLE SensorReadings(sensor_id INT, reading INT);
+INSERT INTO SensorReadings VALUES
+ (1,10),(1,20),(1,30),
+ (2,5),(2,8),
+ (3,100);`,
+ tables:["sensorreadings"],
+ cols:["sensor_id","min_reading","max_reading","avg_reading"],
+ rows:[[1,10,30,20],[2,5,8,6.5],[3,100,100,100]],
+ solution:`SELECT sensor_id,
+  MIN(reading) AS min_reading,
+  MAX(reading) AS max_reading,
+  ROUND(AVG(reading)::numeric, 2) AS avg_reading
+FROM SensorReadings
+GROUP BY sensor_id
+ORDER BY sensor_id`,
+ tips:"MIN, MAX and AVG are aggregate functions applied per group. Cast AVG to numeric before ROUND so PostgreSQL rounds to the requested decimals.",
+ hints:["Group the rows by sensor_id.","Apply MIN(reading), MAX(reading) and AVG(reading) within each group.","Wrap the average in ROUND(AVG(reading)::numeric, 2) for two-decimal output."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS SensorReadings;
+CREATE TABLE SensorReadings(sensor_id INT, reading INT);
+INSERT INTO SensorReadings VALUES (7,2),(7,4),(7,6),(7,8),(8,15);`,
+   rows:[[7,2,8,5],[8,15,15,15]]}
+ ]},
 ];
 
 export function getQuestionById(id: number): Question | undefined {
