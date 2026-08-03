@@ -2808,6 +2808,192 @@ INSERT INTO Connections VALUES
  (10,30);`,
    rows:[[10,20],[10,30],[20,10],[30,10]]}
  ]},
+{id:104,title:"Q104 · Reviewer Leaderboard Momentum",difficulty:"Hard",topic:"Advanced Analytics",
+ desc:"Reviewers(reviewer_id INT, country TEXT)\nReviewEvents(event_date DATE, reviewer_id INT, review_count INT)\n\nA product-review platform wants to see which countries gained ground between November 2024 and December 2024. For each month, rank countries by their total review_count (summed across all reviewers in that country) from highest to lowest, using DENSE_RANK so tied totals share the same rank and the next distinct total takes the very next rank number (no gaps). A country must have activity in BOTH months to be compared; a country active in only one of the two months is excluded entirely. Return the countries whose December rank number is strictly smaller than their November rank number (i.e. they moved up the leaderboard).\nReturn: country, ordered by country name ascending",
+ setup:`DROP TABLE IF EXISTS ReviewEvents;
+DROP TABLE IF EXISTS Reviewers;
+CREATE TABLE Reviewers(reviewer_id INT, country TEXT);
+CREATE TABLE ReviewEvents(event_date DATE, reviewer_id INT, review_count INT);
+INSERT INTO Reviewers VALUES
+ (1,'Norvale'),(2,'Sudmark'),(3,'Eastport'),(4,'Westbrook'),(5,'Centralia'),(6,'Farvale');
+INSERT INTO ReviewEvents VALUES
+ ('2024-11-05',1,250),('2024-11-20',1,150),
+ ('2024-11-10',2,400),
+ ('2024-11-10',3,300),
+ ('2024-11-10',4,200),
+ ('2024-11-10',5,100),
+ ('2024-12-05',1,300),
+ ('2024-12-10',2,250),
+ ('2024-12-10',3,450),
+ ('2024-12-10',4,450),
+ ('2024-12-10',5,100),
+ ('2025-06-01',6,900);`,
+ tables:["reviewers","reviewevents"],
+ cols:["country"],
+ rows:[["Eastport"],["Westbrook"]],
+ solution:`WITH monthly AS (
+  SELECT r.country, TO_CHAR(e.event_date,'YYYY-MM') AS ym, SUM(e.review_count) AS total_reviews
+  FROM ReviewEvents e JOIN Reviewers r ON r.reviewer_id = e.reviewer_id
+  GROUP BY r.country, TO_CHAR(e.event_date,'YYYY-MM')
+),
+ranked AS (
+  SELECT country, ym, DENSE_RANK() OVER (PARTITION BY ym ORDER BY total_reviews DESC) AS rnk
+  FROM monthly
+)
+SELECT nov.country
+FROM ranked nov
+JOIN ranked dec_ ON dec_.country = nov.country AND nov.ym = '2024-11' AND dec_.ym = '2024-12'
+WHERE dec_.rnk < nov.rnk
+ORDER BY nov.country`,
+ tips:"Aggregate review_count by country and month first, then rank each month independently with DENSE_RANK() PARTITION BY month. Self-join the ranked CTE on country to line up the two months, keeping only rows where both months exist.",
+ hints:["Join Reviewers to ReviewEvents and SUM(review_count) grouped by country and month (e.g. TO_CHAR(event_date,'YYYY-MM')).","In a separate step, rank countries within each month using DENSE_RANK() OVER (PARTITION BY month ORDER BY total DESC) so ties share a rank with no gaps.","Self-join the ranked results on country for November vs December, requiring both months to exist, and keep rows where the December rank is smaller (better) than the November rank."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS ReviewEvents;
+DROP TABLE IF EXISTS Reviewers;
+CREATE TABLE Reviewers(reviewer_id INT, country TEXT);
+CREATE TABLE ReviewEvents(event_date DATE, reviewer_id INT, review_count INT);
+INSERT INTO Reviewers VALUES
+ (1,'Alpha'),(2,'Beta'),(3,'Gamma'),(4,'Delta'),(5,'Epsilon'),(6,'Zeta');
+INSERT INTO ReviewEvents VALUES
+ ('2024-11-01',1,1000),
+ ('2024-11-01',2,800),
+ ('2024-11-01',3,800),
+ ('2024-11-01',4,200),
+ ('2024-11-01',6,1500),
+ ('2024-12-01',1,100),
+ ('2024-12-01',2,900),
+ ('2024-12-01',3,850),
+ ('2024-12-01',4,900),
+ ('2024-12-01',5,50);`,
+   rows:[["Beta"],["Delta"],["Gamma"]]}
+ ]},
+{id:105,title:"Q105 · Fitness Streak Finder",difficulty:"Hard",topic:"Consecutive Sequences",
+ desc:"UserCheckins(user_id INT, checkin_date DATE)\n\nA fitness app logs a row every time a member checks in, but a member can check in more than once on the same day. Find every member who has checked in on 3 or more CALENDAR DAYS IN A ROW at least once — a qualifying streak is a run of consecutive dates with no day skipped, at least 3 days long. Duplicate check-ins on the same day count as a single day and neither extend nor break a streak. List each qualifying member only once, even if they have multiple separate streaks.\nReturn: user_id, ordered ascending",
+ setup:`DROP TABLE IF EXISTS UserCheckins;
+CREATE TABLE UserCheckins(user_id INT, checkin_date DATE);
+INSERT INTO UserCheckins VALUES
+ (1,'2024-01-01'),(1,'2024-01-02'),(1,'2024-01-03'),
+ (2,'2024-01-01'),(2,'2024-01-02'),
+ (3,'2024-01-01'),(3,'2024-01-02'),(3,'2024-01-04'),
+ (4,'2024-02-01'),(4,'2024-02-02'),(4,'2024-02-02'),(4,'2024-02-03'),(4,'2024-02-04'),
+ (5,'2024-03-01'),
+ (6,'2024-04-01'),(6,'2024-04-02'),(6,'2024-04-03'),(6,'2024-04-05'),(6,'2024-04-06'),(6,'2024-04-07');`,
+ tables:["usercheckins"],
+ cols:["user_id"],
+ rows:[[1],[4],[6]],
+ solution:`WITH distinct_days AS (
+  SELECT DISTINCT user_id, checkin_date FROM UserCheckins
+),
+grp AS (
+  SELECT user_id, checkin_date,
+    checkin_date - (ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY checkin_date))::int AS grp_key
+  FROM distinct_days
+),
+streaks AS (
+  SELECT user_id, grp_key, COUNT(*) AS streak_len
+  FROM grp GROUP BY user_id, grp_key
+)
+SELECT DISTINCT user_id FROM streaks WHERE streak_len >= 3 ORDER BY user_id`,
+ tips:"This is the classic gaps-and-islands trick: dedupe to one row per user/day, then subtract a per-user ROW_NUMBER() (ordered by date) from the date. Consecutive dates land on the same resulting value, turning runs into groups you can COUNT.",
+ hints:["First get DISTINCT (user_id, checkin_date) pairs so repeat check-ins on the same day don't inflate a streak.","For each user, order their distinct days and subtract ROW_NUMBER() (as an integer) from checkin_date — consecutive calendar days produce the identical result, forming a group key.","GROUP BY user_id and that group key, COUNT(*) the rows in each group, and keep users with any group of size >= 3."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS UserCheckins;
+CREATE TABLE UserCheckins(user_id INT, checkin_date DATE);
+INSERT INTO UserCheckins VALUES
+ (10,'2024-01-10'),(10,'2024-01-12'),(10,'2024-01-13'),(10,'2024-01-14'),
+ (20,'2024-02-01'),(20,'2024-02-02'),(20,'2024-02-05'),(20,'2024-02-06'),
+ (30,'2024-03-01'),(30,'2024-03-02'),(30,'2024-03-03'),(30,'2024-03-04'),(30,'2024-03-05'),
+ (40,'2024-04-01'),(40,'2024-04-01'),(40,'2024-04-01');`,
+   rows:[[10],[30]]}
+ ]},
+{id:106,title:"Q106 · Bookstore Monthly Bestsellers",difficulty:"Hard",topic:"Window Functions",
+ desc:"OrderLines(invoice_no TEXT, order_date DATE, item_desc TEXT, unit_price NUMERIC, quantity INT)\n\nA bookstore's fulfillment log records every line item ever shipped or cancelled, spanning several years. A cancelled line has invoice_no starting with 'C' and a negative quantity; exclude cancelled lines from sales. For each calendar month (combine the same month across every year — all January activity together regardless of year, and so on), compute each item's total revenue as unit_price * quantity summed over its non-cancelled lines, then find the item(s) with the single highest total revenue that month. If two or more items tie for the top spot in a month, return all of them.\nReturn: month, description, total_paid — ordered by month ascending, then description ascending",
+ setup:`DROP TABLE IF EXISTS OrderLines;
+CREATE TABLE OrderLines(invoice_no TEXT, order_date DATE, item_desc TEXT, unit_price NUMERIC, quantity INT);
+INSERT INTO OrderLines VALUES
+ ('INV1','2023-01-05','Notebook',10.00,5),
+ ('INV2','2024-01-10','Notebook',10.00,3),
+ ('INV3','2023-01-07','Pen Set',8.00,10),
+ ('C001','2023-01-08','Notebook',10.00,-2),
+ ('INV4','2023-02-01','Backpack',40.00,2),
+ ('INV5','2024-02-15','Backpack',40.00,1),
+ ('INV6','2023-02-02','Umbrella',30.00,4),
+ ('INV7','2023-03-01','Lamp',25.00,2);`,
+ tables:["orderlines"],
+ cols:["month","description","total_paid"],
+ rows:[[1,"Notebook",80],[1,"Pen Set",80],[2,"Backpack",120],[2,"Umbrella",120],[3,"Lamp",50]],
+ solution:`WITH valid AS (
+  SELECT EXTRACT(MONTH FROM order_date)::int AS month_num, item_desc, unit_price * quantity AS paid
+  FROM OrderLines
+  WHERE quantity > 0
+),
+monthly AS (
+  SELECT month_num, item_desc, SUM(paid) AS total_paid
+  FROM valid GROUP BY month_num, item_desc
+),
+ranked AS (
+  SELECT month_num, item_desc, total_paid,
+    DENSE_RANK() OVER (PARTITION BY month_num ORDER BY total_paid DESC) AS rnk
+  FROM monthly
+)
+SELECT month_num AS month, item_desc AS description, total_paid
+FROM ranked WHERE rnk = 1
+ORDER BY month_num, item_desc`,
+ tips:"Filter to quantity > 0 to drop cancellations, group by EXTRACT(MONTH FROM order_date) and item to combine years, then DENSE_RANK() within each month by total revenue and keep rnk = 1 so ties all come through.",
+ hints:["Filter out cancelled lines with quantity > 0, then extract just the month number from order_date so years combine.","GROUP BY month and item_desc, summing unit_price * quantity to get each item's monthly revenue.","Rank items within each month using DENSE_RANK() OVER (PARTITION BY month ORDER BY total DESC) and keep rank 1 — this naturally returns every item tied for the top spot."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS OrderLines;
+CREATE TABLE OrderLines(invoice_no TEXT, order_date DATE, item_desc TEXT, unit_price NUMERIC, quantity INT);
+INSERT INTO OrderLines VALUES
+ ('INV10','2022-04-01','Widget A',5.00,10),
+ ('INV11','2023-04-15','Widget A',5.00,10),
+ ('INV12','2022-04-02','Widget B',20.00,3),
+ ('C010','2022-04-03','Widget A',5.00,-5),
+ ('INV13','2022-05-01','Gadget X',15.00,4),
+ ('INV14','2023-05-01','Gadget Y',15.00,4),
+ ('INV15','2022-05-02','Gadget Z',5.00,1);`,
+   rows:[[4,"Widget A",100],[5,"Gadget X",60],[5,"Gadget Y",60]]}
+ ]},
+{id:107,title:"Q107 · Second-Highest Pay By Department",difficulty:"Medium",topic:"Aggregations & JOINs",
+ desc:"Departments(dept_id INT, dept_name TEXT)\nEmployees(emp_id INT, dept_id INT, salary INT)\n\nHR wants each department's second-highest salary, but it must be based on distinct salary VALUES, not row position — if several employees share the top salary, the second-highest is the next lower distinct amount. If a department has fewer than two distinct salary values (including a department with zero employees), return NULL for that department instead of omitting it.\nReturn: dept_name, second_highest_salary — one row per department, ordered by dept_name ascending",
+ setup:`DROP TABLE IF EXISTS Employees;
+DROP TABLE IF EXISTS Departments;
+CREATE TABLE Departments(dept_id INT, dept_name TEXT);
+CREATE TABLE Employees(emp_id INT, dept_id INT, salary INT);
+INSERT INTO Departments VALUES
+ (1,'Engineering'),(2,'Sales'),(3,'HR'),(4,'Support');
+INSERT INTO Employees VALUES
+ (1,1,90000),(2,1,90000),(3,1,80000),
+ (4,2,70000),(5,2,70000),(6,2,70000),
+ (7,3,60000);`,
+ tables:["departments","employees"],
+ cols:["dept_name","second_highest_salary"],
+ rows:[["Engineering",80000],["HR",null],["Sales",null],["Support",null]],
+ solution:`WITH distinct_sal AS (
+  SELECT DISTINCT dept_id, salary FROM Employees
+),
+ranked AS (
+  SELECT dept_id, salary, DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) AS rnk
+  FROM distinct_sal
+)
+SELECT d.dept_name, r.salary AS second_highest_salary
+FROM Departments d
+LEFT JOIN ranked r ON r.dept_id = d.dept_id AND r.rnk = 2
+ORDER BY d.dept_name`,
+ tips:"DISTINCT the (dept_id, salary) pairs first so a shared top salary doesn't hide the true second value, rank with DENSE_RANK() PARTITION BY dept_id, then LEFT JOIN from Departments so departments with no second distinct salary still appear with NULL.",
+ hints:["Get DISTINCT (dept_id, salary) pairs so a salary shared by multiple employees is only counted once.","Rank those distinct salaries within each department using DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC).","LEFT JOIN Departments to the rank-2 rows (not an inner join) so departments without a second distinct salary — or with no employees — still appear, with NULL."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Employees;
+DROP TABLE IF EXISTS Departments;
+CREATE TABLE Departments(dept_id INT, dept_name TEXT);
+CREATE TABLE Employees(emp_id INT, dept_id INT, salary INT);
+INSERT INTO Departments VALUES
+ (10,'Marketing'),(20,'Finance'),(30,'Legal');
+INSERT INTO Employees VALUES
+ (1,10,50000),(2,10,55000),(3,10,55000),
+ (4,20,100000);`,
+   rows:[["Finance",null],["Legal",null],["Marketing",50000]]}
+ ]},
 ];
 
 export function getQuestionById(id: number): Question | undefined {
