@@ -1,55 +1,46 @@
 {
-  "date": "2026-08-02",
+  "date": "2026-08-03",
   "question": {
-    "title": "Cumulative Sales by Region",
+    "title": "Identifying Consecutive Logs",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "Calculate the cumulative sales for each region over time. You should return the region name and the cumulative sales amount for each month in the data.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(255), sales_date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, sales_date, sales_amount) VALUES ('North', '2022-01-01', 100.00), ('South', '2022-01-01', 200.00), ('North', '2022-02-01', 150.00), ('South', '2022-02-01', 250.00), ('North', '2022-03-01', 120.00), ('South', '2022-03-01', 220.00);",
+    "topic": "Consecutive Sequences",
+    "desc": "You have a table of user login logs with user IDs and login times. Find all user IDs that have logged in for three consecutive days.",
+    "setup": "DROP TABLE IF EXISTS login_logs; CREATE TABLE login_logs (user_id INT, login_time DATE); INSERT INTO login_logs (user_id, login_time) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (3, '2022-01-01'), (3, '2022-01-02'), (3, '2022-01-03');",
     "tables": [
-      "sales"
+      "login_logs"
     ],
     "cols": [
-      "region",
-      "cumulative_sales"
+      "user_id"
     ],
     "rows": [
       [
-        "North",
-        370
+        1
       ],
       [
-        "South",
-        670
+        3
       ]
     ],
-    "solution": "WITH monthly_sales AS (SELECT region, EXTRACT(MONTH FROM sales_date) AS sales_month, SUM(sales_amount) AS total_sales FROM sales GROUP BY region, EXTRACT(MONTH FROM sales_date)) SELECT region, SUM(total_sales) OVER (PARTITION BY region ORDER BY sales_month) AS cumulative_sales FROM monthly_sales ORDER BY region, sales_month;",
-    "tips": "Using window functions can simplify cumulative calculations.",
+    "solution": "WITH consecutive_logs AS ( SELECT user_id, login_time, login_time - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_time) AS diff FROM login_logs ) SELECT DISTINCT user_id FROM consecutive_logs WHERE login_time - (SELECT MIN(login_time) FROM consecutive_logs cl2 WHERE cl2.user_id = consecutive_logs.user_id) = 2",
+    "tips": "Consider using window functions to identify consecutive sequences.",
     "hints": [
-      "Consider using window functions to calculate cumulative sums.",
-      "You might need to use a subquery or CTE to first calculate monthly sales before applying the window function.",
-      "Look into the PARTITION BY and ORDER BY clauses within window functions to group and sort your data appropriately."
+      "Use window functions to assign a row number to each login for a user, ordered by time.",
+      "Calculate the difference between the login time and the row number for each user.",
+      "Filter the results to find users with three consecutive logins."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(255), sales_date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, sales_date, sales_amount) VALUES ('East', '2023-01-01', 500.00), ('West', '2023-01-01', 600.00), ('East', '2023-02-01', 550.00), ('West', '2023-02-01', 650.00);",
+        "setup": "DROP TABLE IF EXISTS login_logs; CREATE TABLE login_logs (user_id INT, login_time DATE); INSERT INTO login_logs (user_id, login_time) VALUES (4, '2022-02-01'), (4, '2022-02-02'), (4, '2022-02-03'), (5, '2022-02-01'), (5, '2022-02-03');",
         "rows": [
           [
-            "East",
-            1050
-          ],
-          [
-            "West",
-            1250
+            4
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (region VARCHAR(255), sales_date DATE, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region, sales_date, sales_amount) VALUES ('Central', '2022-04-01', 800.00), ('Central', '2022-05-01', 900.00);",
+        "setup": "DROP TABLE IF EXISTS login_logs; CREATE TABLE login_logs (user_id INT, login_time DATE); INSERT INTO login_logs (user_id, login_time) VALUES (6, '2022-03-01'), (6, '2022-03-02'), (6, '2022-03-04'), (7, '2022-03-01'), (7, '2022-03-02'), (7, '2022-03-03');",
         "rows": [
           [
-            "Central",
-            1700
+            7
           ]
         ]
       }
