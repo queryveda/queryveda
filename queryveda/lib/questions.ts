@@ -3039,7 +3039,15 @@ SELECT category, c AS ticket_count FROM counts, mx WHERE c = m ORDER BY category
 CREATE TABLE Tickets(ticket_id INT, category TEXT);
 INSERT INTO Tickets VALUES
  (1,'Shipping'),(2,'Shipping'),(3,'Refund'),(4,'Refund'),(5,'Refund'),(6,'Account');`,
-   rows:[["Refund",3]]}
+   rows:[["Refund",3]]},
+  {setup:`DROP TABLE IF EXISTS Tickets;
+CREATE TABLE Tickets(ticket_id INT, category TEXT);
+INSERT INTO Tickets VALUES
+ (1,'Delivery'),(2,'Delivery'),
+ (3,'Payment'),(4,'Payment'),
+ (5,'Returns'),(6,'Returns'),
+ (7,'Feedback');`,
+   rows:[["Delivery",2],["Payment",2],["Returns",2]]}
  ]},
 {id:110,title:"Q110 · Purchase Count Distribution",difficulty:"Medium",topic:"Statistical Aggregates",
  desc:"Purchases(purchase_id INT, user_id INT)\n\nProduct wants a histogram of customer engagement: for each possible number of purchases N, how many distinct users made EXACTLY N purchases? First compute how many purchases each user made, then count how many users land on each purchase-count value.\nReturn: purchase_count, num_users — ordered by purchase_count ascending",
