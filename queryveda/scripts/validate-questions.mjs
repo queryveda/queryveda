@@ -17,9 +17,10 @@ import { PGlite } from "@electric-sql/pglite";
 import { runTests } from "../lib/pglite.ts";
 import { questions } from "../lib/questions.ts";
 
-// Browser PGlite returns DATE columns as local-midnight Date objects; Node returns ISO
-// strings. Register a DATE (OID 1082) parser that reproduces the browser's local-midnight
-// Date so fmtDate renders YYYY-MM-DD identically. Without this, date problems false-fail.
+// PGlite's default DATE parser returns a UTC-midnight Date object, which renders with a
+// spurious time-of-day when formatted in a non-UTC timezone. Register a DATE (OID 1082)
+// parser that instead builds a LOCAL-midnight Date, so fmtDate renders YYYY-MM-DD
+// identically in every timezone, matching the app. Without this, date problems false-fail.
 const dateParser = (v) => {
   const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(v);

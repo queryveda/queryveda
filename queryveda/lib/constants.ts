@@ -1,4 +1,4 @@
-import { Topic, Difficulty } from "./types";
+import type { Topic, Difficulty } from "./types";
 
 export const TOPICS: Topic[] = [
   "Aggregations & JOINs",

@@ -1,4 +1,5 @@
 import type { Question } from "./types";
+import { TOPICS } from "./constants.ts";
 
 export const questions: Question[] = [
 {id:1,title:"Q1 · Consecutive Price Increase",difficulty:"Medium",topic:"Window Functions",
@@ -3001,13 +3002,7 @@ export function getQuestionById(id: number): Question | undefined {
 }
 
 export function getSortedQuestions(): Question[] {
-  const topicOrder = [
-    "Aggregations & JOINs",
-    "Window Functions",
-    "Cumulative & Sliding Windows",
-    "Consecutive Sequences",
-    "Advanced Analytics",
-  ];
+  const topicOrder: readonly string[] = TOPICS;
   const diffOrder: Record<string, number> = { Easy: 0, Medium: 1, Hard: 2 };
   return [...questions].sort((a, b) => {
     const ti = topicOrder.indexOf(a.topic) - topicOrder.indexOf(b.topic);
