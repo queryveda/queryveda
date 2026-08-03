@@ -80,22 +80,42 @@ never identical. Do not copy SS problem text or datasets.
 
 ## Validation harness (quality backbone)
 
-- New script: `queryveda/scripts/validate-questions.mjs`, run with Node + `@electric-sql/pglite`.
-- For each targeted question:
-  - Run `setup`, then `solution`. Assert the result's column set matches `cols` and its
-    rows match `rows`.
-  - For each `TestCase`: run `test.setup`, then `solution`. Assert rows match `test.rows`.
-- **Row comparison rules:**
-  - Normalize values before compare: PGlite `DATE` → `YYYY-MM-DD` string; numeric types →
-    number; `null` preserved; trim/normalize types so `100` (int) and `"100"` match intent.
-  - Order-sensitive comparison when the problem/`desc` implies an ORDER BY; otherwise
-    order-insensitive (multiset) comparison. Each problem declares which (default: the
-    solution's own ORDER BY determines order-sensitivity; problems without ORDER BY are
-    compared as multisets).
-- Output: per-problem, per-test PASS/FAIL with diffs. **New problems must be 100% green**
-  before they are added/committed. The harness can also run over the existing 77 as a
-  sanity check (expected: all pass) but must never modify them.
-- The harness is a dev/CI tool (script only); it is not shipped in the app bundle.
+- New script: `queryveda/scripts/validate-questions.mjs`, run with plain Node (v25+, native
+  TS type-stripping) + `@electric-sql/pglite`. No new dependencies.
+- **Reuse the app's real grader for 1:1 fidelity.** Import `runTests` from `lib/pglite.ts`
+  and call `runTests(db, question, question.solution)`; a problem is valid iff
+  `.passed === true`. This exercises the visible expected rows AND every hidden test with
+  the exact normalization/comparison the app uses. Do NOT reimplement comparison.
+  - `runTests`/`compareResults` compare **order-independently** (rows are normalized and
+    sorted before comparison) — problems do not need a deterministic ORDER BY to validate,
+    though a stable ORDER BY is still good authoring practice.
+  - `normalize` (in `lib/pglite.ts`) rounds numerics to 4 dp, lowercases/trims strings,
+    maps null→"∅", and renders `Date` via `fmtDate` (`YYYY-MM-DD`, or `+ HH:MM:SS` if any
+    time component is nonzero).
+- **Critical PGlite config (environment fidelity):** in Node, PGlite returns `DATE`
+  columns as ISO strings, but the browser returns `Date` objects rendered by `fmtDate` as
+  local-midnight `YYYY-MM-DD`. The harness MUST register a `DATE` (OID 1082) parser that
+  builds a **local-midnight** Date from the Y-M-D part:
+  `new PGlite({ parsers: { 1082: v => { const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2]-1, +m[3]) : new Date(v); } } })`.
+  Without this, date-valued problems produce false failures. (Verified: with it, 65/75
+  existing problems pass; without it, only 39/75.)
+- **Enable native TS import:** `lib/questions.ts` line 1 must be `import type { Question }`
+  (not `import { Question }`) so Node's type-stripping erases it and the harness can import
+  `questions` and `runTests` directly. (This one-line change is included in Task 1.)
+- Support running the whole catalog or a filtered id range (e.g. `--min-id=78`) so new
+  problems can be gated independently.
+- Output: per-problem PASS/FAIL with the grader's message. **New problems (ids 78+) must be
+  100% green** before they are committed.
+- The harness is a dev tool (script only); it is not shipped in the app bundle and must
+  never modify `questions.ts` content.
+
+## Known pre-existing content issues (out of scope, for the owner's awareness)
+
+Running the faithful harness over the existing 77 surfaced ~10 problems whose stored
+reference solution/expected-rows disagree or whose solution errors on PGlite 0.5.1
+(the same version the app uses): Q15, Q16, Q27, Q30, Q32, Q42, Q50, Q61, Q63, Q68.
+Per project decision these are **not modified** by this work. They are recorded here so the
+owner can decide separately whether to fix them.
 
 ## Category / UI integration
 

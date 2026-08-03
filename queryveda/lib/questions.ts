@@ -1,4 +1,5 @@
-import { Question } from "./types";
+import type { Question } from "./types";
+import { TOPICS } from "./constants.ts";
 
 export const questions: Question[] = [
 {id:1,title:"Q1 · Consecutive Price Increase",difficulty:"Medium",topic:"Window Functions",
@@ -1894,6 +1895,1106 @@ GROUP BY u.signup_date`,
    INSERT INTO Activity VALUES (1,'2025-02-04'),(2,'2025-02-04'),(3,'2025-02-04'),(1,'2025-02-08'),(2,'2025-02-08'),(1,'2025-02-15');`,
    rows:[['2025-02-01',5,3,2,1,60.00,40.00,20.00]]}
  ]},
+{id:78,title:"Q78 · Returning Customers Within a Week",difficulty:"Medium",topic:"Date & Time",
+ desc:"Orders(order_id INT, customer_id INT, ordered_at DATE, dish TEXT, amount INT)\n\nTake each customer's earliest order as their starting point. List every customer who came back with a follow-up order somewhere in the week that follows — strictly later than the starting day, and no more than seven days past it. Anything ordered on the starting day itself is ignored.\nReturn: customer_id",
+ setup:`DROP TABLE IF EXISTS Orders;
+CREATE TABLE Orders(order_id INT, customer_id INT, ordered_at DATE, dish TEXT, amount INT);
+INSERT INTO Orders VALUES
+ (1,1,'2025-01-01','Ramen',400),(2,1,'2025-01-05','Sushi',600),
+ (3,2,'2025-02-01','Tacos',300),(4,2,'2025-02-01','Burrito',350),(5,2,'2025-02-15','Nachos',250),
+ (6,3,'2025-03-01','Pizza',500),(7,3,'2025-03-08','Pasta',450),
+ (8,4,'2025-04-01','Curry',550),(9,4,'2025-04-09','Naan',150),
+ (10,5,'2025-05-01','Salad',200);`,
+ tables:["orders"],
+ cols:["customer_id"],
+ rows:[[1],[3]],
+ solution:`SELECT DISTINCT f.customer_id
+FROM (SELECT customer_id, MIN(ordered_at) AS first_dt FROM Orders GROUP BY customer_id) f
+JOIN Orders o ON o.customer_id = f.customer_id
+ AND o.ordered_at > f.first_dt
+ AND o.ordered_at <= f.first_dt + 7`,
+ tips:"Find each customer's first order date with MIN(...) GROUP BY, then join back to look for any order in the (first, first+7] window. DISTINCT collapses multiple qualifying orders.",
+ hints:["Get each customer's first order date using MIN(ordered_at) with GROUP BY customer_id.","Join that back to Orders to find any order strictly after the first date.","Keep only orders where ordered_at <= first_date + 7 days; wrap in DISTINCT for the id list."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Orders;
+CREATE TABLE Orders(order_id INT, customer_id INT, ordered_at DATE, dish TEXT, amount INT);
+INSERT INTO Orders VALUES
+ (1,10,'2025-06-01','A',100),(2,10,'2025-06-02','B',100),
+ (3,20,'2025-06-01','C',100),(4,20,'2025-06-08','D',100),
+ (5,30,'2025-06-01','E',100),(6,30,'2025-06-10','F',100);`,
+   rows:[[10],[20]]}
+ ]},
+
+{id:79,title:"Q79 · Unique Active Members Per Month",difficulty:"Easy",topic:"Date & Time",
+ desc:"WorkspaceEvents(event_id INT, workspace_id INT, member_id INT, event_type TEXT, event_at DATE)\n\nAll events happen within the same year. For each workspace, find the number of unique members who logged at least one event in each calendar month.\nReturn: workspace_id, month (1-12), unique_members",
+ setup:`DROP TABLE IF EXISTS WorkspaceEvents;
+CREATE TABLE WorkspaceEvents(event_id INT, workspace_id INT, member_id INT, event_type TEXT, event_at DATE);
+INSERT INTO WorkspaceEvents VALUES
+ (1,100,1,'click','2025-01-05'),
+ (2,100,1,'click','2025-01-20'),
+ (3,100,2,'view','2025-01-10'),
+ (4,100,1,'view','2025-02-01'),
+ (5,100,3,'click','2025-02-01'),
+ (6,200,1,'click','2025-01-15'),
+ (7,200,3,'click','2025-01-16'),
+ (8,200,3,'click','2025-03-01');`,
+ tables:["workspaceevents"],
+ cols:["workspace_id","month","unique_members"],
+ rows:[[100,1,2],[100,2,2],[200,1,2],[200,3,1]],
+ solution:`SELECT workspace_id, EXTRACT(MONTH FROM event_at)::INT AS month, COUNT(DISTINCT member_id) AS unique_members
+FROM WorkspaceEvents
+GROUP BY workspace_id, EXTRACT(MONTH FROM event_at)
+ORDER BY workspace_id, month`,
+ tips:"Extract the month number from event_at and group by workspace_id plus that month. COUNT(DISTINCT member_id) avoids double-counting a member who logged multiple events in the same month.",
+ hints:["Use EXTRACT(MONTH FROM event_at) to turn each event's date into a month number.","GROUP BY both workspace_id and the extracted month.","Use COUNT(DISTINCT member_id), not COUNT(*) — a member can have several events in one month."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS WorkspaceEvents;
+CREATE TABLE WorkspaceEvents(event_id INT, workspace_id INT, member_id INT, event_type TEXT, event_at DATE);
+INSERT INTO WorkspaceEvents VALUES
+ (1,300,5,'click','2025-04-01'),
+ (2,300,5,'click','2025-04-02'),
+ (3,300,6,'click','2025-04-03'),
+ (4,300,6,'click','2025-05-01'),
+ (5,300,7,'click','2025-05-01'),
+ (6,300,7,'click','2025-05-02'),
+ (7,400,9,'view','2025-04-10');`,
+   rows:[[300,4,2],[300,5,2],[400,4,1]]}
+ ]},
+
+{id:80,title:"Q80 · Hour of Highest Fuel Cost",difficulty:"Easy",topic:"Aggregations & JOINs",
+ desc:"DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT)\n\nOne trip in the log burned more fuel than every other, and no two trips tie for that top spot. Report the hour of the day during which that single costliest trip ran.\nReturn: hour_of_day",
+ setup:`DROP TABLE IF EXISTS DeliveryTrips;
+CREATE TABLE DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT);
+INSERT INTO DeliveryTrips VALUES
+ (1,8,12.50,10.2,'Clear'),
+ (2,9,15.75,12.0,'Rain'),
+ (3,13,22.40,25.5,'Clear'),
+ (4,17,18.30,20.1,'Cloudy'),
+ (5,19,9.90,5.0,'Clear'),
+ (6,22,14.20,11.3,'Rain');`,
+ tables:["deliverytrips"],
+ cols:["hour_of_day"],
+ rows:[[13]],
+ solution:`SELECT hour_of_day FROM DeliveryTrips ORDER BY fuel_cost DESC LIMIT 1`,
+ tips:"Sort by fuel_cost descending and take the top row's hour_of_day. No need to GROUP BY since only one trip holds the maximum.",
+ hints:["You need the row with the maximum fuel_cost, not an aggregate.","ORDER BY fuel_cost DESC puts the priciest trip first.","LIMIT 1 keeps just that top row; select its hour_of_day."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS DeliveryTrips;
+CREATE TABLE DeliveryTrips(trip_id INT, hour_of_day INT, fuel_cost NUMERIC, distance_km NUMERIC, weather TEXT);
+INSERT INTO DeliveryTrips VALUES
+ (1,6,8.00,6.0,'Clear'),
+ (2,11,31.20,40.0,'Rain'),
+ (3,15,10.10,9.5,'Cloudy'),
+ (4,21,7.60,4.2,'Clear');`,
+   rows:[[11]]}
+ ]},
+
+{id:81,title:"Q81 · Draft Documents Mentioning Renewal",difficulty:"Easy",topic:"String & Text",
+ desc:"Documents(doc_id INT, filename TEXT, body TEXT)\n\nFind all documents whose filename starts with \"draft\" (case-insensitive) AND whose body contains the word \"renewal\" anywhere (case-insensitive).\nReturn: doc_id, filename",
+ setup:`DROP TABLE IF EXISTS Documents;
+CREATE TABLE Documents(doc_id INT, filename TEXT, body TEXT);
+INSERT INTO Documents VALUES
+ (1,'draft_contract','This mentions renewal terms.'),
+ (2,'Draft_Notes','Nothing about that topic here.'),
+ (3,'DRAFT_v2','RENEWAL policy included below.'),
+ (4,'my_draft_old','Contains renewal word but wrong filename prefix.'),
+ (5,'final_report','Renewal clause attached.'),
+ (6,'draftsman_plan','General plans, no mention.'),
+ (7,'DRAFT_summary','Discusses lease renewal decisions.');`,
+ tables:["documents"],
+ cols:["doc_id","filename"],
+ rows:[[1,'draft_contract'],[3,'DRAFT_v2'],[7,'DRAFT_summary']],
+ solution:`SELECT doc_id, filename FROM Documents WHERE filename ILIKE 'draft%' AND body ILIKE '%renewal%' ORDER BY doc_id`,
+ tips:"ILIKE performs case-insensitive matching in Postgres. Anchor the filename pattern with 'draft%' for a prefix match and wrap 'renewal' in %...% since it can appear anywhere in the body.",
+ hints:["ILIKE matches case-insensitively, so 'Draft', 'DRAFT', and 'draft' all qualify.","'draft%' matches any filename starting with draft — but draftsman_plan also starts with draft, so filename alone isn't enough.","Add a second ILIKE condition on body: '%renewal%' matches the word appearing anywhere in the text."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Documents;
+CREATE TABLE Documents(doc_id INT, filename TEXT, body TEXT);
+INSERT INTO Documents VALUES
+ (10,'Draft_Budget','Q3 renewal figures inside.'),
+ (11,'draft_memo','No relevant keyword.'),
+ (12,'old_draft','renewal note here but bad prefix.'),
+ (13,'DRAFT_final','RENEWAL approved.');`,
+   rows:[[10,'Draft_Budget'],[13,'DRAFT_final']]}
+ ]},
+
+{id:82,title:"Q82 · Six-Letter First Names Ending in N",difficulty:"Easy",topic:"String & Text",
+ desc:"Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE)\n\nPick out the employees whose first name is made up of precisely six letters and whose final letter is 'n'. For each one, bring back every column the table stores.\nReturn: emp_id, first_name, last_name, department, salary, hire_date",
+ setup:`DROP TABLE IF EXISTS Employees;
+CREATE TABLE Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE);
+INSERT INTO Employees VALUES
+ (1,'Damian','Cole','Sales',62000,'2021-01-10'),
+ (2,'Steven','Wright','IT',71000,'2020-03-15'),
+ (3,'Alice','Kane','HR',55000,'2019-07-01'),
+ (4,'Justin','Hall','IT',68000,'2022-05-20'),
+ (5,'Susan','Blake','Sales',59000,'2018-11-11'),
+ (6,NULL,'Doe','HR',50000,'2020-01-01'),
+ (7,'Morgan','Lee','Finance',73000,'2021-09-09'),
+ (8,'Steven','Kim','Finance',70000,'2023-02-02');`,
+ tables:["employees"],
+ cols:["emp_id","first_name","last_name","department","salary","hire_date"],
+ rows:[[1,'Damian','Cole','Sales',62000,'2021-01-10'],[2,'Steven','Wright','IT',71000,'2020-03-15'],[4,'Justin','Hall','IT',68000,'2022-05-20'],[7,'Morgan','Lee','Finance',73000,'2021-09-09'],[8,'Steven','Kim','Finance',70000,'2023-02-02']],
+ solution:`SELECT emp_id, first_name, last_name, department, salary, hire_date
+FROM Employees
+WHERE LENGTH(first_name) = 6 AND first_name LIKE '%n'
+ORDER BY emp_id`,
+ tips:"LENGTH(first_name) = 6 filters on exact character count, and LIKE '%n' checks the last character. NULL first names automatically fail the LENGTH comparison and are excluded.",
+ hints:["LENGTH(first_name) gives the character count — filter for exactly 6.","LIKE '%n' matches any string ending in the letter n (case-sensitive).","Combine both conditions with AND; NULL names are excluded automatically since LENGTH(NULL) is NULL."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Employees;
+CREATE TABLE Employees(emp_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT, hire_date DATE);
+INSERT INTO Employees VALUES
+ (10,'Karen','Doyle','Ops',60000,'2022-01-01'),
+ (11,'Warren','Fox','Ops',66000,'2021-06-06'),
+ (12,'Meghan','Ray','Legal',64000,'2020-02-02'),
+ (13,'Brian','Vance','Legal',58000,'2019-09-09'),
+ (14,'Alanna','Brooks','Sales',61000,'2023-03-03');`,
+   rows:[[11,'Warren','Fox','Ops',66000,'2021-06-06'],[12,'Meghan','Ray','Legal',64000,'2020-02-02']]}
+ ]},
+
+{id:83,title:"Q83 · Support Ticket Resolution Rate By Category",difficulty:"Medium",topic:"Ratios & Rates",
+ desc:"SupportTickets(ticket_id INT, category TEXT, resolved BOOLEAN)\n\nCategory by category, measure how well tickets get closed out. For a given category, that measure is the share of its tickets marked resolved out of every ticket filed under it. Give each result to two decimal places.\nReturn: category, resolution_rate",
+ setup:`DROP TABLE IF EXISTS SupportTickets;
+CREATE TABLE SupportTickets(ticket_id INT, category TEXT, resolved BOOLEAN);
+INSERT INTO SupportTickets VALUES
+ (1,'Billing',TRUE),
+ (2,'Billing',TRUE),
+ (3,'Billing',FALSE),
+ (4,'Billing',FALSE),
+ (5,'Technical',TRUE),
+ (6,'Technical',TRUE),
+ (7,'Technical',TRUE),
+ (8,'Account',FALSE),
+ (9,'Account',FALSE),
+ (10,'Shipping',TRUE);`,
+ tables:["supporttickets"],
+ cols:["category","resolution_rate"],
+ rows:[['Account',0.00],['Billing',0.50],['Shipping',1.00],['Technical',1.00]],
+ solution:`SELECT category, ROUND(AVG(CASE WHEN resolved THEN 1.0 ELSE 0.0 END), 2) AS resolution_rate
+FROM SupportTickets
+GROUP BY category
+ORDER BY category`,
+ tips:"AVG of a 1/0 CASE expression is a quick way to compute a per-group proportion. Cast to a decimal (1.0/0.0) so integer division doesn't truncate.",
+ hints:["Turn the boolean into a number per row: 1 if resolved, 0 otherwise, using a CASE expression.","AVG() of those 0/1 values across a GROUP BY category gives the fraction resolved.","Wrap the AVG in ROUND(..., 2) for two decimal places; use 1.0/0.0 (not 1/0) so the division isn't integer division."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS SupportTickets;
+CREATE TABLE SupportTickets(ticket_id INT, category TEXT, resolved BOOLEAN);
+INSERT INTO SupportTickets VALUES
+ (11,'Refunds',TRUE),
+ (12,'Refunds',FALSE),
+ (13,'Refunds',FALSE),
+ (14,'Login',TRUE),
+ (15,'Login',TRUE),
+ (16,'Login',FALSE),
+ (17,'Login',FALSE);`,
+   rows:[['Login',0.50],['Refunds',0.33]]}
+ ]},
+
+{id:84,title:"Q84 · Percentage of Shipable Orders",difficulty:"Medium",topic:"Ratios & Rates",
+ desc:"CustOrders(order_id INT, customer_id INT, order_date DATE, item TEXT, cost INT)\nCustomers(customer_id INT, name TEXT, address TEXT)\n\nAn order can only go out the door when we hold a usable mailing address for the customer behind it — the address field must be filled in, meaning neither NULL nor an empty string. An order pointing at a customer_id we have no record of cannot ship either. Out of the whole order book, what percentage is ready to ship? Round to two decimal places.\nReturn: shipable_pct",
+ setup:`DROP TABLE IF EXISTS CustOrders; DROP TABLE IF EXISTS Customers;
+CREATE TABLE Customers(customer_id INT, name TEXT, address TEXT);
+CREATE TABLE CustOrders(order_id INT, customer_id INT, order_date DATE, item TEXT, cost INT);
+INSERT INTO Customers VALUES
+ (101,'Alice','12 Elm St'),
+ (102,'Bob',NULL),
+ (103,'Cara',''),
+ (104,'Dan','9 Oak Ave');
+INSERT INTO CustOrders VALUES
+ (1,101,'2025-01-01','Widget',20),
+ (2,102,'2025-01-02','Gadget',30),
+ (3,103,'2025-01-03','Gizmo',15),
+ (4,104,'2025-01-04','Thing',25),
+ (5,105,'2025-01-05','Doohickey',10);`,
+ tables:["customorders","customers"],
+ cols:["shipable_pct"],
+ rows:[[40.00]],
+ solution:`SELECT ROUND(100.0 * SUM(CASE WHEN c.address IS NOT NULL AND c.address <> '' THEN 1 ELSE 0 END) / COUNT(*), 2) AS shipable_pct
+FROM CustOrders o
+LEFT JOIN Customers c ON o.customer_id = c.customer_id`,
+ tips:"Use a LEFT JOIN from orders to customers so orders with no matching customer still count in the denominator (and are correctly excluded from the shipable numerator). Guard against empty-string addresses, not just NULL.",
+ hints:["LEFT JOIN CustOrders to Customers so every order stays in the result even if the customer_id doesn't match.","An address is 'known' only if it's not NULL and not an empty string — check both.","Divide the count of shipable orders by the total order count (COUNT(*) over the joined rows), multiply by 100, and ROUND to 2 decimals."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS CustOrders; DROP TABLE IF EXISTS Customers;
+CREATE TABLE Customers(customer_id INT, name TEXT, address TEXT);
+CREATE TABLE CustOrders(order_id INT, customer_id INT, order_date DATE, item TEXT, cost INT);
+INSERT INTO Customers VALUES
+ (201,'Eve','4 Pine Rd'),
+ (202,'Frank','7 Birch Ln'),
+ (203,'Gina',NULL);
+INSERT INTO CustOrders VALUES
+ (10,201,'2025-02-01','Chair',40),
+ (11,202,'2025-02-02','Table',60),
+ (12,203,'2025-02-03','Lamp',20),
+ (13,201,'2025-02-04','Desk',80);`,
+   rows:[[75.00]]}
+ ]},
+
+{id:85,title:"Q85 · Users Missing Phone Numbers",difficulty:"Easy",topic:"Filtering & Conditionals",
+ desc:"AppUsers(user_id INT, user_name TEXT, phone_number TEXT)\n\nSome accounts were set up without a contact number ever being saved. Track those accounts down and list them. Treat a number as absent whenever the field holds NULL or is left blank (an empty string).\nReturn: user_id, user_name",
+ setup:`DROP TABLE IF EXISTS AppUsers;
+CREATE TABLE AppUsers(user_id INT, user_name TEXT, phone_number TEXT);
+INSERT INTO AppUsers VALUES
+ (1,'Alice','555-1234'),
+ (2,'Bob',NULL),
+ (3,'Cara',''),
+ (4,'Dan','555-5678'),
+ (5,'Eve',NULL),
+ (6,'Frank','555-9999');`,
+ tables:["appusers"],
+ cols:["user_id","user_name"],
+ rows:[[2,'Bob'],[3,'Cara'],[5,'Eve']],
+ solution:`SELECT user_id, user_name FROM AppUsers WHERE phone_number IS NULL OR phone_number = '' ORDER BY user_id`,
+ tips:"NULL and empty string are different values in SQL and both must be checked explicitly — IS NULL alone would miss the empty-string rows.",
+ hints:["IS NULL alone won't catch empty-string phone numbers — they aren't NULL, they're ''.","Check both conditions with OR: phone_number IS NULL OR phone_number = ''.","Return just user_id and user_name for the matching rows, ordered however you like (grading is order-independent)."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS AppUsers;
+CREATE TABLE AppUsers(user_id INT, user_name TEXT, phone_number TEXT);
+INSERT INTO AppUsers VALUES
+ (10,'Gina','777-0001'),
+ (11,'Hank',''),
+ (12,'Ivy',NULL),
+ (13,'Jack','777-0004');`,
+   rows:[[11,'Hank'],[12,'Ivy']]}
+ ]},
+
+{id:86,title:"Q86 · Word Frequency in Meeting Notes",difficulty:"Medium",topic:"String & Text",
+ desc:"MeetingNotes(note_id INT, contents TEXT)\n\nBreak every note's contents into individual words on whitespace, strip any punctuation stuck to a word, and lowercase everything so capitalization doesn't create duplicate entries. Tally how many times each resulting word shows up across the whole table.\nReturn: word, occurrences",
+ setup:`DROP TABLE IF EXISTS MeetingNotes;
+CREATE TABLE MeetingNotes(note_id INT, contents TEXT);
+INSERT INTO MeetingNotes VALUES
+ (1,'Ship the release, ship it today.'),
+ (2,'Release day is today!'),
+ (3,'Today we ship.'),
+ (4,NULL),
+ (5,''),
+ (6,'SHIP ship Ship'),
+ (7,'Blocked: waiting on QA sign-off.');`,
+ tables:["meetingnotes"],
+ cols:["word","occurrences"],
+ rows:[["ship",6],["today",3],["release",2],["blocked",1],["day",1],["is",1],["it",1],["on",1],["qa",1],["signoff",1],["the",1],["waiting",1],["we",1]],
+ solution:`SELECT word, COUNT(*) AS occurrences
+FROM (
+  SELECT lower(regexp_replace(w, '[^a-zA-Z0-9]', '', 'g')) AS word
+  FROM MeetingNotes, regexp_split_to_table(contents, '\\s+') AS w
+  WHERE contents IS NOT NULL AND contents <> ''
+) t
+WHERE word <> ''
+GROUP BY word
+ORDER BY occurrences DESC, word`,
+ tips:"regexp_split_to_table breaks each row's text into a word per output row (a set-returning function used directly in the FROM list). Lowercase and strip non-alphanumeric characters before grouping so 'Ship,' and 'ship' count as the same word.",
+ hints:["regexp_split_to_table(contents, '\\\\s+') turns one note into one row per whitespace-separated token — use it directly in the FROM clause alongside MeetingNotes.","Punctuation attached to a word (commas, periods, colons) needs stripping and casing needs normalizing before you can group correctly: regexp_replace(lower(w), '[^a-zA-Z0-9]', '', 'g').","Skip NULL/empty contents and empty tokens produced by stripping, then GROUP BY the cleaned word and COUNT(*)."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS MeetingNotes;
+CREATE TABLE MeetingNotes(note_id INT, contents TEXT);
+INSERT INTO MeetingNotes VALUES
+ (10,'Deploy now, deploy fast.'),
+ (11,'Now is the time.'),
+ (12,'DEPLOY!'),
+ (13,NULL);`,
+   rows:[["deploy",3],["now",2],["fast",1],["is",1],["the",1],["time",1]]}
+ ]},
+
+{id:87,title:"Q87 · Bean Varieties Reviewed By a Taster",difficulty:"Easy",topic:"Filtering & Conditionals",
+ desc:"CoffeeTastings(review_id INT, taster_name TEXT, bean_variety TEXT, farm_region TEXT)\n\nAmong the reviews written by taster 'Naomi Reyes', find the bean varieties for which the farm_region is filled in (not NULL). List each qualifying variety once.\nReturn: bean_variety",
+ setup:`DROP TABLE IF EXISTS CoffeeTastings;
+CREATE TABLE CoffeeTastings(review_id INT, taster_name TEXT, bean_variety TEXT, farm_region TEXT);
+INSERT INTO CoffeeTastings VALUES
+ (1,'Naomi Reyes','Bourbon','Yirgacheffe'),
+ (2,'Naomi Reyes','Bourbon','Sidama'),
+ (3,'Naomi Reyes','Typica',NULL),
+ (4,'Naomi Reyes','Geisha','Huila'),
+ (5,'Marcus Ide','Caturra','Antioquia'),
+ (6,'Naomi Reyes','Pacamara',NULL),
+ (7,'Naomi Reyes','Caturra','Tarrazu');`,
+ tables:["coffeetastings"],
+ cols:["bean_variety"],
+ rows:[["Bourbon"],["Caturra"],["Geisha"]],
+ solution:`SELECT DISTINCT bean_variety
+FROM CoffeeTastings
+WHERE taster_name = 'Naomi Reyes' AND farm_region IS NOT NULL
+ORDER BY bean_variety`,
+ tips:"Filter to the one taster and a non-NULL farm_region, then DISTINCT collapses the repeated 'Bourbon' rows into a single result.",
+ hints:["Filter rows to taster_name = 'Naomi Reyes' first.","Add farm_region IS NOT NULL — reviews with no region on file don't count.","Wrap in SELECT DISTINCT since the same variety can appear in more than one qualifying review."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS CoffeeTastings;
+CREATE TABLE CoffeeTastings(review_id INT, taster_name TEXT, bean_variety TEXT, farm_region TEXT);
+INSERT INTO CoffeeTastings VALUES
+ (10,'Naomi Reyes','SL28','Nyeri'),
+ (11,'Naomi Reyes','SL28',NULL),
+ (12,'Priya Anand','SL34','Kirinyaga'),
+ (13,'Naomi Reyes','Java','Nyeri');`,
+   rows:[["Java"],["SL28"]]}
+ ]},
+
+{id:88,title:"Q88 · Counting Bull and Bear Mentions",difficulty:"Hard",topic:"String & Text",
+ desc:"MarketNotes(note_id INT, snippet TEXT)\n\nCount, case-insensitively, how many times the exact words \"bull\" and \"bear\" occur in the snippet column across all rows — count every occurrence within a row, not just whether it appears. A match must be a standalone word: substrings inside longer words like \"bullish\" or \"bearing\" don't count, even though hyphenated forms like \"bull-run\" do.\nReturn: word, occurrences",
+ setup:`DROP TABLE IF EXISTS MarketNotes;
+CREATE TABLE MarketNotes(note_id INT, snippet TEXT);
+INSERT INTO MarketNotes VALUES
+ (1,'Traders call this a bull market, and the bull-run may continue.'),
+ (2,'A bearish tone crept in, though nobody said bear outright.'),
+ (3,'BULL BULL everywhere, one commentator shouted.'),
+ (4,'The bear market bruised confidence; another bear signal followed.'),
+ (5,'Bullish and bearing are not the same as Bull or Bear.'),
+ (6,'No commentary today.');`,
+ tables:["marketnotes"],
+ cols:["word","occurrences"],
+ rows:[["bear",4],["bull",5]],
+ solution:`WITH words AS (SELECT unnest(ARRAY['bull','bear']) AS word)
+SELECT w.word,
+ COALESCE(SUM((SELECT COUNT(*) FROM regexp_matches(lower(m.snippet), '\\m' || w.word || '\\M', 'g'))), 0) AS occurrences
+FROM words w
+CROSS JOIN MarketNotes m
+GROUP BY w.word
+ORDER BY w.word`,
+ tips:"regexp_matches(..., 'g') returns one row per match, so wrapping it in COUNT(*) inside a correlated subquery gives the per-row occurrence count; the \\m and \\M anchors mark a word's start and end so 'bullish' can't match 'bull'.",
+ hints:["Lowercase the snippet first so the match is case-insensitive.","Postgres regex word-boundary anchors \\m and \\M mark the start/end of a word — '\\mbull\\M' matches 'bull' and 'bull-run' but not 'bullish'.","regexp_matches(text, pattern, 'g') returns one row per occurrence; count those rows per snippet and SUM across all rows, per word."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS MarketNotes;
+CREATE TABLE MarketNotes(note_id INT, snippet TEXT);
+INSERT INTO MarketNotes VALUES
+ (10,'A bear, then a bull, then a bear again.'),
+ (11,'Bearish sentiment, no bull talk.'),
+ (12,'bull-market bull-run bear-trap');`,
+   rows:[["bear",3],["bull",4]]}
+ ]},
+
+{id:89,title:"Q89 · Distinct Shipments Per Month",difficulty:"Easy",topic:"Date & Time",
+ desc:"WarehouseShipments(shipment_id INT, parcel_id INT, ship_date DATE, weight INT)\n\nA shipment is uniquely identified by the pair (shipment_id, parcel_id); the same pair can appear on more than one row due to duplicate logging. For each calendar month, count the distinct shipments that went out.\nReturn: year_month (format YYYY-MM), shipment_count",
+ setup:`DROP TABLE IF EXISTS WarehouseShipments;
+CREATE TABLE WarehouseShipments(shipment_id INT, parcel_id INT, ship_date DATE, weight INT);
+INSERT INTO WarehouseShipments VALUES
+ (1,1,'2025-01-05',10),
+ (1,1,'2025-01-05',10),
+ (1,2,'2025-01-20',15),
+ (2,1,'2025-02-01',20),
+ (2,2,'2025-02-14',5),
+ (2,2,'2025-02-14',5),
+ (3,1,'2025-02-28',8),
+ (3,1,'2025-03-01',9);`,
+ tables:["warehouseshipments"],
+ cols:["year_month","shipment_count"],
+ rows:[["2025-01",2],["2025-02",3],["2025-03",1]],
+ solution:`SELECT TO_CHAR(ship_date, 'YYYY-MM') AS year_month,
+ COUNT(DISTINCT (shipment_id, parcel_id)) AS shipment_count
+FROM WarehouseShipments
+GROUP BY year_month
+ORDER BY year_month`,
+ tips:"TO_CHAR formats a date into the YYYY-MM bucket to group by month. COUNT(DISTINCT (a, b)) counts distinct row-value pairs, which collapses the duplicated logging rows for the same shipment.",
+ hints:["TO_CHAR(ship_date, 'YYYY-MM') turns a date into its calendar-month bucket for grouping.","The same (shipment_id, parcel_id) pair can be logged more than once — a plain COUNT(*) would overcount.","COUNT(DISTINCT (shipment_id, parcel_id)) counts each unique pair once per month, using a row constructor inside DISTINCT."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS WarehouseShipments;
+CREATE TABLE WarehouseShipments(shipment_id INT, parcel_id INT, ship_date DATE, weight INT);
+INSERT INTO WarehouseShipments VALUES
+ (10,1,'2025-04-02',12),
+ (10,1,'2025-04-02',12),
+ (10,1,'2025-04-02',12),
+ (11,1,'2025-04-15',7),
+ (12,1,'2025-05-01',6);`,
+   rows:[["2025-04",2],["2025-05",1]]}
+ ]},
+
+{id:90,title:"Q90 · Bike Rentals in Rain Before Noon",difficulty:"Medium",topic:"Date & Time",
+ desc:"BikeRentals(ride_id INT, ride_time TIMESTAMP, weather TEXT, distance_km NUMERIC)\n\nA ride qualifies when the weather logged for it is 'Rain' AND its ride_time falls strictly before 12:00 noon on whatever day it happened (the calendar date doesn't matter, only the time of day). Return the full row for every qualifying ride.\nReturn: ride_id, ride_time, weather, distance_km",
+ setup:`DROP TABLE IF EXISTS BikeRentals;
+CREATE TABLE BikeRentals(ride_id INT, ride_time TIMESTAMP, weather TEXT, distance_km NUMERIC);
+INSERT INTO BikeRentals VALUES
+ (1,'2025-03-01 00:05:00','Rain',2.5),
+ (2,'2025-03-01 08:30:00','Rain',3.1),
+ (3,'2025-03-01 11:59:59','Rain',1.2),
+ (4,'2025-03-01 12:00:00','Rain',4.0),
+ (5,'2025-03-01 09:15:00','Clear',2.0),
+ (6,'2025-03-02 07:00:00','Rain',5.5),
+ (7,'2025-03-02 18:00:00','Rain',2.2),
+ (8,'2025-03-02 06:45:00','Cloudy',1.9);`,
+ tables:["bikerentals"],
+ cols:["ride_id","ride_time","weather","distance_km"],
+ rows:[[1,"2025-03-01 00:05:00","Rain",2.5],[2,"2025-03-01 08:30:00","Rain",3.1],[3,"2025-03-01 11:59:59","Rain",1.2],[6,"2025-03-02 07:00:00","Rain",5.5]],
+ solution:`SELECT ride_id, ride_time, weather, distance_km
+FROM BikeRentals
+WHERE weather = 'Rain' AND EXTRACT(HOUR FROM ride_time) * 60 + EXTRACT(MINUTE FROM ride_time) < 720
+ORDER BY ride_id`,
+ tips:"Extract the hour and minute from the timestamp and compare against 720 minutes (12:00 noon) rather than comparing the whole timestamp, since the calendar date shouldn't matter — only the time of day.",
+ hints:["'Before noon' is about the time-of-day component of ride_time, not the date — EXTRACT(HOUR FROM ride_time) and EXTRACT(MINUTE FROM ride_time) give you that.","Convert hour and minute into total minutes since midnight and compare against 720 (12:00 noon) with a strict less-than.","Combine with weather = 'Rain' using AND; a ride_time of exactly 12:00:00 is noon, not before it, so it's excluded."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS BikeRentals;
+CREATE TABLE BikeRentals(ride_id INT, ride_time TIMESTAMP, weather TEXT, distance_km NUMERIC);
+INSERT INTO BikeRentals VALUES
+ (10,'2025-04-10 05:00:00','Rain',3.3),
+ (11,'2025-04-10 12:00:01','Rain',2.1),
+ (12,'2025-04-10 10:00:00','Clear',1.5),
+ (13,'2025-04-11 23:59:00','Rain',4.4);`,
+   rows:[[10,"2025-04-10 05:00:00","Rain",3.3]]}
+ ]},
+
+{id:91,title:"Q91 · Club Invite Acceptance Rate By Date",difficulty:"Medium",topic:"Date & Time",
+ desc:"ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT)\n\nEach row records either an invite being 'sent' or an invite being 'accepted', with the (sender_id, receiver_id) pair linking the two events; an unaccepted invite has no 'accepted' row. An acceptance only counts if its date falls within 7 days of the send date, inclusive (i.e. accepted on or after the send date and no later than the send date plus 7 days); acceptances that arrive later are ignored. For each date on which invites were sent, compute the fraction of those invites that were accepted inside that window, rounded to 2 decimal places. Omit any send date whose invites had no qualifying acceptance.\nReturn: invite_date, acceptance_rate",
+ setup:`DROP TABLE IF EXISTS ClubInvites;
+CREATE TABLE ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT);
+INSERT INTO ClubInvites VALUES
+ ('sent','2025-05-01','A','B'),
+ ('sent','2025-05-01','A','C'),
+ ('accepted','2025-05-03','A','B'),
+ ('sent','2025-05-02','D','E'),
+ ('sent','2025-05-02','D','F'),
+ ('accepted','2025-05-02','D','E'),
+ ('accepted','2025-05-15','D','F'),
+ ('sent','2025-05-05','G','H'),
+ ('sent','2025-05-06','I','J'),
+ ('accepted','2025-05-13','I','J');`,
+ tables:["clubinvites"],
+ cols:["invite_date","acceptance_rate"],
+ rows:[["2025-05-01",0.50],["2025-05-02",0.50],["2025-05-06",1.00]],
+ solution:`WITH sent AS (
+  SELECT sender_id, receiver_id, invite_date AS sent_date
+  FROM ClubInvites WHERE action = 'sent'
+),
+accepted AS (
+  SELECT sender_id, receiver_id, invite_date AS accepted_date
+  FROM ClubInvites WHERE action = 'accepted'
+)
+SELECT s.sent_date AS invite_date,
+ ROUND(1.0 * SUM(CASE WHEN a.sender_id IS NOT NULL THEN 1 ELSE 0 END) / COUNT(*), 2) AS acceptance_rate
+FROM sent s
+LEFT JOIN accepted a ON a.sender_id = s.sender_id AND a.receiver_id = s.receiver_id
+ AND a.accepted_date BETWEEN s.sent_date AND s.sent_date + 7
+GROUP BY s.sent_date
+HAVING SUM(CASE WHEN a.sender_id IS NOT NULL THEN 1 ELSE 0 END) > 0
+ORDER BY s.sent_date`,
+ tips:"Split the rows into sent events and accepted events, then LEFT JOIN on the (sender, receiver) pair with an extra date-window condition so only acceptances within 7 days of the send count. HAVING drops send-dates left with no qualifying acceptance.",
+ hints:["Separate the rows into 'sent' events and 'accepted' events, each keyed by (sender_id, receiver_id) and carrying its own date.","LEFT JOIN sent to accepted on the pair, and add a join condition that the accepted_date is BETWEEN the sent_date and sent_date + 7 — acceptances outside that window must not match.","Group by the send date, compute qualifying-accepted / total-sent as a ROUND(...,2) ratio, and use HAVING to drop dates with zero qualifying acceptances."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS ClubInvites;
+CREATE TABLE ClubInvites(action TEXT, invite_date DATE, sender_id TEXT, receiver_id TEXT);
+INSERT INTO ClubInvites VALUES
+ ('sent','2025-06-01','P','Q'),
+ ('sent','2025-06-01','P','R'),
+ ('sent','2025-06-01','P','S'),
+ ('accepted','2025-06-02','P','Q'),
+ ('accepted','2025-06-20','P','R'),
+ ('sent','2025-06-02','T','U'),
+ ('accepted','2025-06-05','T','U');`,
+   rows:[["2025-06-01",0.33],["2025-06-02",1.00]]}
+ ]},
+
+{id:92,title:"Q92 · Regional Premium Subscriber Share",difficulty:"Medium",topic:"Ratios & Rates",
+ desc:"CreatorSubs(sub_id INT, region TEXT, plan_status TEXT)\n\nOut of every subscriber on file, work out what share is BOTH based in the 'APAC' region AND currently on the 'premium' plan_status. Express the result as a percentage of the whole subscriber base, rounded to two decimal places.\nReturn: pct_apac_premium",
+ setup:`DROP TABLE IF EXISTS CreatorSubs;
+CREATE TABLE CreatorSubs(sub_id INT, region TEXT, plan_status TEXT);
+INSERT INTO CreatorSubs VALUES
+ (1,'APAC','premium'),
+ (2,'APAC','premium'),
+ (3,'APAC','free'),
+ (4,'EU','premium'),
+ (5,'EU','free'),
+ (6,'NA','premium'),
+ (7,'NA','trial'),
+ (8,NULL,'premium'),
+ (9,'APAC',NULL),
+ (10,'APAC','premium');`,
+ tables:["creatorsubs"],
+ cols:["pct_apac_premium"],
+ rows:[[30.00]],
+ solution:`SELECT ROUND(100.0 * SUM(CASE WHEN region = 'APAC' AND plan_status = 'premium' THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_apac_premium
+FROM CreatorSubs`,
+ tips:"Sum a 1/0 CASE expression that requires both conditions at once, then divide by COUNT(*) over the whole table. Multiply by 100.0 (not 100) up front so the division doesn't truncate to an integer.",
+ hints:["A row counts toward the numerator only if BOTH region = 'APAC' AND plan_status = 'premium' are true — combine them in one CASE/AND, not two separate checks.","The denominator is every subscriber, COUNT(*) over the full table, regardless of region or status.","Multiply by 100.0 before dividing so PostgreSQL doesn't perform integer division, then ROUND to 2 decimal places."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS CreatorSubs;
+CREATE TABLE CreatorSubs(sub_id INT, region TEXT, plan_status TEXT);
+INSERT INTO CreatorSubs VALUES
+ (20,'APAC','premium'),
+ (21,'APAC','trial'),
+ (22,'EU','premium'),
+ (23,'EU','premium'),
+ (24,'NA','free');`,
+   rows:[[20.00]]}
+ ]},
+
+{id:93,title:"Q93 · Reporter Diversity Rate Per Post",difficulty:"Medium",topic:"Ratios & Rates",
+ desc:"ContentReports(report_id TEXT, reporter_first TEXT, reporter_last TEXT, post_id TEXT)\n\nEvery flag submitted against a post gets a row here; a NULL report_id marks a placeholder row where no flag was actually filed, so drop those first. For each post that has at least one real flag, compute what percentage of its flag rows came from distinct reporters (a reporter is identified by their first+last name pair) versus the total number of flag rows for that post. A post flagged five times by the same person scores low; a post where every flag comes from a different person scores 100. Round to two decimal places and skip posts with zero real flags.\nReturn: post_id, reporter_diversity_pct",
+ setup:`DROP TABLE IF EXISTS ContentReports;
+CREATE TABLE ContentReports(report_id TEXT, reporter_first TEXT, reporter_last TEXT, post_id TEXT);
+INSERT INTO ContentReports VALUES
+ ('1','Amy','Lee','P100'),
+ ('2','Amy','Lee','P100'),
+ ('3','Ben','Cruz','P100'),
+ ('4','Cara','Diaz','P100'),
+ (NULL,'Xan','Yu','P100'),
+ ('5','Dan','Fox','P200'),
+ ('6','Dan','Fox','P200'),
+ ('7','Dan','Fox','P200'),
+ (NULL,'Zed','Quinn','P300'),
+ ('8','Eve','Gomez','P400');`,
+ tables:["contentreports"],
+ cols:["post_id","reporter_diversity_pct"],
+ rows:[["P100",75.00],["P200",33.33],["P400",100.00]],
+ solution:`SELECT post_id,
+ ROUND(100.0 * COUNT(DISTINCT reporter_first || '|' || reporter_last) / COUNT(*), 2) AS reporter_diversity_pct
+FROM ContentReports
+WHERE report_id IS NOT NULL
+GROUP BY post_id
+ORDER BY post_id`,
+ tips:"Filter out the placeholder (NULL report_id) rows in a WHERE clause before grouping, so posts with only placeholders naturally disappear. Combine first+last name into one key for COUNT(DISTINCT ...) so two different people who happen to share a first name aren't merged.",
+ hints:["WHERE report_id IS NOT NULL removes placeholder rows before any grouping happens — apply it before GROUP BY, not after.","Identify a unique reporter by combining reporter_first and reporter_last (e.g. with ||) so COUNT(DISTINCT ...) treats the pair as one identity.","Per post_id, divide COUNT(DISTINCT combined name) by COUNT(*) of the remaining rows, multiply by 100.0, and ROUND to 2 decimals; a post left with zero rows after the WHERE filter won't appear in the GROUP BY output at all."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS ContentReports;
+CREATE TABLE ContentReports(report_id TEXT, reporter_first TEXT, reporter_last TEXT, post_id TEXT);
+INSERT INTO ContentReports VALUES
+ ('10','Gia','Hall','Q1'),
+ ('11','Gia','Hall','Q1'),
+ ('12','Gia','Hall','Q1'),
+ ('13','Gia','Hall','Q1'),
+ ('14','Ivy','Jax','Q2'),
+ ('15','Ken','Loo','Q2'),
+ (NULL,'Mia','Noor','Q3');`,
+   rows:[["Q1",25.00],["Q2",100.00]]}
+ ]},
+
+{id:94,title:"Q94 · Month-over-Month Revenue Swing",difficulty:"Hard",topic:"Ratios & Rates",
+ desc:"SubRevenue(payment_id INT, txn_date DATE, amount INT)\n\nGroup all payments by calendar month and total the amount collected in each. For every month after the first one present in the data, work out how much that month's total changed versus the prior month, expressed as a percentage of the prior month's total: ((this month - last month) / last month) * 100, rounded to two decimal places. The very first month in the data has no prior month to compare against, so leave it blank. If a prior month's total was exactly zero, the percentage change is undefined — leave that month blank too instead of erroring. Order the result from the earliest month to the latest.\nReturn: ym, pct_change",
+ setup:`DROP TABLE IF EXISTS SubRevenue;
+CREATE TABLE SubRevenue(payment_id INT, txn_date DATE, amount INT);
+INSERT INTO SubRevenue VALUES
+ (1,'2025-01-05',600),
+ (2,'2025-01-20',400),
+ (3,'2025-02-10',0),
+ (4,'2025-03-15',500),
+ (5,'2025-04-01',700),
+ (6,'2025-04-25',300);`,
+ tables:["subrevenue"],
+ cols:["ym","pct_change"],
+ rows:[["2025-01",null],["2025-02",-100.00],["2025-03",null],["2025-04",100.00]],
+ solution:`WITH monthly AS (
+  SELECT TO_CHAR(txn_date, 'YYYY-MM') AS ym, SUM(amount) AS revenue
+  FROM SubRevenue
+  GROUP BY TO_CHAR(txn_date, 'YYYY-MM')
+)
+SELECT ym,
+ ROUND(100.0 * (revenue - LAG(revenue) OVER (ORDER BY ym)) / NULLIF(LAG(revenue) OVER (ORDER BY ym), 0), 2) AS pct_change
+FROM monthly
+ORDER BY ym`,
+ tips:"Aggregate to one row per calendar month first (TO_CHAR(txn_date,'YYYY-MM') with SUM), then use LAG() over that monthly series to compare each month to the one before it. Wrap the LAG denominator in NULLIF(...,0) so a zero-revenue prior month produces NULL instead of a division-by-zero error.",
+ hints:["First collapse the raw payments into one row per month: GROUP BY TO_CHAR(txn_date, 'YYYY-MM') with SUM(amount).","Use LAG(revenue) OVER (ORDER BY ym) on that monthly series to fetch the previous month's total for the pct-change formula.","Divide by NULLIF(LAG(revenue) OVER (ORDER BY ym), 0) rather than the raw LAG value — this turns a zero prior-month total into NULL instead of throwing a division-by-zero error, which also naturally leaves the first month blank since its LAG is NULL."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS SubRevenue;
+CREATE TABLE SubRevenue(payment_id INT, txn_date DATE, amount INT);
+INSERT INTO SubRevenue VALUES
+ (10,'2025-06-01',1000),
+ (11,'2025-07-01',1500),
+ (12,'2025-08-01',750);`,
+   rows:[["2025-06",null],["2025-07",50.00],["2025-08",-50.00]]}
+ ]},
+
+{id:95,title:"Q95 · Top Earners in Back-Office Departments",difficulty:"Easy",topic:"Filtering & Conditionals",
+ desc:"WarehouseStaff(staff_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT)\n\nLeadership wants a compensation snapshot limited to two back-office teams. Pull every employee who works in either the 'Logistics' or 'Facilities' department AND earns more than 75000.\nReturn: first_name, last_name, department, salary",
+ setup:`DROP TABLE IF EXISTS WarehouseStaff;
+CREATE TABLE WarehouseStaff(staff_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT);
+INSERT INTO WarehouseStaff VALUES
+ (1,'Nina','Ortiz','Logistics',82000),
+ (2,'Omar','Price','Logistics',70000),
+ (3,'Paula','Quinn','Facilities',90000),
+ (4,'Raj','Singh','Facilities',75000),
+ (5,'Sara','Tuck','Sales',120000),
+ (6,'Tom','Ura','Logistics',76500),
+ (7,'Vera','West','Facilities',60000);`,
+ tables:["warehousestaff"],
+ cols:["first_name","last_name","department","salary"],
+ rows:[["Nina","Ortiz","Logistics",82000],["Paula","Quinn","Facilities",90000],["Tom","Ura","Logistics",76500]],
+ solution:`SELECT first_name, last_name, department, salary
+FROM WarehouseStaff
+WHERE department IN ('Logistics', 'Facilities') AND salary > 75000
+ORDER BY staff_id`,
+ tips:"A row must satisfy both conditions at once, so combine the department check and the salary check with AND. IN (...) is a clean way to test membership in the two eligible departments instead of chaining OR.",
+ hints:["Use WHERE department IN ('Logistics', 'Facilities') to match either eligible department in one condition.","The salary bar is strictly 'more than' 75000, so use > not >=.","Combine both conditions with AND — a row needs the right department AND the qualifying salary to appear."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS WarehouseStaff;
+CREATE TABLE WarehouseStaff(staff_id INT, first_name TEXT, last_name TEXT, department TEXT, salary INT);
+INSERT INTO WarehouseStaff VALUES
+ (10,'Amy','Byrd','Facilities',75000),
+ (11,'Cole','Diaz','Logistics',95000),
+ (12,'Ella','Frost','Sales',200000),
+ (13,'Gabe','Hu','Logistics',40000);`,
+   rows:[["Cole","Diaz","Logistics",95000]]}
+ ]},
+
+{id:96,title:"Q96 · Veteran Medalists Over 40",difficulty:"Easy",topic:"Filtering & Conditionals",
+ desc:"TrackResults(entry_id INT, athlete_name TEXT, age INT, event TEXT, medal TEXT)\n\nA masters-circuit historian wants a list of athletes who were still winning medals well past their prime. Find every entry where the athlete's age at the time was over 40 AND the medal awarded was either 'Bronze' or 'Silver' — gold-medal entries and entries with no medal don't belong on this list, regardless of age.\nReturn: athlete_name, age, event, medal",
+ setup:`DROP TABLE IF EXISTS TrackResults;
+CREATE TABLE TrackResults(entry_id INT, athlete_name TEXT, age INT, event TEXT, medal TEXT);
+INSERT INTO TrackResults VALUES
+ (1,'Ana Fields',42,'Marathon','Bronze'),
+ (2,'Bo Chen',45,'Marathon','Gold'),
+ (3,'Cid Nunes',38,'800m','Silver'),
+ (4,'Dara Voss',41,'Shot Put','Silver'),
+ (5,'Eli Marsh',50,'Javelin',NULL),
+ (6,'Fay Osei',40,'Marathon','Bronze'),
+ (7,'Gus Reyes',60,'800m','Bronze');`,
+ tables:["trackresults"],
+ cols:["athlete_name","age","event","medal"],
+ rows:[["Ana Fields",42,"Marathon","Bronze"],["Dara Voss",41,"Shot Put","Silver"],["Gus Reyes",60,"800m","Bronze"]],
+ solution:`SELECT athlete_name, age, event, medal
+FROM TrackResults
+WHERE age > 40 AND medal IN ('Bronze', 'Silver')
+ORDER BY entry_id`,
+ tips:"Two independent filters joined by AND: a strict age cutoff (> 40, so exactly 40 doesn't qualify) and a medal membership check with IN. NULL medals automatically fail the IN test without any extra NULL handling.",
+ hints:["The age condition is strictly 'over 40', so age > 40 — an athlete who was exactly 40 does not qualify.","Use medal IN ('Bronze', 'Silver') to accept either medal color in one condition.","AND the two conditions together; rows with a NULL medal or a Gold medal are excluded automatically by the IN check."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS TrackResults;
+CREATE TABLE TrackResults(entry_id INT, athlete_name TEXT, age INT, event TEXT, medal TEXT);
+INSERT INTO TrackResults VALUES
+ (10,'Hana Volk',55,'Discus','Gold'),
+ (11,'Ivo Kade',44,'Discus','Bronze'),
+ (12,'Jool Amis',30,'Discus','Silver'),
+ (13,'Kira Ott',40,'Discus','Bronze');`,
+   rows:[["Ivo Kade",44,"Discus","Bronze"]]}
+ ]},
+
+{id:97,title:"Q97 · Survival Counts by Cabin Tier",difficulty:"Medium",topic:"Filtering & Conditionals",
+ desc:"CruisePassengers(passenger_id INT, cabin_tier INT, survived INT)\n\ncabin_tier holds 1, 2, or 3; survived holds 1 for a survivor and 0 otherwise. Translate each cabin_tier into its label — 1 = 'First', 2 = 'Second', 3 = 'Third' — using a CASE expression, then for each label count how many passengers in that tier survived and how many did not.\nReturn: class_label, survivors, non_survivors",
+ setup:`DROP TABLE IF EXISTS CruisePassengers;
+CREATE TABLE CruisePassengers(passenger_id INT, cabin_tier INT, survived INT);
+INSERT INTO CruisePassengers VALUES
+ (1,1,1),
+ (2,1,1),
+ (3,1,0),
+ (4,2,1),
+ (5,2,0),
+ (6,2,0),
+ (7,3,0),
+ (8,3,0),
+ (9,3,0),
+ (10,3,1);`,
+ tables:["cruisepassengers"],
+ cols:["class_label","survivors","non_survivors"],
+ rows:[["First",2,1],["Second",1,2],["Third",1,3]],
+ solution:`SELECT
+ CASE cabin_tier WHEN 1 THEN 'First' WHEN 2 THEN 'Second' WHEN 3 THEN 'Third' END AS class_label,
+ SUM(CASE WHEN survived = 1 THEN 1 ELSE 0 END) AS survivors,
+ SUM(CASE WHEN survived = 1 THEN 0 ELSE 1 END) AS non_survivors
+FROM CruisePassengers
+GROUP BY cabin_tier
+ORDER BY cabin_tier`,
+ tips:"A CASE expression maps the numeric cabin_tier to a readable label right in the SELECT list, and GROUP BY the underlying cabin_tier (not the label) keeps the grouping simple. Two more CASE expressions inside SUM() split survived/non-survived counts out of the same grouped rows.",
+ hints:["Build the label with CASE cabin_tier WHEN 1 THEN 'First' WHEN 2 THEN 'Second' WHEN 3 THEN 'Third' END in the SELECT list.","GROUP BY the original cabin_tier column (not the CASE result) so each tier's rows are aggregated together.","Count survivors and non-survivors with two SUM(CASE WHEN survived = 1 THEN ... ELSE ... END) expressions in the same SELECT."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS CruisePassengers;
+CREATE TABLE CruisePassengers(passenger_id INT, cabin_tier INT, survived INT);
+INSERT INTO CruisePassengers VALUES
+ (20,1,0),
+ (21,2,1),
+ (22,2,1),
+ (23,3,1),
+ (24,3,0),
+ (25,1,1);`,
+   rows:[["First",1,1],["Second",2,0],["Third",1,1]]}
+ ]},
+{id:98,title:"Q98 · Consultants Outearning Their Supervisor",difficulty:"Medium",topic:"Self-Joins & Comparisons",
+ desc:"Staff(staff_id INT, name TEXT, supervisor_id INT, salary INT)\n\nEach row is a consulting staff member; supervisor_id points to another row's staff_id (NULL for a managing partner who has no supervisor). Find every staff member who earns strictly more than their own supervisor.\nReturn: name, salary",
+ setup:`DROP TABLE IF EXISTS Staff;
+CREATE TABLE Staff(staff_id INT, name TEXT, supervisor_id INT, salary INT);
+INSERT INTO Staff VALUES
+ (1,'Nina Cole',NULL,190000),
+ (2,'Omar Diaz',1,150000),
+ (3,'Priya Nair',1,210000),
+ (4,'Liam Ortiz',2,140000),
+ (5,'Sara Kim',2,155000),
+ (6,'Tomas Silva',3,210000),
+ (7,'Yuki Tanaka',3,225000),
+ (8,'Amara Bello',5,100000),
+ (9,'Dev Patel',NULL,300000);`,
+ tables:["staff"],
+ cols:["name","salary"],
+ rows:[["Priya Nair",210000],["Sara Kim",155000],["Yuki Tanaka",225000]],
+ solution:`SELECT s.name, s.salary
+FROM Staff s
+JOIN Staff sup ON s.supervisor_id = sup.staff_id
+WHERE s.salary > sup.salary
+ORDER BY s.staff_id`,
+ tips:"Self-join Staff to itself, matching each row's supervisor_id to the supervisor's staff_id, then keep rows where the employee's salary exceeds the supervisor's. Rows with a NULL supervisor_id drop out of the join automatically.",
+ hints:["Join the Staff table to itself: one copy for the employee, one for their supervisor, matching supervisor_id to staff_id.","Filter to rows where the employee's salary is strictly greater than the matched supervisor's salary.","Top-level staff with a NULL supervisor_id have no join partner and are correctly excluded; equal salaries should not qualify."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Staff;
+CREATE TABLE Staff(staff_id INT, name TEXT, supervisor_id INT, salary INT);
+INSERT INTO Staff VALUES
+ (1,'A',NULL,500000),
+ (2,'B',1,400000),
+ (3,'C',1,600000),
+ (4,'D',2,410000),
+ (5,'E',2,390000);`,
+   rows:[["C",600000],["D",410000]]}
+ ]},
+{id:99,title:"Q99 · Top Achiever Under a Regional Lead",difficulty:"Medium",topic:"Self-Joins & Comparisons",
+ desc:"SalesReps(rep_id INT, name TEXT, manager_id INT, quota_achieved INT)\n\nEvery sales rep reports to a manager, who is also a row in this same table (manager_id references another rep's rep_id). Among the reps who report directly to the manager named 'Dana Cho', find the rep(s) with the highest quota_achieved — there may be a tie.\nReturn: name, quota_achieved for every rep tied for the top value",
+ setup:`DROP TABLE IF EXISTS SalesReps;
+CREATE TABLE SalesReps(rep_id INT, name TEXT, manager_id INT, quota_achieved INT);
+INSERT INTO SalesReps VALUES
+ (1,'Dana Cho',NULL,0),
+ (2,'Evan Brooks',1,85),
+ (3,'Farah Idris',1,120),
+ (4,'Grace Lin',1,120),
+ (5,'Hugo Vance',1,95),
+ (6,'Ivy Chen',NULL,300),
+ (7,'Jack Ono',6,400),
+ (8,'Karin Voss',1,60);`,
+ tables:["salesreps"],
+ cols:["name","quota_achieved"],
+ rows:[["Farah Idris",120],["Grace Lin",120]],
+ solution:`SELECT r.name, r.quota_achieved
+FROM SalesReps r
+JOIN SalesReps m ON r.manager_id = m.rep_id
+WHERE m.name = 'Dana Cho'
+AND r.quota_achieved = (
+  SELECT MAX(r2.quota_achieved)
+  FROM SalesReps r2
+  JOIN SalesReps m2 ON r2.manager_id = m2.rep_id
+  WHERE m2.name = 'Dana Cho'
+)
+ORDER BY r.name`,
+ tips:"Self-join SalesReps to itself to resolve each rep's manager_id to the manager's name, filter to reports of 'Dana Cho', then compare each report's quota_achieved to the MAX over that same filtered set (computed with a matching subquery) so ties are all returned.",
+ hints:["Self-join SalesReps to itself so you can filter rows where the matched manager's name is 'Dana Cho'.","Compute the maximum quota_achieved among only that filtered group of direct reports, e.g. with a subquery repeating the same join and filter.","Keep every report whose quota_achieved equals that maximum, so ties produce multiple rows instead of just one."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS SalesReps;
+CREATE TABLE SalesReps(rep_id INT, name TEXT, manager_id INT, quota_achieved INT);
+INSERT INTO SalesReps VALUES
+ (1,'Dana Cho',NULL,0),
+ (2,'Nora Silva',1,200),
+ (3,'Omar Reyes',1,150),
+ (4,'Pia Novak',1,199),
+ (5,'Quinn Ashe',NULL,500),
+ (6,'Remy Chu',5,600);`,
+   rows:[["Nora Silva",200]]}
+ ]},
+{id:100,title:"Q100 · Compatible Roommate Pairs",difficulty:"Hard",topic:"Self-Joins & Comparisons",
+ desc:"Applicants(applicant_id INT, name TEXT, hometown TEXT, age INT, gender TEXT, is_early_riser BOOLEAN)\n\nA roommate-matching service treats two applicants as compatible when they share the same hometown, share the same gender, have different ages, and have different sleep schedules (one is_early_riser is true and the other false). Find every compatible pair.\nReturn: applicant_id_1, applicant_id_2 for each compatible pair, with applicant_id_1 < applicant_id_2 so each pair is listed exactly once (no reversed duplicate, no applicant paired with themselves)",
+ setup:`DROP TABLE IF EXISTS Applicants;
+CREATE TABLE Applicants(applicant_id INT, name TEXT, hometown TEXT, age INT, gender TEXT, is_early_riser BOOLEAN);
+INSERT INTO Applicants VALUES
+ (1,'Ana','Austin',22,'F',true),
+ (2,'Bea','Austin',25,'F',false),
+ (3,'Cleo','Austin',22,'F',false),
+ (4,'Dana','Austin',30,'F',true),
+ (5,'Evan','Austin',25,'M',false),
+ (6,'Felix','Austin',28,'M',true),
+ (7,'Gia','Denver',25,'F',false),
+ (8,'Hana','Austin',25,'F',true);`,
+ tables:["applicants"],
+ cols:["applicant_id_1","applicant_id_2"],
+ rows:[[1,2],[2,4],[3,4],[3,8],[5,6]],
+ solution:`SELECT a.applicant_id AS applicant_id_1, b.applicant_id AS applicant_id_2
+FROM Applicants a
+JOIN Applicants b ON a.applicant_id < b.applicant_id
+ AND a.hometown = b.hometown
+ AND a.gender = b.gender
+ AND a.age <> b.age
+ AND a.is_early_riser <> b.is_early_riser
+ORDER BY 1, 2`,
+ tips:"Self-join Applicants to itself with a < b on applicant_id to enumerate each unordered pair exactly once, then require same hometown, same gender, different age, and different is_early_riser in the join condition.",
+ hints:["Self-join Applicants to itself using a.applicant_id < b.applicant_id so each pair is generated only once, in a fixed order, and no one is paired with themselves.","Add equality conditions for hometown and gender to the join.","Add a.age <> b.age and a.is_early_riser <> b.is_early_riser to the join so only pairs differing on both of those attributes qualify."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Applicants;
+CREATE TABLE Applicants(applicant_id INT, name TEXT, hometown TEXT, age INT, gender TEXT, is_early_riser BOOLEAN);
+INSERT INTO Applicants VALUES
+ (1,'X','Boston',20,'M',true),
+ (2,'Y','Boston',22,'M',false),
+ (3,'Z','Boston',20,'M',false),
+ (4,'W','Boston',25,'F',true),
+ (5,'V','Chicago',22,'M',false);`,
+   rows:[[1,2]]}
+ ]},
+{id:101,title:"Q101 · Categories Sold at Either Branch",difficulty:"Easy",topic:"Set Operations",
+ desc:"DowntownInventory(product_id INT, category TEXT, price INT)\nUptownInventory(product_id INT, category TEXT, price INT)\n\nTwo branches of a bookstore keep separate, independently numbered catalogs. List every distinct category that appears in the downtown catalog, the uptown catalog, or both.\nReturn: category, one row per distinct value, ordered alphabetically ascending with no duplicates even if a category is stocked at both branches",
+ setup:`DROP TABLE IF EXISTS DowntownInventory;
+DROP TABLE IF EXISTS UptownInventory;
+CREATE TABLE DowntownInventory(product_id INT, category TEXT, price INT);
+CREATE TABLE UptownInventory(product_id INT, category TEXT, price INT);
+INSERT INTO DowntownInventory VALUES
+ (1,'Fiction',12),
+ (2,'Mystery',15),
+ (3,'Fiction',10),
+ (4,'Cookbooks',20),
+ (5,'Poetry',18);
+INSERT INTO UptownInventory VALUES
+ (1,'Mystery',14),
+ (2,'Sci-Fi',22),
+ (3,'Poetry',16),
+ (4,'Graphic Novels',25),
+ (5,'Sci-Fi',20);`,
+ tables:["downtowninventory","uptowninventory"],
+ cols:["category"],
+ rows:[["Cookbooks"],["Fiction"],["Graphic Novels"],["Mystery"],["Poetry"],["Sci-Fi"]],
+ solution:`SELECT category FROM DowntownInventory
+UNION
+SELECT category FROM UptownInventory
+ORDER BY category`,
+ tips:"UNION (not UNION ALL) combines both catalogs' category lists while automatically removing duplicates, both within a branch's own repeated categories and across the two branches.",
+ hints:["Select the category column from each table separately.","Combine the two SELECTs with UNION rather than UNION ALL so duplicate categories collapse into one row.","Add ORDER BY category to the combined result for alphabetical output."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS DowntownInventory;
+DROP TABLE IF EXISTS UptownInventory;
+CREATE TABLE DowntownInventory(product_id INT, category TEXT, price INT);
+CREATE TABLE UptownInventory(product_id INT, category TEXT, price INT);
+INSERT INTO DowntownInventory VALUES
+ (1,'Nonfiction',10),
+ (2,'Nonfiction',11),
+ (3,'Fiction',9);
+INSERT INTO UptownInventory VALUES
+ (1,'Fiction',13),
+ (2,'Kids',8);`,
+   rows:[["Fiction"],["Kids"],["Nonfiction"]]}
+ ]},
+{id:102,title:"Q102 · Current Payroll Snapshot",difficulty:"Medium",topic:"Set Operations",
+ desc:"PayrollSnapshots(emp_id INT, first_name TEXT, last_name TEXT, dept_id INT, salary INT)\n\nPayroll exports sometimes get re-uploaded, so the same emp_id can appear more than once, including exact duplicate rows. There is no timestamp column, but salary only ever increases over time, so an employee's current salary is the largest value recorded for their emp_id; a re-upload never changes an employee's name or dept_id, so all snapshots sharing that employee's maximum salary are identical. Compute the result as a set difference: take every row, then subtract every row that is provably outdated because some other row for the same emp_id records a strictly higher salary, so that exact-duplicate snapshots collapse to a single row.\nReturn: the set of distinct current-salary rows — emp_id, first_name, last_name, dept_id, salary — ordered by emp_id ascending",
+ setup:`DROP TABLE IF EXISTS PayrollSnapshots;
+CREATE TABLE PayrollSnapshots(emp_id INT, first_name TEXT, last_name TEXT, dept_id INT, salary INT);
+INSERT INTO PayrollSnapshots VALUES
+ (101,'Ada','Kwan',10,72000),
+ (101,'Ada','Kwan',10,78000),
+ (102,'Ben','Osei',20,65000),
+ (103,'Cara','Diaz',10,90000),
+ (103,'Cara','Diaz',10,95000),
+ (103,'Cara','Diaz',10,88000),
+ (104,'Deng','Wu',30,55000),
+ (105,'Elin','Farah',20,60000),
+ (105,'Elin','Farah',20,60000);`,
+ tables:["payrollsnapshots"],
+ cols:["emp_id","first_name","last_name","dept_id","salary"],
+ rows:[[101,"Ada","Kwan",10,78000],[102,"Ben","Osei",20,65000],[103,"Cara","Diaz",10,95000],[104,"Deng","Wu",30,55000],[105,"Elin","Farah",20,60000]],
+ solution:`SELECT * FROM PayrollSnapshots
+EXCEPT
+SELECT p1.* FROM PayrollSnapshots p1
+JOIN PayrollSnapshots p2 ON p1.emp_id = p2.emp_id AND p2.salary > p1.salary
+ORDER BY emp_id`,
+ tips:"The subtracted set (via the self-join) is every snapshot that some later, higher-salary snapshot for the same emp_id proves outdated; EXCEPT removes exactly those rows and also collapses exact duplicate rows, leaving one current row per employee.",
+ hints:["Self-join PayrollSnapshots to itself on emp_id to find pairs where one row's salary is strictly less than another row's salary for the same employee — those lower rows are outdated.","Use EXCEPT to subtract that outdated set from the full table.","EXCEPT also removes exact duplicate rows, so an employee with two identical snapshots still ends up with just one output row."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS PayrollSnapshots;
+CREATE TABLE PayrollSnapshots(emp_id INT, first_name TEXT, last_name TEXT, dept_id INT, salary INT);
+INSERT INTO PayrollSnapshots VALUES
+ (201,'X','Y',1,50000),
+ (202,'M','N',2,80000),
+ (202,'M','N',2,75000),
+ (203,'P','Q',3,60000),
+ (203,'P','Q',3,60000);`,
+   rows:[[201,"X","Y",1,50000],[202,"M","N",2,80000],[203,"P","Q",3,60000]]}
+ ]},
+{id:103,title:"Q103 · Symmetric Contact Network",difficulty:"Medium",topic:"Set Operations",
+ desc:"Connections(user_id INT, contact_id INT)\n\nA messaging app logs a row each time a user adds someone as a contact, but the logging is not always mirrored — sometimes only one direction of a friendship got recorded. Build the fully symmetric view of the network: if (user_id, contact_id) is logged, the result must contain both (user_id, contact_id) and (contact_id, user_id), without a duplicate row when both directions were already logged separately.\nReturn: user_id, contact_id — every symmetric edge exactly once, ordered by user_id then contact_id ascending",
+ setup:`DROP TABLE IF EXISTS Connections;
+CREATE TABLE Connections(user_id INT, contact_id INT);
+INSERT INTO Connections VALUES
+ (1,2),
+ (2,1),
+ (1,3),
+ (4,5),
+ (5,4),
+ (2,4),
+ (6,6);`,
+ tables:["connections"],
+ cols:["user_id","contact_id"],
+ rows:[[1,2],[1,3],[2,1],[2,4],[3,1],[4,2],[4,5],[5,4],[6,6]],
+ solution:`SELECT user_id, contact_id FROM Connections
+UNION
+SELECT contact_id AS user_id, user_id AS contact_id FROM Connections
+ORDER BY user_id, contact_id`,
+ tips:"UNION the table with its own column-swapped copy: this adds the missing reverse edge for one-directional rows while UNION's deduplication prevents already-symmetric pairs (and self-loops) from doubling up.",
+ hints:["Select user_id and contact_id as-is from Connections for one side of the UNION.","Select contact_id and user_id (swapped) from Connections for the other side.","Combine with UNION (not UNION ALL) so pairs that were already logged in both directions, or self-loops like (6,6), don't appear twice."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Connections;
+CREATE TABLE Connections(user_id INT, contact_id INT);
+INSERT INTO Connections VALUES
+ (10,20),
+ (20,10),
+ (10,30);`,
+   rows:[[10,20],[10,30],[20,10],[30,10]]}
+ ]},
+{id:104,title:"Q104 · Reviewer Leaderboard Momentum",difficulty:"Hard",topic:"Advanced Analytics",
+ desc:"Reviewers(reviewer_id INT, country TEXT)\nReviewEvents(event_date DATE, reviewer_id INT, review_count INT)\n\nA product-review platform wants to see which countries gained ground between November 2024 and December 2024. For each month, rank countries by their total review_count (summed across all reviewers in that country) from highest to lowest, using DENSE_RANK so tied totals share the same rank and the next distinct total takes the very next rank number (no gaps). A country must have activity in BOTH months to be compared; a country active in only one of the two months is excluded entirely. Return the countries whose December rank number is strictly smaller than their November rank number (i.e. they moved up the leaderboard).\nReturn: country, ordered by country name ascending",
+ setup:`DROP TABLE IF EXISTS ReviewEvents;
+DROP TABLE IF EXISTS Reviewers;
+CREATE TABLE Reviewers(reviewer_id INT, country TEXT);
+CREATE TABLE ReviewEvents(event_date DATE, reviewer_id INT, review_count INT);
+INSERT INTO Reviewers VALUES
+ (1,'Norvale'),(2,'Sudmark'),(3,'Eastport'),(4,'Westbrook'),(5,'Centralia'),(6,'Farvale');
+INSERT INTO ReviewEvents VALUES
+ ('2024-11-05',1,250),('2024-11-20',1,150),
+ ('2024-11-10',2,400),
+ ('2024-11-10',3,300),
+ ('2024-11-10',4,200),
+ ('2024-11-10',5,100),
+ ('2024-12-05',1,300),
+ ('2024-12-10',2,250),
+ ('2024-12-10',3,450),
+ ('2024-12-10',4,450),
+ ('2024-12-10',5,100),
+ ('2025-06-01',6,900);`,
+ tables:["reviewers","reviewevents"],
+ cols:["country"],
+ rows:[["Eastport"],["Westbrook"]],
+ solution:`WITH monthly AS (
+  SELECT r.country, TO_CHAR(e.event_date,'YYYY-MM') AS ym, SUM(e.review_count) AS total_reviews
+  FROM ReviewEvents e JOIN Reviewers r ON r.reviewer_id = e.reviewer_id
+  GROUP BY r.country, TO_CHAR(e.event_date,'YYYY-MM')
+),
+ranked AS (
+  SELECT country, ym, DENSE_RANK() OVER (PARTITION BY ym ORDER BY total_reviews DESC) AS rnk
+  FROM monthly
+)
+SELECT nov.country
+FROM ranked nov
+JOIN ranked dec_ ON dec_.country = nov.country AND nov.ym = '2024-11' AND dec_.ym = '2024-12'
+WHERE dec_.rnk < nov.rnk
+ORDER BY nov.country`,
+ tips:"Aggregate review_count by country and month first, then rank each month independently with DENSE_RANK() PARTITION BY month. Self-join the ranked CTE on country to line up the two months, keeping only rows where both months exist.",
+ hints:["Join Reviewers to ReviewEvents and SUM(review_count) grouped by country and month (e.g. TO_CHAR(event_date,'YYYY-MM')).","In a separate step, rank countries within each month using DENSE_RANK() OVER (PARTITION BY month ORDER BY total DESC) so ties share a rank with no gaps.","Self-join the ranked results on country for November vs December, requiring both months to exist, and keep rows where the December rank is smaller (better) than the November rank."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS ReviewEvents;
+DROP TABLE IF EXISTS Reviewers;
+CREATE TABLE Reviewers(reviewer_id INT, country TEXT);
+CREATE TABLE ReviewEvents(event_date DATE, reviewer_id INT, review_count INT);
+INSERT INTO Reviewers VALUES
+ (1,'Alpha'),(2,'Beta'),(3,'Gamma'),(4,'Delta'),(5,'Epsilon'),(6,'Zeta');
+INSERT INTO ReviewEvents VALUES
+ ('2024-11-01',1,1000),
+ ('2024-11-01',2,800),
+ ('2024-11-01',3,800),
+ ('2024-11-01',4,200),
+ ('2024-11-01',6,1500),
+ ('2024-12-01',1,100),
+ ('2024-12-01',2,900),
+ ('2024-12-01',3,850),
+ ('2024-12-01',4,900),
+ ('2024-12-01',5,50);`,
+   rows:[["Beta"],["Delta"],["Gamma"]]}
+ ]},
+{id:105,title:"Q105 · Fitness Streak Finder",difficulty:"Hard",topic:"Consecutive Sequences",
+ desc:"UserCheckins(user_id INT, checkin_date DATE)\n\nA fitness app logs a row every time a member checks in, but a member can check in more than once on the same day. Find every member who has checked in on 3 or more CALENDAR DAYS IN A ROW at least once — a qualifying streak is a run of consecutive dates with no day skipped, at least 3 days long. Duplicate check-ins on the same day count as a single day and neither extend nor break a streak. List each qualifying member only once, even if they have multiple separate streaks.\nReturn: user_id, ordered ascending",
+ setup:`DROP TABLE IF EXISTS UserCheckins;
+CREATE TABLE UserCheckins(user_id INT, checkin_date DATE);
+INSERT INTO UserCheckins VALUES
+ (1,'2024-01-01'),(1,'2024-01-02'),(1,'2024-01-03'),
+ (2,'2024-01-01'),(2,'2024-01-02'),
+ (3,'2024-01-01'),(3,'2024-01-02'),(3,'2024-01-04'),
+ (4,'2024-02-01'),(4,'2024-02-02'),(4,'2024-02-02'),(4,'2024-02-03'),(4,'2024-02-04'),
+ (5,'2024-03-01'),
+ (6,'2024-04-01'),(6,'2024-04-02'),(6,'2024-04-03'),(6,'2024-04-05'),(6,'2024-04-06'),(6,'2024-04-07');`,
+ tables:["usercheckins"],
+ cols:["user_id"],
+ rows:[[1],[4],[6]],
+ solution:`WITH distinct_days AS (
+  SELECT DISTINCT user_id, checkin_date FROM UserCheckins
+),
+grp AS (
+  SELECT user_id, checkin_date,
+    checkin_date - (ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY checkin_date))::int AS grp_key
+  FROM distinct_days
+),
+streaks AS (
+  SELECT user_id, grp_key, COUNT(*) AS streak_len
+  FROM grp GROUP BY user_id, grp_key
+)
+SELECT DISTINCT user_id FROM streaks WHERE streak_len >= 3 ORDER BY user_id`,
+ tips:"This is the classic gaps-and-islands trick: dedupe to one row per user/day, then subtract a per-user ROW_NUMBER() (ordered by date) from the date. Consecutive dates land on the same resulting value, turning runs into groups you can COUNT.",
+ hints:["First get DISTINCT (user_id, checkin_date) pairs so repeat check-ins on the same day don't inflate a streak.","For each user, order their distinct days and subtract ROW_NUMBER() (as an integer) from checkin_date — consecutive calendar days produce the identical result, forming a group key.","GROUP BY user_id and that group key, COUNT(*) the rows in each group, and keep users with any group of size >= 3."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS UserCheckins;
+CREATE TABLE UserCheckins(user_id INT, checkin_date DATE);
+INSERT INTO UserCheckins VALUES
+ (10,'2024-01-10'),(10,'2024-01-12'),(10,'2024-01-13'),(10,'2024-01-14'),
+ (20,'2024-02-01'),(20,'2024-02-02'),(20,'2024-02-05'),(20,'2024-02-06'),
+ (30,'2024-03-01'),(30,'2024-03-02'),(30,'2024-03-03'),(30,'2024-03-04'),(30,'2024-03-05'),
+ (40,'2024-04-01'),(40,'2024-04-01'),(40,'2024-04-01');`,
+   rows:[[10],[30]]}
+ ]},
+{id:106,title:"Q106 · Bookstore Monthly Bestsellers",difficulty:"Hard",topic:"Window Functions",
+ desc:"OrderLines(invoice_no TEXT, order_date DATE, item_desc TEXT, unit_price NUMERIC, quantity INT)\n\nA bookstore's fulfillment log records every line item ever shipped or cancelled, spanning several years. A cancelled line has invoice_no starting with 'C' and a negative quantity; exclude cancelled lines from sales. For each calendar month (combine the same month across every year — all January activity together regardless of year, and so on), compute each item's total revenue as unit_price * quantity summed over its non-cancelled lines, then find the item(s) with the single highest total revenue that month. If two or more items tie for the top spot in a month, return all of them.\nReturn: month, description, total_paid — ordered by month ascending, then description ascending",
+ setup:`DROP TABLE IF EXISTS OrderLines;
+CREATE TABLE OrderLines(invoice_no TEXT, order_date DATE, item_desc TEXT, unit_price NUMERIC, quantity INT);
+INSERT INTO OrderLines VALUES
+ ('INV1','2023-01-05','Notebook',10.00,5),
+ ('INV2','2024-01-10','Notebook',10.00,3),
+ ('INV3','2023-01-07','Pen Set',8.00,10),
+ ('C001','2023-01-08','Notebook',10.00,-2),
+ ('INV4','2023-02-01','Backpack',40.00,2),
+ ('INV5','2024-02-15','Backpack',40.00,1),
+ ('INV6','2023-02-02','Umbrella',30.00,4),
+ ('INV7','2023-03-01','Lamp',25.00,2);`,
+ tables:["orderlines"],
+ cols:["month","description","total_paid"],
+ rows:[[1,"Notebook",80],[1,"Pen Set",80],[2,"Backpack",120],[2,"Umbrella",120],[3,"Lamp",50]],
+ solution:`WITH valid AS (
+  SELECT EXTRACT(MONTH FROM order_date)::int AS month_num, item_desc, unit_price * quantity AS paid
+  FROM OrderLines
+  WHERE quantity > 0
+),
+monthly AS (
+  SELECT month_num, item_desc, SUM(paid) AS total_paid
+  FROM valid GROUP BY month_num, item_desc
+),
+ranked AS (
+  SELECT month_num, item_desc, total_paid,
+    DENSE_RANK() OVER (PARTITION BY month_num ORDER BY total_paid DESC) AS rnk
+  FROM monthly
+)
+SELECT month_num AS month, item_desc AS description, total_paid
+FROM ranked WHERE rnk = 1
+ORDER BY month_num, item_desc`,
+ tips:"Filter to quantity > 0 to drop cancellations, group by EXTRACT(MONTH FROM order_date) and item to combine years, then DENSE_RANK() within each month by total revenue and keep rnk = 1 so ties all come through.",
+ hints:["Filter out cancelled lines with quantity > 0, then extract just the month number from order_date so years combine.","GROUP BY month and item_desc, summing unit_price * quantity to get each item's monthly revenue.","Rank items within each month using DENSE_RANK() OVER (PARTITION BY month ORDER BY total DESC) and keep rank 1 — this naturally returns every item tied for the top spot."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS OrderLines;
+CREATE TABLE OrderLines(invoice_no TEXT, order_date DATE, item_desc TEXT, unit_price NUMERIC, quantity INT);
+INSERT INTO OrderLines VALUES
+ ('INV10','2022-04-01','Widget A',5.00,10),
+ ('INV11','2023-04-15','Widget A',5.00,10),
+ ('INV12','2022-04-02','Widget B',20.00,3),
+ ('C010','2022-04-03','Widget A',5.00,-5),
+ ('INV13','2022-05-01','Gadget X',15.00,4),
+ ('INV14','2023-05-01','Gadget Y',15.00,4),
+ ('INV15','2022-05-02','Gadget Z',5.00,1);`,
+   rows:[[4,"Widget A",100],[5,"Gadget X",60],[5,"Gadget Y",60]]}
+ ]},
+{id:107,title:"Q107 · Second-Highest Pay By Department",difficulty:"Medium",topic:"Aggregations & JOINs",
+ desc:"Departments(dept_id INT, dept_name TEXT)\nEmployees(emp_id INT, dept_id INT, salary INT)\n\nHR wants each department's second-highest salary, but it must be based on distinct salary VALUES, not row position — if several employees share the top salary, the second-highest is the next lower distinct amount. If a department has fewer than two distinct salary values (including a department with zero employees), return NULL for that department instead of omitting it.\nReturn: dept_name, second_highest_salary — one row per department, ordered by dept_name ascending",
+ setup:`DROP TABLE IF EXISTS Employees;
+DROP TABLE IF EXISTS Departments;
+CREATE TABLE Departments(dept_id INT, dept_name TEXT);
+CREATE TABLE Employees(emp_id INT, dept_id INT, salary INT);
+INSERT INTO Departments VALUES
+ (1,'Engineering'),(2,'Sales'),(3,'HR'),(4,'Support');
+INSERT INTO Employees VALUES
+ (1,1,90000),(2,1,90000),(3,1,80000),
+ (4,2,70000),(5,2,70000),(6,2,70000),
+ (7,3,60000);`,
+ tables:["departments","employees"],
+ cols:["dept_name","second_highest_salary"],
+ rows:[["Engineering",80000],["HR",null],["Sales",null],["Support",null]],
+ solution:`WITH distinct_sal AS (
+  SELECT DISTINCT dept_id, salary FROM Employees
+),
+ranked AS (
+  SELECT dept_id, salary, DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) AS rnk
+  FROM distinct_sal
+)
+SELECT d.dept_name, r.salary AS second_highest_salary
+FROM Departments d
+LEFT JOIN ranked r ON r.dept_id = d.dept_id AND r.rnk = 2
+ORDER BY d.dept_name`,
+ tips:"DISTINCT the (dept_id, salary) pairs first so a shared top salary doesn't hide the true second value, rank with DENSE_RANK() PARTITION BY dept_id, then LEFT JOIN from Departments so departments with no second distinct salary still appear with NULL.",
+ hints:["Get DISTINCT (dept_id, salary) pairs so a salary shared by multiple employees is only counted once.","Rank those distinct salaries within each department using DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC).","LEFT JOIN Departments to the rank-2 rows (not an inner join) so departments without a second distinct salary — or with no employees — still appear, with NULL."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Employees;
+DROP TABLE IF EXISTS Departments;
+CREATE TABLE Departments(dept_id INT, dept_name TEXT);
+CREATE TABLE Employees(emp_id INT, dept_id INT, salary INT);
+INSERT INTO Departments VALUES
+ (10,'Marketing'),(20,'Finance'),(30,'Legal');
+INSERT INTO Employees VALUES
+ (1,10,50000),(2,10,55000),(3,10,55000),
+ (4,20,100000);`,
+   rows:[["Finance",null],["Legal",null],["Marketing",50000]]}
+ ]},
 ];
 
 export function getQuestionById(id: number): Question | undefined {
@@ -1901,13 +3002,7 @@ export function getQuestionById(id: number): Question | undefined {
 }
 
 export function getSortedQuestions(): Question[] {
-  const topicOrder = [
-    "Aggregations & JOINs",
-    "Window Functions",
-    "Cumulative & Sliding Windows",
-    "Consecutive Sequences",
-    "Advanced Analytics",
-  ];
+  const topicOrder: readonly string[] = TOPICS;
   const diffOrder: Record<string, number> = { Easy: 0, Medium: 1, Hard: 2 };
   return [...questions].sort((a, b) => {
     const ti = topicOrder.indexOf(a.topic) - topicOrder.indexOf(b.topic);
