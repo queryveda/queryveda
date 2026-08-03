@@ -2995,6 +2995,289 @@ INSERT INTO Employees VALUES
  (4,20,100000);`,
    rows:[["Finance",null],["Legal",null],["Marketing",50000]]}
  ]},
+{id:108,title:"Q108 · Median Order Value",difficulty:"Hard",topic:"Statistical Aggregates",
+ desc:"Orders(order_id INT, region TEXT, amount INT)\n\nA marketplace wants each region's typical order size, but average is too easily skewed by a handful of large orders. Compute the MEDIAN order amount per region: when a region has an even number of orders, the median is the average of the two middle values once sorted; when odd, it's the single middle value. Round to 2 decimal places.\nReturn: region, median_amount — ordered by region ascending",
+ setup:`DROP TABLE IF EXISTS Orders;
+CREATE TABLE Orders(order_id INT, region TEXT, amount INT);
+INSERT INTO Orders VALUES
+ (1,'North',100),(2,'North',200),(3,'North',300),(4,'North',400),
+ (5,'South',50),(6,'South',150),(7,'South',250),
+ (8,'East',500);`,
+ tables:["orders"],
+ cols:["region","median_amount"],
+ rows:[["East",500],["North",250],["South",150]],
+ solution:`SELECT region, ROUND(percentile_cont(0.5) WITHIN GROUP (ORDER BY amount)::numeric,2) AS median_amount
+FROM Orders GROUP BY region ORDER BY region`,
+ tips:"PostgreSQL's percentile_cont(0.5) WITHIN GROUP (ORDER BY x) computes an exact median per group, automatically averaging the two middle values when the group has an even row count — no manual ROW_NUMBER bookkeeping needed.",
+ hints:["A median isn't AVG() — with an even count you need the average of the two middle sorted values, and with an odd count just the single middle value.","PostgreSQL has a built-in ordered-set aggregate for this: percentile_cont(0.5) WITHIN GROUP (ORDER BY amount).","Just GROUP BY region and apply that aggregate per group, casting to numeric and rounding to 2 decimal places."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Orders;
+CREATE TABLE Orders(order_id INT, region TEXT, amount INT);
+INSERT INTO Orders VALUES
+ (1,'West',10),(2,'West',20),(3,'West',30),(4,'West',40),(5,'West',50),
+ (6,'Central',7),(7,'Central',9);`,
+   rows:[["Central",8],["West",30]]}
+ ]},
+{id:109,title:"Q109 · Most Common Support Category",difficulty:"Medium",topic:"Statistical Aggregates",
+ desc:"Tickets(ticket_id INT, category TEXT)\n\nA support team wants to know which issue category is filed most often — the statistical mode of the category column. If two or more categories are tied for the highest ticket count, return ALL of them rather than picking one arbitrarily.\nReturn: category, ticket_count — ordered by category ascending",
+ setup:`DROP TABLE IF EXISTS Tickets;
+CREATE TABLE Tickets(ticket_id INT, category TEXT);
+INSERT INTO Tickets VALUES
+ (1,'Billing'),(2,'Billing'),(3,'Billing'),(4,'Billing'),
+ (5,'Bug'),(6,'Bug'),(7,'Bug'),(8,'Bug'),
+ (9,'Login'),(10,'Login');`,
+ tables:["tickets"],
+ cols:["category","ticket_count"],
+ rows:[["Billing",4],["Bug",4]],
+ solution:`WITH counts AS (SELECT category, COUNT(*) AS c FROM Tickets GROUP BY category),
+mx AS (SELECT MAX(c) AS m FROM counts)
+SELECT category, c AS ticket_count FROM counts, mx WHERE c = m ORDER BY category`,
+ tips:"Count tickets per category, find the single highest count with a scalar MAX() subquery, then keep every category whose count equals that maximum — that naturally returns all ties instead of just one row.",
+ hints:["First get each category's ticket count with COUNT(*) GROUP BY category.","Separately find the overall highest count among those per-category counts (a MAX() over the grouped counts).","Keep only the category rows whose count equals that maximum — do not use LIMIT 1 or ORDER BY ... LIMIT 1, since that would drop tied categories."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Tickets;
+CREATE TABLE Tickets(ticket_id INT, category TEXT);
+INSERT INTO Tickets VALUES
+ (1,'Shipping'),(2,'Shipping'),(3,'Refund'),(4,'Refund'),(5,'Refund'),(6,'Account');`,
+   rows:[["Refund",3]]}
+ ]},
+{id:110,title:"Q110 · Purchase Count Distribution",difficulty:"Medium",topic:"Statistical Aggregates",
+ desc:"Purchases(purchase_id INT, user_id INT)\n\nProduct wants a histogram of customer engagement: for each possible number of purchases N, how many distinct users made EXACTLY N purchases? First compute how many purchases each user made, then count how many users land on each purchase-count value.\nReturn: purchase_count, num_users — ordered by purchase_count ascending",
+ setup:`DROP TABLE IF EXISTS Purchases;
+CREATE TABLE Purchases(purchase_id INT, user_id INT);
+INSERT INTO Purchases VALUES
+ (1,1),(2,1),(3,1),
+ (4,2),(5,2),(6,2),
+ (7,3),
+ (8,4),(9,4),
+ (10,5);`,
+ tables:["purchases"],
+ cols:["purchase_count","num_users"],
+ rows:[[1,2],[2,1],[3,2]],
+ solution:`WITH per_user AS (SELECT user_id, COUNT(*) AS c FROM Purchases GROUP BY user_id)
+SELECT c AS purchase_count, COUNT(*) AS num_users FROM per_user GROUP BY c ORDER BY c`,
+ tips:"This is a group-of-a-group: first aggregate Purchases per user_id to get each user's purchase count, then treat that count as the grouping key in a second aggregation to count how many users share each count value.",
+ hints:["Start with a subquery/CTE that computes COUNT(*) of purchases GROUP BY user_id — one row per user.","Treat that per-user count as data: GROUP BY it in an outer query.","COUNT(*) in the outer query gives the number of users sharing each purchase-count value; ORDER BY the purchase count."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Purchases;
+CREATE TABLE Purchases(purchase_id INT, user_id INT);
+INSERT INTO Purchases VALUES
+ (1,10),
+ (2,20),
+ (3,30),(4,30),
+ (5,40),(6,40),(7,40),(8,40),
+ (9,50),(10,50),(11,50),(12,50);`,
+   rows:[[1,2],[2,1],[4,2]]}
+ ]},
+{id:111,title:"Q111 · Weighted Average Rating",difficulty:"Medium",topic:"Statistical Aggregates",
+ desc:"RatingBuckets(stars INT, num_reviews INT)\n\nA product page stores ratings as a frequency table instead of one row per reviewer: each row is a star value (1-5) and how many reviewers gave that many stars. Compute the weighted average rating — SUM(stars * num_reviews) / SUM(num_reviews) — rounded to 2 decimal places. If the total number of reviews across all buckets is zero, return NULL instead of dividing by zero.\nReturn: weighted_avg (a single row)",
+ setup:`DROP TABLE IF EXISTS RatingBuckets;
+CREATE TABLE RatingBuckets(stars INT, num_reviews INT);
+INSERT INTO RatingBuckets VALUES
+ (5,10),(4,5),(3,3),(2,0),(1,2);`,
+ tables:["ratingbuckets"],
+ cols:["weighted_avg"],
+ rows:[[4.05]],
+ solution:`SELECT ROUND(SUM(stars*num_reviews)::numeric / NULLIF(SUM(num_reviews),0),2) AS weighted_avg FROM RatingBuckets`,
+ tips:"This is a weighted mean: multiply each star value by its review count, sum those products, and divide by the total review count. Wrap the denominator in NULLIF(..., 0) so an all-zero-reviews table returns NULL instead of erroring.",
+ hints:["The weighted average is SUM(stars * num_reviews) divided by SUM(num_reviews), not a plain AVG(stars).","Cast the numerator (or the whole division) to numeric so you get decimal division instead of integer truncation.","Guard the denominator with NULLIF(SUM(num_reviews), 0) so a table where every bucket has 0 reviews returns NULL rather than a division-by-zero error."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS RatingBuckets;
+CREATE TABLE RatingBuckets(stars INT, num_reviews INT);
+INSERT INTO RatingBuckets VALUES
+ (5,0),(4,0),(3,0);`,
+   rows:[[null]]},
+  {setup:`DROP TABLE IF EXISTS RatingBuckets;
+CREATE TABLE RatingBuckets(stars INT, num_reviews INT);
+INSERT INTO RatingBuckets VALUES
+ (5,4),(4,4),(3,2),(2,0),(1,0);`,
+   rows:[[4.2]]}
+ ]},
+{id:112,title:"Q112 · Reactivated Subscribers",difficulty:"Hard",topic:"Advanced Analytics",
+ desc:"Logins(user_id INT, login_date DATE)\n\nA subscription service defines a REACTIVATION as any login that occurs 30 or more days after that same user's immediately preceding login. A user's very first login has no preceding login and is never counted as a reactivation, and a single user can reactivate multiple times over their history.\nReturn: user_id, reactivation_date — one row per qualifying login, ordered by user_id ascending, then reactivation_date ascending",
+ setup:`DROP TABLE IF EXISTS Logins;
+CREATE TABLE Logins(user_id INT, login_date DATE);
+INSERT INTO Logins VALUES
+ (1,'2024-01-01'),(1,'2024-01-31'),(1,'2024-02-01'),
+ (2,'2024-01-01'),(2,'2024-01-30'),(2,'2024-03-15'),
+ (3,'2024-01-01');`,
+ tables:["logins"],
+ cols:["user_id","reactivation_date"],
+ rows:[[1,"2024-01-31"],[2,"2024-03-15"]],
+ solution:`WITH lagged AS (
+  SELECT user_id, login_date, LAG(login_date) OVER (PARTITION BY user_id ORDER BY login_date) AS prev
+  FROM Logins
+)
+SELECT user_id, login_date AS reactivation_date
+FROM lagged WHERE prev IS NOT NULL AND (login_date - prev) >= 30
+ORDER BY user_id, login_date`,
+ tips:"Use LAG(login_date) PARTITION BY user_id ORDER BY login_date to line up each login with the user's previous one, then filter to rows where a previous login exists AND the gap (a plain date subtraction, giving whole days) is >= 30.",
+ hints:["LAG(login_date) OVER (PARTITION BY user_id ORDER BY login_date) gives each row the same user's immediately preceding login date (NULL for their first).","Subtracting two DATE values in Postgres gives an integer number of days directly — no EXTRACT needed.","Filter to rows where the previous login is NOT NULL and the day gap is >= 30; a user's first login (prev IS NULL) must never qualify."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Logins;
+CREATE TABLE Logins(user_id INT, login_date DATE);
+INSERT INTO Logins VALUES
+ (10,'2024-05-01'),(10,'2024-05-15'),(10,'2024-06-20'),
+ (20,'2024-05-01'),(20,'2024-06-15');`,
+   rows:[[10,"2024-06-20"],[20,"2024-06-15"]]}
+ ]},
+{id:113,title:"Q113 · Server Session Uptime",difficulty:"Hard",topic:"Advanced Analytics",
+ desc:"ServerEvents(server_id INT, event_type TEXT /* 'start' or 'stop' */, ts TIMESTAMP)\n\nAn infrastructure log records 'start' and 'stop' events for servers that get power-cycled repeatedly over time. Each 'start' event pairs with the very next 'stop' event for that same server (pair them in chronological order: 1st start with 1st stop, 2nd start with 2nd stop, and so on — a server can have several such sessions). Compute each server's TOTAL uptime across all of its sessions, in whole seconds.\nReturn: server_id, uptime_seconds — ordered by server_id ascending",
+ setup:`DROP TABLE IF EXISTS ServerEvents;
+CREATE TABLE ServerEvents(server_id INT, event_type TEXT, ts TIMESTAMP);
+INSERT INTO ServerEvents VALUES
+ (1,'start','2024-01-01 10:00:00'),(1,'stop','2024-01-01 10:05:00'),
+ (1,'start','2024-01-01 10:10:00'),(1,'stop','2024-01-01 10:12:00'),
+ (2,'start','2024-01-01 09:00:00'),(2,'stop','2024-01-01 09:01:00');`,
+ tables:["serverevents"],
+ cols:["server_id","uptime_seconds"],
+ rows:[[1,420],[2,60]],
+ solution:`WITH starts AS (
+  SELECT server_id, ts, ROW_NUMBER() OVER (PARTITION BY server_id ORDER BY ts) AS rn
+  FROM ServerEvents WHERE event_type = 'start'
+),
+stops AS (
+  SELECT server_id, ts, ROW_NUMBER() OVER (PARTITION BY server_id ORDER BY ts) AS rn
+  FROM ServerEvents WHERE event_type = 'stop'
+)
+SELECT s.server_id, SUM(EXTRACT(EPOCH FROM (e.ts - s.ts)))::int AS uptime_seconds
+FROM starts s JOIN stops e ON e.server_id = s.server_id AND e.rn = s.rn
+GROUP BY s.server_id ORDER BY s.server_id`,
+ tips:"Split into two CTEs (starts, stops), number each chronologically per server with ROW_NUMBER() OVER (PARTITION BY server_id ORDER BY ts), then join starts to stops on matching server_id and matching row number so the Nth start pairs with the Nth stop. Sum EXTRACT(EPOCH FROM (stop_ts - start_ts)) to get seconds, never returning the raw timestamps.",
+ hints:["Split ServerEvents into a 'start' set and a 'stop' set, and within each set number the rows per server in chronological order with ROW_NUMBER() OVER (PARTITION BY server_id ORDER BY ts).","Join the two sets on server_id AND matching row number — that pairs the 1st start with the 1st stop, the 2nd with the 2nd, etc., which is exactly how a server power-cycles.","EXTRACT(EPOCH FROM (stop_ts - start_ts)) converts a timestamp difference to seconds; SUM that per server and cast to an integer — never select the raw ts columns."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS ServerEvents;
+CREATE TABLE ServerEvents(server_id INT, event_type TEXT, ts TIMESTAMP);
+INSERT INTO ServerEvents VALUES
+ (5,'start','2024-02-01 00:00:00'),(5,'stop','2024-02-01 01:00:00'),
+ (6,'start','2024-02-01 08:00:00'),(6,'stop','2024-02-01 08:00:30'),
+ (6,'start','2024-02-01 09:00:00'),(6,'stop','2024-02-01 09:10:00');`,
+   rows:[[5,3600],[6,630]]}
+ ]},
+{id:114,title:"Q114 · Three-Topping Combinations",difficulty:"Medium",topic:"Self-Joins & Comparisons",
+ desc:"Toppings(name TEXT, price INT)\n\nA pizzeria wants every distinct way to pick 3 different toppings for a promo combo whose total price is at most $15. Each combination of 3 toppings should appear exactly once (no mirrored duplicates like the same trio listed in a different order, and no picking the same topping twice) — enforce this with topping1 < topping2 < topping3 alphabetically.\nReturn: topping1, topping2, topping3, total_price — ordered by topping1 ascending, then topping2 ascending, then topping3 ascending",
+ setup:`DROP TABLE IF EXISTS Toppings;
+CREATE TABLE Toppings(name TEXT, price INT);
+INSERT INTO Toppings VALUES
+ ('Cheese',3),('Pepperoni',5),('Mushroom',4),('Olive',6),('Pineapple',10);`,
+ tables:["toppings"],
+ cols:["topping1","topping2","topping3","total_price"],
+ rows:[["Cheese","Mushroom","Olive",13],["Cheese","Mushroom","Pepperoni",12],["Cheese","Olive","Pepperoni",14],["Mushroom","Olive","Pepperoni",15]],
+ solution:`SELECT a.name AS topping1, b.name AS topping2, c.name AS topping3, a.price+b.price+c.price AS total_price
+FROM Toppings a JOIN Toppings b ON a.name < b.name JOIN Toppings c ON b.name < c.name
+WHERE a.price+b.price+c.price <= 15
+ORDER BY topping1, topping2, topping3`,
+ tips:"Self-join Toppings to itself three times (aliases a, b, c) using strict name inequalities a.name < b.name < c.name — this both forbids picking the same topping twice and guarantees each 3-combination is produced exactly once instead of 6 times (one per ordering).",
+ hints:["Self-join the Toppings table to itself three times (aliases a, b, c) to build every possible trio.","Use a.name < b.name AND b.name < c.name as the join conditions instead of <> — this avoids both self-pairs and every mirrored duplicate of the same trio.","Filter WHERE the summed price of the three is <= 15 (the stated budget), keeping the boundary case where the total equals exactly 15."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Toppings;
+CREATE TABLE Toppings(name TEXT, price INT);
+INSERT INTO Toppings VALUES
+ ('Anchovy',2),('Bacon',3),('Corn',2),('Ham',20);`,
+   rows:[["Anchovy","Bacon","Corn",7]]}
+ ]},
+{id:115,title:"Q115 · Customer Lifecycle Status",difficulty:"Hard",topic:"Advanced Analytics",
+ desc:"Activity(user_id INT, month TEXT /* 'prev' or 'curr' */)\n\nEach row records that a user was active in either the previous month or the current month (a user can appear in both, or just one). Classify every user who appears at all into exactly one lifecycle status: 'new' (active in curr only), 'retained' (active in both prev and curr), or 'churned' (active in prev only). Then count how many users fall into each status.\nReturn: status, user_count — ordered by status ascending",
+ setup:`DROP TABLE IF EXISTS Activity;
+CREATE TABLE Activity(user_id INT, month TEXT);
+INSERT INTO Activity VALUES
+ (1,'prev'),(1,'curr'),
+ (2,'prev'),
+ (3,'curr'),
+ (4,'prev'),(4,'curr'),
+ (5,'curr'),
+ (6,'prev');`,
+ tables:["activity"],
+ cols:["status","user_count"],
+ rows:[["churned",2],["new",2],["retained",2]],
+ solution:`WITH prevu AS (SELECT DISTINCT user_id FROM Activity WHERE month = 'prev'),
+curru AS (SELECT DISTINCT user_id FROM Activity WHERE month = 'curr'),
+classified AS (
+  SELECT COALESCE(p.user_id, c.user_id) AS user_id,
+    CASE WHEN p.user_id IS NOT NULL AND c.user_id IS NOT NULL THEN 'retained'
+         WHEN p.user_id IS NOT NULL THEN 'churned'
+         ELSE 'new' END AS status
+  FROM prevu p FULL OUTER JOIN curru c ON p.user_id = c.user_id
+)
+SELECT status, COUNT(*) AS user_count FROM classified GROUP BY status ORDER BY status`,
+ tips:"Split into a prev-month user set and a curr-month user set, FULL OUTER JOIN them on user_id, then a CASE on which side is NULL classifies each user as new/retained/churned in one pass before the final GROUP BY status.",
+ hints:["Build two DISTINCT user_id sets: one for month = 'prev', one for month = 'curr'.","FULL OUTER JOIN those two sets on user_id so every user appears exactly once, whichever month(s) they were active in.","A CASE expression on which side of the join is NULL gives the status per user (both present = retained, only prev = churned, only curr = new); GROUP BY that status and COUNT(*)."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Activity;
+CREATE TABLE Activity(user_id INT, month TEXT);
+INSERT INTO Activity VALUES
+ (10,'prev'),(10,'curr'),
+ (20,'prev'),(20,'curr'),
+ (30,'curr'),
+ (40,'curr'),
+ (50,'prev');`,
+   rows:[["churned",1],["new",2],["retained",2]]}
+ ]},
+{id:116,title:"Q116 · Ad Click-Through Rate",difficulty:"Medium",topic:"Ratios & Rates",
+ desc:"AdEvents(ad_id INT, event_type TEXT /* 'impression' or 'click' */)\n\nEach row logs a single impression or click for an ad. Compute the click-through rate per ad as clicks / impressions, rounded to 2 decimal places (a fraction such as 0.20, not a percentage). An ad with impressions but zero clicks should show a CTR of 0.00. An ad with zero impressions (regardless of clicks) has an undefined CTR and must be excluded from the results entirely.\nReturn: ad_id, ctr — ordered by ad_id ascending",
+ setup:`DROP TABLE IF EXISTS AdEvents;
+CREATE TABLE AdEvents(ad_id INT, event_type TEXT);
+INSERT INTO AdEvents VALUES
+ (1,'impression'),(1,'impression'),(1,'impression'),(1,'impression'),(1,'impression'),
+ (1,'impression'),(1,'impression'),(1,'impression'),(1,'impression'),(1,'impression'),
+ (1,'click'),(1,'click'),
+ (2,'impression'),(2,'impression'),(2,'impression'),(2,'impression'),(2,'impression'),
+ (3,'click'),(3,'click'),(3,'click'),
+ (4,'impression'),(4,'impression'),(4,'impression'),(4,'impression'),
+ (4,'impression'),(4,'impression'),(4,'impression'),(4,'impression'),
+ (4,'click'),(4,'click'),(4,'click'),(4,'click'),(4,'click'),(4,'click'),(4,'click'),(4,'click');`,
+ tables:["adevents"],
+ cols:["ad_id","ctr"],
+ rows:[[1,0.2],[2,0],[4,1]],
+ solution:`WITH counts AS (
+  SELECT ad_id,
+    SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END) AS impressions,
+    SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) AS clicks
+  FROM AdEvents GROUP BY ad_id
+)
+SELECT ad_id, ROUND(clicks::numeric / NULLIF(impressions,0),2) AS ctr
+FROM counts WHERE impressions > 0
+ORDER BY ad_id`,
+ tips:"Pivot impressions and clicks into two columns per ad with conditional SUM(CASE WHEN ...), then divide clicks by impressions (cast to numeric, NULLIF the denominator to dodge divide-by-zero) and filter to impressions > 0 so a zero-impression ad never appears.",
+ hints:["Use conditional aggregation — SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END) and the equivalent for clicks — grouped by ad_id to get one row per ad with both counts.","Divide clicks by impressions after casting to numeric (e.g. clicks::numeric / impressions) so you get decimal division, then ROUND to 2 places.","Filter the final result to impressions > 0 so an ad with zero impressions (undefined CTR) is dropped instead of producing an error or a NULL row; an ad with impressions but 0 clicks should still show 0.00."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS AdEvents;
+CREATE TABLE AdEvents(ad_id INT, event_type TEXT);
+INSERT INTO AdEvents VALUES
+ (10,'impression'),(10,'impression'),(10,'impression'),(10,'click'),
+ (20,'impression'),(20,'impression'),
+ (30,'click');`,
+   rows:[[10,0.33],[20,0]]}
+ ]},
+{id:117,title:"Q117 · Odd/Even Reading Split",difficulty:"Medium",topic:"Advanced Analytics",
+ desc:"Readings(device_id INT, reading_at DATE, value INT)\n\nA sensor platform wants a quick data-quality check per device: order that device's readings chronologically, number them starting at 1, then sum the values sitting at odd positions (1st, 3rd, 5th, ...) separately from the values at even positions (2nd, 4th, ...). A device with no readings at even positions should show 0 for that sum, not NULL.\nReturn: device_id, odd_sum, even_sum — ordered by device_id ascending",
+ setup:`DROP TABLE IF EXISTS Readings;
+CREATE TABLE Readings(device_id INT, reading_at DATE, value INT);
+INSERT INTO Readings VALUES
+ (1,'2024-01-01',10),(1,'2024-01-02',20),(1,'2024-01-03',30),(1,'2024-01-04',40),(1,'2024-01-05',50),
+ (2,'2024-01-01',5),(2,'2024-01-02',7),
+ (3,'2024-01-01',100);`,
+ tables:["readings"],
+ cols:["device_id","odd_sum","even_sum"],
+ rows:[[1,90,60],[2,5,7],[3,100,0]],
+ solution:`WITH ordered AS (
+  SELECT device_id, value, ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY reading_at) AS rn
+  FROM Readings
+)
+SELECT device_id,
+  SUM(CASE WHEN rn % 2 = 1 THEN value ELSE 0 END) AS odd_sum,
+  SUM(CASE WHEN rn % 2 = 0 THEN value ELSE 0 END) AS even_sum
+FROM ordered GROUP BY device_id ORDER BY device_id`,
+ tips:"Assign a per-device ROW_NUMBER() ordered by reading_at, then use conditional SUM(CASE WHEN rn % 2 = 1 ...) / (rn % 2 = 0 ...) to split values into odd- and even-position totals in a single GROUP BY device_id pass, defaulting the ELSE branch to 0 so devices with no even position still show 0.",
+ hints:["Number each device's readings in chronological order with ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY reading_at).","rn % 2 tells you odd (1) vs even (0) position; use conditional aggregation — SUM(CASE WHEN rn % 2 = 1 THEN value ELSE 0 END) — to total each group.","Make sure the ELSE branch is 0, not NULL/omitted, so a device with only one reading (no even position) reports even_sum = 0 instead of NULL; GROUP BY device_id."],
+ tests:[
+  {setup:`DROP TABLE IF EXISTS Readings;
+CREATE TABLE Readings(device_id INT, reading_at DATE, value INT);
+INSERT INTO Readings VALUES
+ (10,'2024-02-01',1),(10,'2024-02-02',2),(10,'2024-02-03',3),
+ (20,'2024-02-01',9),(20,'2024-02-02',1),(20,'2024-02-03',9),(20,'2024-02-04',1);`,
+   rows:[[10,4,2],[20,18,2]]}
+ ]},
 ];
 
 export function getQuestionById(id: number): Question | undefined {
