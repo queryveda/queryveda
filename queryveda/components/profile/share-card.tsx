@@ -177,6 +177,7 @@ function drawCard(canvas: HTMLCanvasElement, displayName: string, stats: Profile
     "Ratios & Rates": "Ratios",
     "Self-Joins & Comparisons": "Self-Join",
     "Set Operations": "Set Ops",
+    "Statistical Aggregates": "Stats",
   };
   for (const t of stats.byTopic) {
     ctx.fillStyle = "#94a3b8";

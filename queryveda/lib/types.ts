@@ -11,7 +11,8 @@ export type Topic =
   | "Date & Time"
   | "Ratios & Rates"
   | "Self-Joins & Comparisons"
-  | "Set Operations";
+  | "Set Operations"
+  | "Statistical Aggregates";
 
 export interface TestCase {
   setup: string;

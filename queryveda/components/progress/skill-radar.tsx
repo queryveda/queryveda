@@ -119,6 +119,7 @@ export function SkillRadar({ byTopic }: SkillRadarProps) {
               "Ratios & Rates": "Ratios",
               "Self-Joins & Comparisons": "Self-Join",
               "Set Operations": "Set Ops",
+              "Statistical Aggregates": "Stats",
             };
             return (
               <text

@@ -12,6 +12,7 @@ export const TOPICS: Topic[] = [
   "Ratios & Rates",
   "Self-Joins & Comparisons",
   "Set Operations",
+  "Statistical Aggregates",
 ];
 
 export const TOPIC_COLORS: Record<Topic, string> = {
@@ -26,6 +27,7 @@ export const TOPIC_COLORS: Record<Topic, string> = {
   "Ratios & Rates": "#f43f5e",
   "Self-Joins & Comparisons": "#f97316",
   "Set Operations": "#84cc16",
+  "Statistical Aggregates": "#10b981",
 };
 
 export const DIFFICULTY_COLORS: Record<Difficulty, string> = {
