@@ -11,8 +11,9 @@ const SIZE = 360;
 const CX = SIZE / 2;
 const CY = SIZE / 2;
 const RADIUS = 110;
-const LABEL_RADIUS = 140;
-const N = 5;
+const LABEL_RADIUS = 128;
+// One axis per topic — the chart adapts to however many topics exist.
+const N = TOPICS.length;
 
 function angleForAxis(i: number): number {
   // Start from top (-90 deg), go clockwise
