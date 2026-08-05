@@ -1,146 +1,64 @@
 {
-  "date": "2026-08-04",
+  "date": "2026-08-05",
   "question": {
-    "title": "Ranking Sales by Region",
+    "title": "Average Order Value by Customer",
     "difficulty": "Medium",
-    "topic": "Advanced Analytics",
-    "desc": "Rank sales representatives in each region based on their total sales, with the highest sales representative in each region ranked as 1. Use the provided tables: sales and regions.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_rep TEXT, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region_id, sales_rep, sales_amount) VALUES (1, 'John', 1000.00), (1, 'Alice', 800.00), (2, 'Bob', 1200.00), (2, 'Eve', 900.00), (3, 'Charlie', 700.00), (3, 'David', 1100.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name TEXT); INSERT INTO regions (id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East');",
+    "topic": "Aggregations & JOINs",
+    "desc": "Find the average order value for each customer in the 'customers' and 'orders' tables. The average order value is calculated by dividing the total order value by the number of orders for each customer.",
+    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (id, name) VALUES (1, 'John Doe'), (2, 'Jane Doe'), (3, 'Bob Smith'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10,2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (id, customer_id, order_value) VALUES (1, 1, 100.00), (2, 1, 200.00), (3, 2, 50.00), (4, 3, 75.00), (5, 1, 150.00);",
     "tables": [
-      "sales",
-      "regions"
+      "customers",
+      "orders"
     ],
     "cols": [
-      "region_name",
-      "sales_rep",
-      "sales_amount",
-      "rank"
+      "customer_name",
+      "avg_order_value"
     ],
     "rows": [
       [
-        "North",
-        "John",
-        1000,
-        1
+        "John Doe",
+        150
       ],
       [
-        "North",
-        "Alice",
-        800,
-        2
+        "Jane Doe",
+        50
       ],
       [
-        "South",
-        "Bob",
-        1200,
-        1
-      ],
-      [
-        "South",
-        "Eve",
-        900,
-        2
-      ],
-      [
-        "East",
-        "David",
-        1100,
-        1
-      ],
-      [
-        "East",
-        "Charlie",
-        700,
-        2
+        "Bob Smith",
+        75
       ]
     ],
-    "solution": "SELECT r.region_name, s.sales_rep, s.sales_amount, DENSE_RANK() OVER (PARTITION BY r.region_name ORDER BY s.sales_amount DESC) AS rank FROM sales s JOIN regions r ON s.region_id = r.id ORDER BY r.region_name, rank;",
-    "tips": "Use window functions to simplify the ranking process.",
+    "solution": "SELECT c.name AS customer_name, AVG(o.order_value) AS avg_order_value FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.name ORDER BY avg_order_value DESC;",
+    "tips": "Consider using window functions for more complex aggregations.",
     "hints": [
-      "You'll need to join the sales and regions tables based on the region_id.",
-      "Use the DENSE_RANK() window function to assign a rank to each sales representative within their region.",
-      "Partition the data by region and order by sales_amount in descending order to get the correct ranking."
+      "Use the JOIN clause to combine rows from the 'customers' and 'orders' tables.",
+      "Apply the AVG function to calculate the average order value.",
+      "Use the GROUP BY clause to group the results by customer name."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_rep TEXT, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region_id, sales_rep, sales_amount) VALUES (1, 'John', 1500.00), (1, 'Alice', 1000.00), (2, 'Bob', 2000.00), (2, 'Eve', 1800.00), (3, 'Charlie', 1200.00), (3, 'David', 1500.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name TEXT); INSERT INTO regions (id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East');",
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (id, name) VALUES (4, 'Alice Johnson'), (5, 'Mike Brown'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10,2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (id, customer_id, order_value) VALUES (6, 4, 250.00), (7, 4, 300.00), (8, 5, 100.00);",
         "rows": [
           [
-            "North",
-            "John",
-            1500,
-            1
+            "Alice Johnson",
+            275
           ],
           [
-            "North",
-            "Alice",
-            1000,
-            2
-          ],
-          [
-            "South",
-            "Bob",
-            2000,
-            1
-          ],
-          [
-            "South",
-            "Eve",
-            1800,
-            2
-          ],
-          [
-            "East",
-            "David",
-            1500,
-            1
-          ],
-          [
-            "East",
-            "Charlie",
-            1200,
-            2
+            "Mike Brown",
+            100
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_rep TEXT, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region_id, sales_rep, sales_amount) VALUES (1, 'John', 2000.00), (1, 'Alice', 1500.00), (2, 'Bob', 2500.00), (2, 'Eve', 2200.00), (3, 'Charlie', 1800.00), (3, 'David', 2000.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name TEXT); INSERT INTO regions (id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East');",
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (id, name) VALUES (6, 'Emily Davis'), (7, 'David Lee'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10,2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (id, customer_id, order_value) VALUES (9, 6, 400.00), (10, 7, 200.00), (11, 6, 350.00);",
         "rows": [
           [
-            "North",
-            "John",
-            2000,
-            1
+            "Emily Davis",
+            375
           ],
           [
-            "North",
-            "Alice",
-            1500,
-            2
-          ],
-          [
-            "South",
-            "Bob",
-            2500,
-            1
-          ],
-          [
-            "South",
-            "Eve",
-            2200,
-            2
-          ],
-          [
-            "East",
-            "David",
-            2000,
-            1
-          ],
-          [
-            "East",
-            "Charlie",
-            1800,
-            2
+            "David Lee",
+            200
           ]
         ]
       }
