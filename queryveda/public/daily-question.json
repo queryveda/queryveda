@@ -1,64 +1,109 @@
 {
-  "date": "2026-08-05",
+  "date": "2026-08-06",
   "question": {
-    "title": "Average Order Value by Customer",
+    "title": "Ranking Employees by Department",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the average order value for each customer in the 'customers' and 'orders' tables. The average order value is calculated by dividing the total order value by the number of orders for each customer.",
-    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (id, name) VALUES (1, 'John Doe'), (2, 'Jane Doe'), (3, 'Bob Smith'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10,2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (id, customer_id, order_value) VALUES (1, 1, 100.00), (2, 1, 200.00), (3, 2, 50.00), (4, 3, 75.00), (5, 1, 150.00);",
+    "topic": "Window Functions",
+    "desc": "Write a query to rank employees within each department based on their salary, with the highest salary being ranked 1. The output should include the employee's id, name, department, and rank.",
+    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('John Doe', 'Sales', 50000.00), ('Jane Doe', 'Marketing', 60000.00), ('Bob Smith', 'Sales', 70000.00), ('Alice Johnson', 'Marketing', 55000.00), ('Mike Brown', 'Sales', 45000.00);",
     "tables": [
-      "customers",
-      "orders"
+      "employees"
     ],
     "cols": [
-      "customer_name",
-      "avg_order_value"
+      "id",
+      "name",
+      "department",
+      "rank"
     ],
     "rows": [
       [
-        "John Doe",
-        150
-      ],
-      [
-        "Jane Doe",
-        50
-      ],
-      [
+        3,
         "Bob Smith",
-        75
+        "Sales",
+        1
+      ],
+      [
+        1,
+        "John Doe",
+        "Sales",
+        2
+      ],
+      [
+        5,
+        "Mike Brown",
+        "Sales",
+        3
+      ],
+      [
+        2,
+        "Jane Doe",
+        "Marketing",
+        1
+      ],
+      [
+        4,
+        "Alice Johnson",
+        "Marketing",
+        2
       ]
     ],
-    "solution": "SELECT c.name AS customer_name, AVG(o.order_value) AS avg_order_value FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.name ORDER BY avg_order_value DESC;",
-    "tips": "Consider using window functions for more complex aggregations.",
+    "solution": "SELECT id, name, department, rank() OVER (PARTITION BY department ORDER BY salary DESC) AS rank FROM employees;",
+    "tips": "The use of window functions allows for ranking without the need for self-joins or subqueries.",
     "hints": [
-      "Use the JOIN clause to combine rows from the 'customers' and 'orders' tables.",
-      "Apply the AVG function to calculate the average order value.",
-      "Use the GROUP BY clause to group the results by customer name."
+      "Consider using the PARTITION BY clause to divide the result set into partitions based on the department.",
+      "The ORDER BY clause within the window function will determine the order in which the rows are ranked.",
+      "The rank() function will assign a rank to each row within each partition based on the ORDER BY clause."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (id, name) VALUES (4, 'Alice Johnson'), (5, 'Mike Brown'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10,2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (id, customer_id, order_value) VALUES (6, 4, 250.00), (7, 4, 300.00), (8, 5, 100.00);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Emily Davis', 'IT', 80000.00), ('David Lee', 'IT', 65000.00), ('Kevin White', 'Finance', 72000.00), ('Sarah Taylor', 'Finance', 58000.00);",
         "rows": [
           [
-            "Alice Johnson",
-            275
+            1,
+            "Emily Davis",
+            "IT",
+            1
           ],
           [
-            "Mike Brown",
-            100
+            2,
+            "David Lee",
+            "IT",
+            2
+          ],
+          [
+            3,
+            "Kevin White",
+            "Finance",
+            1
+          ],
+          [
+            4,
+            "Sarah Taylor",
+            "Finance",
+            2
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (id, name) VALUES (6, 'Emily Davis'), (7, 'David Lee'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_value DECIMAL(10,2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (id, customer_id, order_value) VALUES (9, 6, 400.00), (10, 7, 200.00), (11, 6, 350.00);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Peter Hall', 'HR', 62000.00), ('Linda Martin', 'HR', 68000.00), ('Tom Harris', 'HR', 59000.00);",
         "rows": [
           [
-            "Emily Davis",
-            375
+            2,
+            "Linda Martin",
+            "HR",
+            1
           ],
           [
-            "David Lee",
-            200
+            1,
+            "Peter Hall",
+            "HR",
+            2
+          ],
+          [
+            3,
+            "Tom Harris",
+            "HR",
+            3
           ]
         ]
       }
