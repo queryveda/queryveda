@@ -1,109 +1,101 @@
 {
-  "date": "2026-08-06",
+  "date": "2026-08-07",
   "question": {
-    "title": "Ranking Employees by Department",
+    "title": "Cumulative Sales by Region",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "Write a query to rank employees within each department based on their salary, with the highest salary being ranked 1. The output should include the employee's id, name, department, and rank.",
-    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('John Doe', 'Sales', 50000.00), ('Jane Doe', 'Marketing', 60000.00), ('Bob Smith', 'Sales', 70000.00), ('Alice Johnson', 'Marketing', 55000.00), ('Mike Brown', 'Sales', 45000.00);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Find the cumulative sales by region for each day, where the cumulative sales are calculated from the start of the year.",
+    "setup": "\n      DROP TABLE IF EXISTS sales;\n      CREATE TABLE sales (\n         id SERIAL PRIMARY KEY,\n         region VARCHAR(255),\n         date DATE,\n         amount DECIMAL(10, 2)\n      );\n      INSERT INTO sales (region, date, amount)\n      VALUES ('North', '2022-01-01', 100.00),\n             ('South', '2022-01-01', 200.00),\n             ('North', '2022-01-02', 150.00),\n             ('South', '2022-01-02', 250.00),\n             ('North', '2022-01-03', 120.00),\n             ('South', '2022-01-03', 300.00);\n   ",
     "tables": [
-      "employees"
+      "sales"
     ],
     "cols": [
-      "id",
-      "name",
-      "department",
-      "rank"
+      "region",
+      "date",
+      "cumulative_sales"
     ],
     "rows": [
       [
-        3,
-        "Bob Smith",
-        "Sales",
-        1
+        "North",
+        "2022-01-01",
+        100
       ],
       [
-        1,
-        "John Doe",
-        "Sales",
-        2
+        "North",
+        "2022-01-02",
+        250
       ],
       [
-        5,
-        "Mike Brown",
-        "Sales",
-        3
+        "North",
+        "2022-01-03",
+        370
       ],
       [
-        2,
-        "Jane Doe",
-        "Marketing",
-        1
+        "South",
+        "2022-01-01",
+        200
       ],
       [
-        4,
-        "Alice Johnson",
-        "Marketing",
-        2
+        "South",
+        "2022-01-02",
+        450
+      ],
+      [
+        "South",
+        "2022-01-03",
+        750
       ]
     ],
-    "solution": "SELECT id, name, department, rank() OVER (PARTITION BY department ORDER BY salary DESC) AS rank FROM employees;",
-    "tips": "The use of window functions allows for ranking without the need for self-joins or subqueries.",
+    "solution": "SELECT region, date, SUM(amount) OVER (PARTITION BY region ORDER BY date) AS cumulative_sales FROM sales ORDER BY region, date;",
+    "tips": "Using window functions can simplify complex aggregation queries.",
     "hints": [
-      "Consider using the PARTITION BY clause to divide the result set into partitions based on the department.",
-      "The ORDER BY clause within the window function will determine the order in which the rows are ranked.",
-      "The rank() function will assign a rank to each row within each partition based on the ORDER BY clause."
+      "You will need to use a window function to calculate the cumulative sales.",
+      "Partition the data by region and order by date to ensure correct cumulative calculations.",
+      "Use the SUM function with the OVER clause to specify the window over which the sum is calculated."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Emily Davis', 'IT', 80000.00), ('David Lee', 'IT', 65000.00), ('Kevin White', 'Finance', 72000.00), ('Sarah Taylor', 'Finance', 58000.00);",
+        "setup": "\n            DROP TABLE IF EXISTS sales;\n            CREATE TABLE sales (\n               id SERIAL PRIMARY KEY,\n               region VARCHAR(255),\n               date DATE,\n               amount DECIMAL(10, 2)\n            );\n            INSERT INTO sales (region, date, amount)\n            VALUES ('East', '2022-02-01', 50.00),\n                   ('West', '2022-02-01', 75.00),\n                   ('East', '2022-02-02', 100.00),\n                   ('West', '2022-02-02', 125.00);\n         ",
         "rows": [
           [
-            1,
-            "Emily Davis",
-            "IT",
-            1
+            "East",
+            "2022-02-01",
+            50
           ],
           [
-            2,
-            "David Lee",
-            "IT",
-            2
+            "East",
+            "2022-02-02",
+            150
           ],
           [
-            3,
-            "Kevin White",
-            "Finance",
-            1
+            "West",
+            "2022-02-01",
+            75
           ],
           [
-            4,
-            "Sarah Taylor",
-            "Finance",
-            2
+            "West",
+            "2022-02-02",
+            200
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Peter Hall', 'HR', 62000.00), ('Linda Martin', 'HR', 68000.00), ('Tom Harris', 'HR', 59000.00);",
+        "setup": "\n            DROP TABLE IF EXISTS sales;\n            CREATE TABLE sales (\n               id SERIAL PRIMARY KEY,\n               region VARCHAR(255),\n               date DATE,\n               amount DECIMAL(10, 2)\n            );\n            INSERT INTO sales (region, date, amount)\n            VALUES ('Central', '2022-03-01', 25.00),\n                   ('Central', '2022-03-02', 50.00),\n                   ('Central', '2022-03-03', 75.00);\n         ",
         "rows": [
           [
-            2,
-            "Linda Martin",
-            "HR",
-            1
+            "Central",
+            "2022-03-01",
+            25
           ],
           [
-            1,
-            "Peter Hall",
-            "HR",
-            2
+            "Central",
+            "2022-03-02",
+            75
           ],
           [
-            3,
-            "Tom Harris",
-            "HR",
-            3
+            "Central",
+            "2022-03-03",
+            150
           ]
         ]
       }
