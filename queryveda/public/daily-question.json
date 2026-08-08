@@ -1,101 +1,48 @@
 {
-  "date": "2026-08-07",
+  "date": "2026-08-08",
   "question": {
-    "title": "Cumulative Sales by Region",
+    "title": "Consecutive Logins",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "Find the cumulative sales by region for each day, where the cumulative sales are calculated from the start of the year.",
-    "setup": "\n      DROP TABLE IF EXISTS sales;\n      CREATE TABLE sales (\n         id SERIAL PRIMARY KEY,\n         region VARCHAR(255),\n         date DATE,\n         amount DECIMAL(10, 2)\n      );\n      INSERT INTO sales (region, date, amount)\n      VALUES ('North', '2022-01-01', 100.00),\n             ('South', '2022-01-01', 200.00),\n             ('North', '2022-01-02', 150.00),\n             ('South', '2022-01-02', 250.00),\n             ('North', '2022-01-03', 120.00),\n             ('South', '2022-01-03', 300.00);\n   ",
+    "topic": "Consecutive Sequences",
+    "desc": "Find all users who have logged in for at least three consecutive days.",
+    "setup": "DROP TABLE IF EXISTS users; CREATE TABLE users (id SERIAL PRIMARY KEY, user_name VARCHAR(255)); DROP TABLE IF EXISTS logins; CREATE TABLE logins (id SERIAL PRIMARY KEY, user_id INTEGER, login_date DATE); INSERT INTO users (user_name) VALUES ('Alice'), ('Bob'), ('Charlie'); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (3, '2022-01-01'), (3, '2022-01-02'), (3, '2022-01-04');",
     "tables": [
-      "sales"
+      "users",
+      "logins"
     ],
     "cols": [
-      "region",
-      "date",
-      "cumulative_sales"
+      "user_name",
+      "consecutive_days"
     ],
     "rows": [
       [
-        "North",
-        "2022-01-01",
-        100
-      ],
-      [
-        "North",
-        "2022-01-02",
-        250
-      ],
-      [
-        "North",
-        "2022-01-03",
-        370
-      ],
-      [
-        "South",
-        "2022-01-01",
-        200
-      ],
-      [
-        "South",
-        "2022-01-02",
-        450
-      ],
-      [
-        "South",
-        "2022-01-03",
-        750
+        "Alice",
+        3
       ]
     ],
-    "solution": "SELECT region, date, SUM(amount) OVER (PARTITION BY region ORDER BY date) AS cumulative_sales FROM sales ORDER BY region, date;",
-    "tips": "Using window functions can simplify complex aggregation queries.",
+    "solution": "WITH consecutive_logins AS ( SELECT user_id, login_date, login_date - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS consecutive_group FROM logins ), consecutive_sequences AS ( SELECT user_id, COUNT(*) AS consecutive_days FROM consecutive_logins GROUP BY user_id, consecutive_group ) SELECT u.user_name, cs.consecutive_days FROM users u JOIN consecutive_sequences cs ON u.id = cs.user_id WHERE cs.consecutive_days >= 3;",
+    "tips": "Consider using window functions to track consecutive sequences.",
     "hints": [
-      "You will need to use a window function to calculate the cumulative sales.",
-      "Partition the data by region and order by date to ensure correct cumulative calculations.",
-      "Use the SUM function with the OVER clause to specify the window over which the sum is calculated."
+      "You may need to use a subquery or CTE to first identify consecutive login dates for each user.",
+      "Use ROW_NUMBER() to assign a unique number to each login date for each user, and then subtract this from the login date to identify consecutive groups.",
+      "Join the users table with the result of the consecutive sequences query to get the user names."
     ],
     "tests": [
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            CREATE TABLE sales (\n               id SERIAL PRIMARY KEY,\n               region VARCHAR(255),\n               date DATE,\n               amount DECIMAL(10, 2)\n            );\n            INSERT INTO sales (region, date, amount)\n            VALUES ('East', '2022-02-01', 50.00),\n                   ('West', '2022-02-01', 75.00),\n                   ('East', '2022-02-02', 100.00),\n                   ('West', '2022-02-02', 125.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS users; CREATE TABLE users (id SERIAL PRIMARY KEY, user_name VARCHAR(255)); DROP TABLE IF EXISTS logins; CREATE TABLE logins (id SERIAL PRIMARY KEY, user_id INTEGER, login_date DATE); INSERT INTO users (user_name) VALUES ('David'), ('Eva'); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-02-01'), (1, '2022-02-02'), (1, '2022-02-03'), (1, '2022-02-04'), (2, '2022-02-01'), (2, '2022-02-03');",
         "rows": [
           [
-            "East",
-            "2022-02-01",
-            50
-          ],
-          [
-            "East",
-            "2022-02-02",
-            150
-          ],
-          [
-            "West",
-            "2022-02-01",
-            75
-          ],
-          [
-            "West",
-            "2022-02-02",
-            200
+            "David",
+            4
           ]
         ]
       },
       {
-        "setup": "\n            DROP TABLE IF EXISTS sales;\n            CREATE TABLE sales (\n               id SERIAL PRIMARY KEY,\n               region VARCHAR(255),\n               date DATE,\n               amount DECIMAL(10, 2)\n            );\n            INSERT INTO sales (region, date, amount)\n            VALUES ('Central', '2022-03-01', 25.00),\n                   ('Central', '2022-03-02', 50.00),\n                   ('Central', '2022-03-03', 75.00);\n         ",
+        "setup": "DROP TABLE IF EXISTS users; CREATE TABLE users (id SERIAL PRIMARY KEY, user_name VARCHAR(255)); DROP TABLE IF EXISTS logins; CREATE TABLE logins (id SERIAL PRIMARY KEY, user_id INTEGER, login_date DATE); INSERT INTO users (user_name) VALUES ('Frank'), ('Grace'); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-03-01'), (1, '2022-03-02'), (2, '2022-03-01'), (2, '2022-03-02'), (2, '2022-03-03');",
         "rows": [
           [
-            "Central",
-            "2022-03-01",
-            25
-          ],
-          [
-            "Central",
-            "2022-03-02",
-            75
-          ],
-          [
-            "Central",
-            "2022-03-03",
-            150
+            "Grace",
+            3
           ]
         ]
       }
