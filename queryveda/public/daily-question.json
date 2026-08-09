@@ -1,48 +1,110 @@
 {
-  "date": "2026-08-08",
+  "date": "2026-08-09",
   "question": {
-    "title": "Consecutive Logins",
+    "title": "Ranking Employee Salaries by Department",
     "difficulty": "Medium",
-    "topic": "Consecutive Sequences",
-    "desc": "Find all users who have logged in for at least three consecutive days.",
-    "setup": "DROP TABLE IF EXISTS users; CREATE TABLE users (id SERIAL PRIMARY KEY, user_name VARCHAR(255)); DROP TABLE IF EXISTS logins; CREATE TABLE logins (id SERIAL PRIMARY KEY, user_id INTEGER, login_date DATE); INSERT INTO users (user_name) VALUES ('Alice'), ('Bob'), ('Charlie'); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-01'), (2, '2022-01-03'), (3, '2022-01-01'), (3, '2022-01-02'), (3, '2022-01-04');",
+    "topic": "Advanced Analytics",
+    "desc": "Given two tables, employees and departments, write a query to rank employee salaries within each department. The output should include the department name, employee name, salary, and a rank based on the salary within the department.",
+    "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO employees (name, department_id, salary) VALUES ('John Doe', 1, 50000.00), ('Jane Smith', 1, 60000.00), ('Bob Johnson', 2, 40000.00), ('Alice Brown', 3, 70000.00), ('Mike Davis', 1, 55000.00);",
     "tables": [
-      "users",
-      "logins"
+      "employees",
+      "departments"
     ],
     "cols": [
-      "user_name",
-      "consecutive_days"
+      "department_name",
+      "employee_name",
+      "salary",
+      "rank"
     ],
     "rows": [
       [
-        "Alice",
+        "Sales",
+        "Jane Smith",
+        60000,
+        1
+      ],
+      [
+        "Sales",
+        "Mike Davis",
+        55000,
+        2
+      ],
+      [
+        "Sales",
+        "John Doe",
+        50000,
         3
+      ],
+      [
+        "Marketing",
+        "Bob Johnson",
+        40000,
+        1
+      ],
+      [
+        "IT",
+        "Alice Brown",
+        70000,
+        1
       ]
     ],
-    "solution": "WITH consecutive_logins AS ( SELECT user_id, login_date, login_date - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS consecutive_group FROM logins ), consecutive_sequences AS ( SELECT user_id, COUNT(*) AS consecutive_days FROM consecutive_logins GROUP BY user_id, consecutive_group ) SELECT u.user_name, cs.consecutive_days FROM users u JOIN consecutive_sequences cs ON u.id = cs.user_id WHERE cs.consecutive_days >= 3;",
-    "tips": "Consider using window functions to track consecutive sequences.",
+    "solution": "SELECT d.name AS department_name, e.name AS employee_name, e.salary, DENSE_RANK() OVER (PARTITION BY d.id ORDER BY e.salary DESC) AS rank FROM employees e JOIN departments d ON e.department_id = d.id ORDER BY d.name, e.salary DESC;",
+    "tips": "Using DENSE_RANK() ensures that if two employees have the same salary, they will have the same rank, and the next rank will not be skipped.",
     "hints": [
-      "You may need to use a subquery or CTE to first identify consecutive login dates for each user.",
-      "Use ROW_NUMBER() to assign a unique number to each login date for each user, and then subtract this from the login date to identify consecutive groups.",
-      "Join the users table with the result of the consecutive sequences query to get the user names."
+      "You will need to use a window function to rank the salaries.",
+      "Join the employees table with the departments table on the department_id column to access the department name.",
+      "Use the DENSE_RANK() function with PARTITION BY to rank the salaries within each department."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS users; CREATE TABLE users (id SERIAL PRIMARY KEY, user_name VARCHAR(255)); DROP TABLE IF EXISTS logins; CREATE TABLE logins (id SERIAL PRIMARY KEY, user_id INTEGER, login_date DATE); INSERT INTO users (user_name) VALUES ('David'), ('Eva'); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-02-01'), (1, '2022-02-02'), (1, '2022-02-03'), (1, '2022-02-04'), (2, '2022-02-01'), (2, '2022-02-03');",
+        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO employees (name, department_id, salary) VALUES ('Emily Chen', 1, 45000.00), ('David Lee', 2, 65000.00), ('Sophia Patel', 1, 52000.00);",
         "rows": [
           [
-            "David",
-            4
+            "HR",
+            "Sophia Patel",
+            52000,
+            1
+          ],
+          [
+            "HR",
+            "Emily Chen",
+            45000,
+            2
+          ],
+          [
+            "Finance",
+            "David Lee",
+            65000,
+            1
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS users; CREATE TABLE users (id SERIAL PRIMARY KEY, user_name VARCHAR(255)); DROP TABLE IF EXISTS logins; CREATE TABLE logins (id SERIAL PRIMARY KEY, user_id INTEGER, login_date DATE); INSERT INTO users (user_name) VALUES ('Frank'), ('Grace'); INSERT INTO logins (user_id, login_date) VALUES (1, '2022-03-01'), (1, '2022-03-02'), (2, '2022-03-01'), (2, '2022-03-02'), (2, '2022-03-03');",
+        "setup": "DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO departments (name) VALUES ('Engineering'), ('Design'); DROP TABLE IF EXISTS employees; CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER, salary DECIMAL(10, 2), FOREIGN KEY (department_id) REFERENCES departments(id)); INSERT INTO employees (name, department_id, salary) VALUES ('Kevin White', 1, 58000.00), ('Olivia Martin', 2, 48000.00), ('Jackson Hall', 1, 62000.00), ('Ava Kim', 2, 50000.00);",
         "rows": [
           [
-            "Grace",
-            3
+            "Design",
+            "Ava Kim",
+            50000,
+            1
+          ],
+          [
+            "Design",
+            "Olivia Martin",
+            48000,
+            2
+          ],
+          [
+            "Engineering",
+            "Jackson Hall",
+            62000,
+            1
+          ],
+          [
+            "Engineering",
+            "Kevin White",
+            58000,
+            2
           ]
         ]
       }
