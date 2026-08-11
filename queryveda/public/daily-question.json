@@ -1,72 +1,76 @@
 {
-  "date": "2026-08-10",
+  "date": "2026-08-11",
   "question": {
-    "title": "Total Sales by Region",
+    "title": "Ranking Sales by Region",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the total sales for each region, including the region name and the total sales. Use the provided sales and regions tables.",
-    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region_id, sales_amount) VALUES (1, 100.00), (1, 200.00), (2, 50.00), (3, 150.00), (1, 300.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name VARCHAR(50)); INSERT INTO regions (id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East');",
+    "topic": "Window Functions",
+    "desc": "Given two tables, 'sales' and 'regions', rank sales by region based on the total sales amount. The sales table contains columns for 'region_id', 'sale_date', and 'sale_amount'. The regions table contains columns for 'region_id' and 'region_name'. The task is to write a query that returns the region name and the corresponding sales rank for each region, with the sales rank determined by the total sales amount in descending order.",
+    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, sale_date DATE, sale_amount DECIMAL(10, 2)); CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East'), (4, 'West'); INSERT INTO sales (region_id, sale_date, sale_amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-15', 200.00), (2, '2022-02-01', 50.00), (3, '2022-03-01', 300.00), (4, '2022-04-01', 150.00), (1, '2022-05-01', 250.00), (2, '2022-06-01', 100.00), (3, '2022-07-01', 200.00), (4, '2022-08-01', 50.00);",
     "tables": [
       "sales",
       "regions"
     ],
     "cols": [
       "region_name",
-      "total_sales"
+      "sales_rank"
     ],
     "rows": [
       [
+        "East",
+        1
+      ],
+      [
         "North",
-        600
+        2
       ],
       [
         "South",
-        50
+        3
       ],
       [
-        "East",
-        150
+        "West",
+        4
       ]
     ],
-    "solution": "SELECT r.region_name, SUM(s.sales_amount) AS total_sales FROM sales s JOIN regions r ON s.region_id = r.id GROUP BY r.region_name ORDER BY total_sales DESC;",
-    "tips": "Consider using indexes on the join columns for larger datasets.",
+    "solution": "SELECT r.region_name, DENSE_RANK() OVER (ORDER BY SUM(s.sale_amount) DESC) AS sales_rank FROM sales s JOIN regions r ON s.region_id = r.region_id GROUP BY r.region_name;",
+    "tips": "Consider using window functions for ranking and aggregation for summing sales amounts.",
     "hints": [
-      "You will need to join the sales table with the regions table on the region_id column.",
-      "Use the SUM aggregation function to calculate the total sales for each region.",
-      "Group the results by the region_name column and order the results by total_sales in descending order."
+      "Start by joining the two tables on the region_id column to link sales data with region names.",
+      "Use the SUM aggregation function within a window function to calculate total sales per region.",
+      "Apply DENSE_RANK() to order regions by their total sales in descending order, ensuring no gaps in the ranking if two regions have the same total sales."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region_id, sales_amount) VALUES (1, 500.00), (2, 250.00), (3, 100.00), (1, 400.00), (2, 300.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name VARCHAR(50)); INSERT INTO regions (id, region_name) VALUES (1, 'West'), (2, 'Central'), (3, 'North');",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, sale_date DATE, sale_amount DECIMAL(10, 2)); CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'Europe'), (2, 'Asia'), (3, 'Africa'); INSERT INTO sales (region_id, sale_date, sale_amount) VALUES (1, '2022-01-01', 500.00), (2, '2022-02-01', 300.00), (3, '2022-03-01', 400.00);",
         "rows": [
           [
-            "West",
-            900
+            "Africa",
+            1
           ],
           [
-            "Central",
-            550
+            "Europe",
+            2
           ],
           [
-            "North",
-            100
+            "Asia",
+            3
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_amount DECIMAL(10, 2)); INSERT INTO sales (region_id, sales_amount) VALUES (1, 800.00), (1, 200.00), (2, 400.00), (3, 600.00), (1, 100.00); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL PRIMARY KEY, region_name VARCHAR(50)); INSERT INTO regions (id, region_name) VALUES (1, 'South'), (2, 'East'), (3, 'North');",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, sale_date DATE, sale_amount DECIMAL(10, 2)); CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'USA'), (2, 'Canada'), (3, 'Mexico'); INSERT INTO sales (region_id, sale_date, sale_amount) VALUES (1, '2022-04-01', 200.00), (2, '2022-05-01', 100.00), (3, '2022-06-01', 250.00), (1, '2022-07-01', 300.00);",
         "rows": [
           [
-            "South",
-            1100
+            "USA",
+            1
           ],
           [
-            "North",
-            600
+            "Mexico",
+            2
           ],
           [
-            "East",
-            400
+            "Canada",
+            3
           ]
         ]
       }
