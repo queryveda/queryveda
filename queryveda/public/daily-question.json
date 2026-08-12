@@ -1,76 +1,92 @@
 {
-  "date": "2026-08-11",
+  "date": "2026-08-12",
   "question": {
-    "title": "Ranking Sales by Region",
+    "title": "Cumulative Order Total",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "Given two tables, 'sales' and 'regions', rank sales by region based on the total sales amount. The sales table contains columns for 'region_id', 'sale_date', and 'sale_amount'. The regions table contains columns for 'region_id' and 'region_name'. The task is to write a query that returns the region name and the corresponding sales rank for each region, with the sales rank determined by the total sales amount in descending order.",
-    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, sale_date DATE, sale_amount DECIMAL(10, 2)); CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'North'), (2, 'South'), (3, 'East'), (4, 'West'); INSERT INTO sales (region_id, sale_date, sale_amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-15', 200.00), (2, '2022-02-01', 50.00), (3, '2022-03-01', 300.00), (4, '2022-04-01', 150.00), (1, '2022-05-01', 250.00), (2, '2022-06-01', 100.00), (3, '2022-07-01', 200.00), (4, '2022-08-01', 50.00);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Write a SQL query to find the cumulative total of orders for each customer. The result should include the customer name, order date, and the cumulative total spent by the customer.",
+    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('John Doe'), ('Jane Doe'), ('Bob Smith'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-15', 200.00), (2, '2022-02-01', 50.00), (3, '2022-03-01', 150.00), (1, '2022-04-01', 300.00);",
     "tables": [
-      "sales",
-      "regions"
+      "customers",
+      "orders"
     ],
     "cols": [
-      "region_name",
-      "sales_rank"
+      "customer_name",
+      "order_date",
+      "cumulative_total"
     ],
     "rows": [
       [
-        "East",
-        1
+        "John Doe",
+        "2022-01-01",
+        100
       ],
       [
-        "North",
-        2
+        "John Doe",
+        "2022-01-15",
+        300
       ],
       [
-        "South",
-        3
+        "John Doe",
+        "2022-04-01",
+        600
       ],
       [
-        "West",
-        4
+        "Jane Doe",
+        "2022-02-01",
+        50
+      ],
+      [
+        "Bob Smith",
+        "2022-03-01",
+        150
       ]
     ],
-    "solution": "SELECT r.region_name, DENSE_RANK() OVER (ORDER BY SUM(s.sale_amount) DESC) AS sales_rank FROM sales s JOIN regions r ON s.region_id = r.region_id GROUP BY r.region_name;",
-    "tips": "Consider using window functions for ranking and aggregation for summing sales amounts.",
+    "solution": "SELECT c.name AS customer_name, o.order_date, SUM(o.total) OVER (PARTITION BY c.id ORDER BY o.order_date) AS cumulative_total FROM customers c JOIN orders o ON c.id = o.customer_id ORDER BY c.name, o.order_date;",
+    "tips": "Using window functions can simplify complex calculations and improve query performance.",
     "hints": [
-      "Start by joining the two tables on the region_id column to link sales data with region names.",
-      "Use the SUM aggregation function within a window function to calculate total sales per region.",
-      "Apply DENSE_RANK() to order regions by their total sales in descending order, ensuring no gaps in the ranking if two regions have the same total sales."
+      "You will need to join the customers and orders tables based on the customer id.",
+      "Use a window function with PARTITION BY to calculate the cumulative total for each customer.",
+      "Order the results by customer name and order date to ensure the cumulative totals are calculated correctly."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, sale_date DATE, sale_amount DECIMAL(10, 2)); CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'Europe'), (2, 'Asia'), (3, 'Africa'); INSERT INTO sales (region_id, sale_date, sale_amount) VALUES (1, '2022-01-01', 500.00), (2, '2022-02-01', 300.00), (3, '2022-03-01', 400.00);",
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Alice Brown'), ('Mike Davis'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-05-01', 250.00), (1, '2022-06-01', 100.00), (2, '2022-07-01', 400.00);",
         "rows": [
           [
-            "Africa",
-            1
+            "Alice Brown",
+            "2022-05-01",
+            250
           ],
           [
-            "Europe",
-            2
+            "Alice Brown",
+            "2022-06-01",
+            350
           ],
           [
-            "Asia",
-            3
+            "Mike Davis",
+            "2022-07-01",
+            400
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS regions; CREATE TABLE sales (region_id INT, sale_date DATE, sale_amount DECIMAL(10, 2)); CREATE TABLE regions (region_id INT, region_name VARCHAR(50)); INSERT INTO regions (region_id, region_name) VALUES (1, 'USA'), (2, 'Canada'), (3, 'Mexico'); INSERT INTO sales (region_id, sale_date, sale_amount) VALUES (1, '2022-04-01', 200.00), (2, '2022-05-01', 100.00), (3, '2022-06-01', 250.00), (1, '2022-07-01', 300.00);",
+        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Emily Chen'), ('David Lee'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-08-01', 500.00), (2, '2022-09-01', 200.00), (1, '2022-10-01', 300.00);",
         "rows": [
           [
-            "USA",
-            1
+            "Emily Chen",
+            "2022-08-01",
+            500
           ],
           [
-            "Mexico",
-            2
+            "Emily Chen",
+            "2022-10-01",
+            800
           ],
           [
-            "Canada",
-            3
+            "David Lee",
+            "2022-09-01",
+            200
           ]
         ]
       }
