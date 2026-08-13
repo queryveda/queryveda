@@ -1,92 +1,46 @@
 {
-  "date": "2026-08-12",
+  "date": "2026-08-13",
   "question": {
-    "title": "Cumulative Order Total",
+    "title": "Identifying Consecutive Logins",
     "difficulty": "Medium",
-    "topic": "Cumulative & Sliding Windows",
-    "desc": "Write a SQL query to find the cumulative total of orders for each customer. The result should include the customer name, order date, and the cumulative total spent by the customer.",
-    "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('John Doe'), ('Jane Doe'), ('Bob Smith'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-15', 200.00), (2, '2022-02-01', 50.00), (3, '2022-03-01', 150.00), (1, '2022-04-01', 300.00);",
+    "topic": "Consecutive Sequences",
+    "desc": "Find the user IDs of users who have logged in for three consecutive days. The login table contains user IDs and login dates.",
+    "setup": "DROP TABLE IF EXISTS login; CREATE TABLE login (user_id INTEGER, login_date DATE); INSERT INTO login (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-02'), (2, '2022-01-03'), (2, '2022-01-04');",
     "tables": [
-      "customers",
-      "orders"
+      "login"
     ],
     "cols": [
-      "customer_name",
-      "order_date",
-      "cumulative_total"
+      "user_id"
     ],
     "rows": [
       [
-        "John Doe",
-        "2022-01-01",
-        100
+        1
       ],
       [
-        "John Doe",
-        "2022-01-15",
-        300
-      ],
-      [
-        "John Doe",
-        "2022-04-01",
-        600
-      ],
-      [
-        "Jane Doe",
-        "2022-02-01",
-        50
-      ],
-      [
-        "Bob Smith",
-        "2022-03-01",
-        150
+        2
       ]
     ],
-    "solution": "SELECT c.name AS customer_name, o.order_date, SUM(o.total) OVER (PARTITION BY c.id ORDER BY o.order_date) AS cumulative_total FROM customers c JOIN orders o ON c.id = o.customer_id ORDER BY c.name, o.order_date;",
-    "tips": "Using window functions can simplify complex calculations and improve query performance.",
+    "solution": "WITH ranked_logins AS ( SELECT user_id, login_date, DATE_TRUNC('day', login_date) - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS consecutive_group FROM login ) SELECT DISTINCT user_id FROM ranked_logins GROUP BY user_id, consecutive_group HAVING COUNT(*) >= 3;",
+    "tips": "Consider using window functions for efficiently handling sequences.",
     "hints": [
-      "You will need to join the customers and orders tables based on the customer id.",
-      "Use a window function with PARTITION BY to calculate the cumulative total for each customer.",
-      "Order the results by customer name and order date to ensure the cumulative totals are calculated correctly."
+      "You might need to use a window function to track the sequence of logins.",
+      "The DATE_TRUNC function could help in comparing dates by removing the time component, and ROW_NUMBER can help in assigning a unique number to each row within a partition of a result set.",
+      "Use a Common Table Expression (CTE) to first identify sequences and then filter based on the length of these sequences."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Alice Brown'), ('Mike Davis'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-05-01', 250.00), (1, '2022-06-01', 100.00), (2, '2022-07-01', 400.00);",
+        "setup": "DROP TABLE IF EXISTS login; CREATE TABLE login (user_id INTEGER, login_date DATE); INSERT INTO login (user_id, login_date) VALUES (3, '2022-01-05'), (3, '2022-01-06'), (3, '2022-01-07'), (4, '2022-01-08'), (4, '2022-01-09');",
         "rows": [
           [
-            "Alice Brown",
-            "2022-05-01",
-            250
-          ],
-          [
-            "Alice Brown",
-            "2022-06-01",
-            350
-          ],
-          [
-            "Mike Davis",
-            "2022-07-01",
-            400
+            3
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS customers; CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO customers (name) VALUES ('Emily Chen'), ('David Lee'); DROP TABLE IF EXISTS orders; CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER, order_date DATE, total DECIMAL(10, 2), FOREIGN KEY (customer_id) REFERENCES customers(id)); INSERT INTO orders (customer_id, order_date, total) VALUES (1, '2022-08-01', 500.00), (2, '2022-09-01', 200.00), (1, '2022-10-01', 300.00);",
+        "setup": "DROP TABLE IF EXISTS login; CREATE TABLE login (user_id INTEGER, login_date DATE); INSERT INTO login (user_id, login_date) VALUES (5, '2022-01-10'), (5, '2022-01-11'), (5, '2022-01-12'), (5, '2022-01-13'), (6, '2022-01-14'), (6, '2022-01-15');",
         "rows": [
           [
-            "Emily Chen",
-            "2022-08-01",
-            500
-          ],
-          [
-            "Emily Chen",
-            "2022-10-01",
-            800
-          ],
-          [
-            "David Lee",
-            "2022-09-01",
-            200
+            5
           ]
         ]
       }
