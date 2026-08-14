@@ -1,46 +1,83 @@
 {
-  "date": "2026-08-13",
+  "date": "2026-08-14",
   "question": {
-    "title": "Identifying Consecutive Logins",
+    "title": "Top Sales Employees by Department",
     "difficulty": "Medium",
-    "topic": "Consecutive Sequences",
-    "desc": "Find the user IDs of users who have logged in for three consecutive days. The login table contains user IDs and login dates.",
-    "setup": "DROP TABLE IF EXISTS login; CREATE TABLE login (user_id INTEGER, login_date DATE); INSERT INTO login (user_id, login_date) VALUES (1, '2022-01-01'), (1, '2022-01-02'), (1, '2022-01-03'), (2, '2022-01-02'), (2, '2022-01-03'), (2, '2022-01-04');",
+    "topic": "Advanced Analytics",
+    "desc": "Find the top sales employee in each department based on total sales. If there are multiple employees with the same highest sales in a department, list all of them.",
+    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER REFERENCES departments(id)); CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER REFERENCES employees(id), amount DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); INSERT INTO employees (name, department_id) VALUES ('John Doe', 1), ('Jane Doe', 1), ('Alice Smith', 2), ('Bob Johnson', 3); INSERT INTO sales (employee_id, amount) VALUES (1, 1000.00), (1, 2000.00), (2, 1500.00), (3, 500.00), (4, 800.00), (1, 3000.00), (2, 2500.00);",
     "tables": [
-      "login"
+      "sales",
+      "employees",
+      "departments"
     ],
     "cols": [
-      "user_id"
+      "department_name",
+      "employee_name",
+      "total_sales"
     ],
     "rows": [
       [
-        1
+        "Sales",
+        "John Doe",
+        6000
       ],
       [
-        2
+        "Sales",
+        "Jane Doe",
+        4000
+      ],
+      [
+        "Marketing",
+        "Alice Smith",
+        500
+      ],
+      [
+        "IT",
+        "Bob Johnson",
+        800
       ]
     ],
-    "solution": "WITH ranked_logins AS ( SELECT user_id, login_date, DATE_TRUNC('day', login_date) - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS consecutive_group FROM login ) SELECT DISTINCT user_id FROM ranked_logins GROUP BY user_id, consecutive_group HAVING COUNT(*) >= 3;",
-    "tips": "Consider using window functions for efficiently handling sequences.",
+    "solution": "WITH sales_rank AS (SELECT d.name AS department_name, e.name AS employee_name, SUM(s.amount) AS total_sales, ROW_NUMBER() OVER (PARTITION BY d.id ORDER BY SUM(s.amount) DESC) AS sales_rank FROM sales s JOIN employees e ON s.employee_id = e.id JOIN departments d ON e.department_id = d.id GROUP BY d.name, e.name) SELECT department_name, employee_name, total_sales FROM sales_rank WHERE sales_rank = 1;",
+    "tips": "Using window functions can simplify complex ranking queries.",
     "hints": [
-      "You might need to use a window function to track the sequence of logins.",
-      "The DATE_TRUNC function could help in comparing dates by removing the time component, and ROW_NUMBER can help in assigning a unique number to each row within a partition of a result set.",
-      "Use a Common Table Expression (CTE) to first identify sequences and then filter based on the length of these sequences."
+      "Consider using a Common Table Expression (CTE) to simplify your query.",
+      "Use the ROW_NUMBER() window function to assign a ranking to each employee within their department.",
+      "Join the sales, employees, and departments tables to access the necessary data for your query."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS login; CREATE TABLE login (user_id INTEGER, login_date DATE); INSERT INTO login (user_id, login_date) VALUES (3, '2022-01-05'), (3, '2022-01-06'), (3, '2022-01-07'), (4, '2022-01-08'), (4, '2022-01-09');",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER REFERENCES departments(id)); CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER REFERENCES employees(id), amount DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'); INSERT INTO employees (name, department_id) VALUES ('David Lee', 1), ('Emily Chen', 2); INSERT INTO sales (employee_id, amount) VALUES (1, 1200.00), (2, 1800.00), (1, 2800.00);",
         "rows": [
           [
-            3
+            "HR",
+            "David Lee",
+            4000
+          ],
+          [
+            "Finance",
+            "Emily Chen",
+            1800
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS login; CREATE TABLE login (user_id INTEGER, login_date DATE); INSERT INTO login (user_id, login_date) VALUES (5, '2022-01-10'), (5, '2022-01-11'), (5, '2022-01-12'), (5, '2022-01-13'), (6, '2022-01-14'), (6, '2022-01-15');",
+        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER REFERENCES departments(id)); CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER REFERENCES employees(id), amount DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('Dev'), ('QA'); INSERT INTO employees (name, department_id) VALUES ('Frank Kim', 1), ('Hannah Brown', 1), ('Ivan Hall', 2); INSERT INTO sales (employee_id, amount) VALUES (1, 2000.00), (2, 2000.00), (3, 1000.00);",
         "rows": [
           [
-            5
+            "Dev",
+            "Frank Kim",
+            2000
+          ],
+          [
+            "Dev",
+            "Hannah Brown",
+            2000
+          ],
+          [
+            "QA",
+            "Ivan Hall",
+            1000
           ]
         ]
       }
