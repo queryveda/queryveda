@@ -1,83 +1,77 @@
 {
-  "date": "2026-08-14",
+  "date": "2026-08-15",
   "question": {
-    "title": "Top Sales Employees by Department",
+    "title": "Employee Department Salaries",
     "difficulty": "Medium",
-    "topic": "Advanced Analytics",
-    "desc": "Find the top sales employee in each department based on total sales. If there are multiple employees with the same highest sales in a department, list all of them.",
-    "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER REFERENCES departments(id)); CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER REFERENCES employees(id), amount DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); INSERT INTO employees (name, department_id) VALUES ('John Doe', 1), ('Jane Doe', 1), ('Alice Smith', 2), ('Bob Johnson', 3); INSERT INTO sales (employee_id, amount) VALUES (1, 1000.00), (1, 2000.00), (2, 1500.00), (3, 500.00), (4, 800.00), (1, 3000.00), (2, 2500.00);",
+    "topic": "Aggregations & JOINs",
+    "desc": "Find the average salary for each department and the total salary for the company, including the department name and the company's total salary in each row.",
+    "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, department_id INTEGER, salary DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); INSERT INTO employees (department_id, salary) VALUES (1, 50000.00), (1, 60000.00), (2, 70000.00), (3, 80000.00), (1, 55000.00);",
     "tables": [
-      "sales",
-      "employees",
-      "departments"
+      "departments",
+      "employees"
     ],
     "cols": [
       "department_name",
-      "employee_name",
-      "total_sales"
+      "avg_salary",
+      "total_company_salary"
     ],
     "rows": [
       [
         "Sales",
-        "John Doe",
-        6000
-      ],
-      [
-        "Sales",
-        "Jane Doe",
-        4000
+        55000,
+        265000
       ],
       [
         "Marketing",
-        "Alice Smith",
-        500
+        70000,
+        265000
       ],
       [
         "IT",
-        "Bob Johnson",
-        800
+        80000,
+        265000
       ]
     ],
-    "solution": "WITH sales_rank AS (SELECT d.name AS department_name, e.name AS employee_name, SUM(s.amount) AS total_sales, ROW_NUMBER() OVER (PARTITION BY d.id ORDER BY SUM(s.amount) DESC) AS sales_rank FROM sales s JOIN employees e ON s.employee_id = e.id JOIN departments d ON e.department_id = d.id GROUP BY d.name, e.name) SELECT department_name, employee_name, total_sales FROM sales_rank WHERE sales_rank = 1;",
-    "tips": "Using window functions can simplify complex ranking queries.",
+    "solution": "WITH department_salaries AS (SELECT d.name AS department_name, AVG(e.salary) AS avg_salary FROM departments d JOIN employees e ON d.id = e.department_id GROUP BY d.name), total_salary AS (SELECT SUM(salary) AS total_company_salary FROM employees) SELECT ds.department_name, ds.avg_salary, ts.total_company_salary FROM department_salaries ds CROSS JOIN total_salary ts;",
+    "tips": "Using a Common Table Expression (CTE) can simplify complex queries and improve readability.",
     "hints": [
-      "Consider using a Common Table Expression (CTE) to simplify your query.",
-      "Use the ROW_NUMBER() window function to assign a ranking to each employee within their department.",
-      "Join the sales, employees, and departments tables to access the necessary data for your query."
+      "You'll need to join the departments and employees tables based on the department_id.",
+      "Consider using a CTE to calculate the average salary for each department and another to calculate the total company salary.",
+      "The final query should use a CROSS JOIN to include the total company salary in each row."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER REFERENCES departments(id)); CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER REFERENCES employees(id), amount DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'); INSERT INTO employees (name, department_id) VALUES ('David Lee', 1), ('Emily Chen', 2); INSERT INTO sales (employee_id, amount) VALUES (1, 1200.00), (2, 1800.00), (1, 2800.00);",
+        "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, department_id INTEGER, salary DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'), ('Operations'); INSERT INTO employees (department_id, salary) VALUES (1, 40000.00), (2, 65000.00), (3, 75000.00), (1, 45000.00), (2, 70000.00);",
         "rows": [
           [
             "HR",
-            "David Lee",
-            4000
+            42500,
+            190000
           ],
           [
             "Finance",
-            "Emily Chen",
-            1800
+            67500,
+            190000
+          ],
+          [
+            "Operations",
+            75000,
+            190000
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS sales; DROP TABLE IF EXISTS employees; DROP TABLE IF EXISTS departments; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, name VARCHAR(255), department_id INTEGER REFERENCES departments(id)); CREATE TABLE sales (id SERIAL PRIMARY KEY, employee_id INTEGER REFERENCES employees(id), amount DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('Dev'), ('QA'); INSERT INTO employees (name, department_id) VALUES ('Frank Kim', 1), ('Hannah Brown', 1), ('Ivan Hall', 2); INSERT INTO sales (employee_id, amount) VALUES (1, 2000.00), (2, 2000.00), (3, 1000.00);",
+        "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, department_id INTEGER, salary DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('Research'), ('Development'); INSERT INTO employees (department_id, salary) VALUES (1, 60000.00), (2, 80000.00), (1, 70000.00);",
         "rows": [
           [
-            "Dev",
-            "Frank Kim",
-            2000
+            "Research",
+            65000,
+            210000
           ],
           [
-            "Dev",
-            "Hannah Brown",
-            2000
-          ],
-          [
-            "QA",
-            "Ivan Hall",
-            1000
+            "Development",
+            80000,
+            210000
           ]
         ]
       }
