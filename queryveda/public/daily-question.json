@@ -1,77 +1,103 @@
 {
-  "date": "2026-08-15",
+  "date": "2026-08-16",
   "question": {
-    "title": "Employee Department Salaries",
+    "title": "Ranking Employee Salaries by Department",
     "difficulty": "Medium",
-    "topic": "Aggregations & JOINs",
-    "desc": "Find the average salary for each department and the total salary for the company, including the department name and the company's total salary in each row.",
-    "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, department_id INTEGER, salary DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('Sales'), ('Marketing'), ('IT'); INSERT INTO employees (department_id, salary) VALUES (1, 50000.00), (1, 60000.00), (2, 70000.00), (3, 80000.00), (1, 55000.00);",
+    "topic": "Window Functions",
+    "desc": "Find the rank of each employee's salary within their respective departments. Use the 'dense_rank' window function to assign a unique rank to each distinct salary within a department. The result should include the employee's name, department, salary, and rank.",
+    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('John', 'Sales', 50000.00), ('Alice', 'Marketing', 60000.00), ('Bob', 'Sales', 55000.00), ('Eve', 'Marketing', 60000.00), ('Mike', 'IT', 70000.00);",
     "tables": [
-      "departments",
       "employees"
     ],
     "cols": [
-      "department_name",
-      "avg_salary",
-      "total_company_salary"
+      "name",
+      "department",
+      "salary",
+      "rank"
     ],
     "rows": [
       [
+        "John",
+        "Sales",
+        50000,
+        1
+      ],
+      [
+        "Bob",
         "Sales",
         55000,
-        265000
+        2
       ],
       [
+        "Alice",
         "Marketing",
-        70000,
-        265000
+        60000,
+        1
       ],
       [
+        "Eve",
+        "Marketing",
+        60000,
+        1
+      ],
+      [
+        "Mike",
         "IT",
-        80000,
-        265000
+        70000,
+        1
       ]
     ],
-    "solution": "WITH department_salaries AS (SELECT d.name AS department_name, AVG(e.salary) AS avg_salary FROM departments d JOIN employees e ON d.id = e.department_id GROUP BY d.name), total_salary AS (SELECT SUM(salary) AS total_company_salary FROM employees) SELECT ds.department_name, ds.avg_salary, ts.total_company_salary FROM department_salaries ds CROSS JOIN total_salary ts;",
-    "tips": "Using a Common Table Expression (CTE) can simplify complex queries and improve readability.",
+    "solution": "SELECT name, department, salary, DENSE_RANK() OVER (PARTITION BY department ORDER BY salary) AS rank FROM employees;",
+    "tips": "Consider using 'RANK' or 'ROW_NUMBER' instead of 'DENSE_RANK' for different ranking behaviors.",
     "hints": [
-      "You'll need to join the departments and employees tables based on the department_id.",
-      "Consider using a CTE to calculate the average salary for each department and another to calculate the total company salary.",
-      "The final query should use a CROSS JOIN to include the total company salary in each row."
+      "You'll need to use a window function to rank the salaries.",
+      "The 'PARTITION BY' clause will help you group employees by department.",
+      "Use 'DENSE_RANK' to ensure that employees with the same salary get the same rank."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, department_id INTEGER, salary DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('HR'), ('Finance'), ('Operations'); INSERT INTO employees (department_id, salary) VALUES (1, 40000.00), (2, 65000.00), (3, 75000.00), (1, 45000.00), (2, 70000.00);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Sam', 'HR', 40000.00), ('Tom', 'HR', 40000.00), ('Lily', 'Finance', 45000.00);",
         "rows": [
           [
+            "Sam",
             "HR",
-            42500,
-            190000
+            40000,
+            1
           ],
           [
+            "Tom",
+            "HR",
+            40000,
+            1
+          ],
+          [
+            "Lily",
             "Finance",
-            67500,
-            190000
-          ],
-          [
-            "Operations",
-            75000,
-            190000
+            45000,
+            1
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS departments; DROP TABLE IF EXISTS employees; CREATE TABLE departments (id SERIAL PRIMARY KEY, name VARCHAR(255)); CREATE TABLE employees (id SERIAL PRIMARY KEY, department_id INTEGER, salary DECIMAL(10, 2)); INSERT INTO departments (name) VALUES ('Research'), ('Development'); INSERT INTO employees (department_id, salary) VALUES (1, 60000.00), (2, 80000.00), (1, 70000.00);",
+        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('David', 'Dev', 80000.00), ('Sophia', 'Dev', 75000.00), ('Oliver', 'Dev', 85000.00);",
         "rows": [
           [
-            "Research",
-            65000,
-            210000
+            "Sophia",
+            "Dev",
+            75000,
+            1
           ],
           [
-            "Development",
+            "David",
+            "Dev",
             80000,
-            210000
+            2
+          ],
+          [
+            "Oliver",
+            "Dev",
+            85000,
+            3
           ]
         ]
       }
