@@ -1,103 +1,88 @@
 {
-  "date": "2026-08-16",
+  "date": "2026-08-17",
   "question": {
-    "title": "Ranking Employee Salaries by Department",
+    "title": "Cumulative Sales by Region",
     "difficulty": "Medium",
-    "topic": "Window Functions",
-    "desc": "Find the rank of each employee's salary within their respective departments. Use the 'dense_rank' window function to assign a unique rank to each distinct salary within a department. The result should include the employee's name, department, salary, and rank.",
-    "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('John', 'Sales', 50000.00), ('Alice', 'Marketing', 60000.00), ('Bob', 'Sales', 55000.00), ('Eve', 'Marketing', 60000.00), ('Mike', 'IT', 70000.00);",
+    "topic": "Cumulative & Sliding Windows",
+    "desc": "Find the cumulative sales for each region and the total cumulative sales across all regions. The sales data is stored in the 'sales' table and the region information is in the 'regions' table.",
+    "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_date DATE, amount DECIMAL(10,2)); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'), (3, 'East'), (4, 'West'); INSERT INTO sales (region_id, sales_date, amount) VALUES (1, '2022-01-01', 100.00), (1, '2022-01-02', 150.00), (2, '2022-01-01', 200.00), (3, '2022-01-03', 50.00), (1, '2022-01-04', 120.00), (2, '2022-01-05', 180.00), (4, '2022-01-06', 250.00), (3, '2022-01-07', 80.00), (1, '2022-01-08', 110.00);",
     "tables": [
-      "employees"
+      "sales",
+      "regions"
     ],
     "cols": [
-      "name",
-      "department",
-      "salary",
-      "rank"
+      "region_name",
+      "cumulative_sales"
     ],
     "rows": [
       [
-        "John",
-        "Sales",
-        50000,
-        1
+        "North",
+        480
       ],
       [
-        "Bob",
-        "Sales",
-        55000,
-        2
+        "South",
+        380
       ],
       [
-        "Alice",
-        "Marketing",
-        60000,
-        1
+        "East",
+        130
       ],
       [
-        "Eve",
-        "Marketing",
-        60000,
-        1
-      ],
-      [
-        "Mike",
-        "IT",
-        70000,
-        1
+        "West",
+        250
       ]
     ],
-    "solution": "SELECT name, department, salary, DENSE_RANK() OVER (PARTITION BY department ORDER BY salary) AS rank FROM employees;",
-    "tips": "Consider using 'RANK' or 'ROW_NUMBER' instead of 'DENSE_RANK' for different ranking behaviors.",
+    "solution": "SELECT r.name AS region_name, SUM(s.amount) OVER (PARTITION BY r.id ORDER BY s.sales_date) AS cumulative_sales FROM sales s JOIN regions r ON s.region_id = r.id ORDER BY r.id, s.sales_date;",
+    "tips": "Consider using window functions to calculate cumulative sums efficiently.",
     "hints": [
-      "You'll need to use a window function to rank the salaries.",
-      "The 'PARTITION BY' clause will help you group employees by department.",
-      "Use 'DENSE_RANK' to ensure that employees with the same salary get the same rank."
+      "You need to join the sales and regions tables based on the region_id.",
+      "Use a window function like SUM() OVER() to calculate the cumulative sales for each region.",
+      "Order the results by region and date to ensure the cumulative sales are calculated correctly."
     ],
     "tests": [
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('Sam', 'HR', 40000.00), ('Tom', 'HR', 40000.00), ('Lily', 'Finance', 45000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_date DATE, amount DECIMAL(10,2)); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'North'), (2, 'South'); INSERT INTO sales (region_id, sales_date, amount) VALUES (1, '2022-02-01', 500.00), (2, '2022-02-02', 300.00), (1, '2022-02-03', 200.00), (2, '2022-02-04', 400.00);",
         "rows": [
           [
-            "Sam",
-            "HR",
-            40000,
-            1
+            "North",
+            500
           ],
           [
-            "Tom",
-            "HR",
-            40000,
-            1
+            "North",
+            700
           ],
           [
-            "Lily",
-            "Finance",
-            45000,
-            1
+            "South",
+            300
+          ],
+          [
+            "South",
+            700
           ]
         ]
       },
       {
-        "setup": "DROP TABLE IF EXISTS employees; CREATE TABLE employees (name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10, 2)); INSERT INTO employees (name, department, salary) VALUES ('David', 'Dev', 80000.00), ('Sophia', 'Dev', 75000.00), ('Oliver', 'Dev', 85000.00);",
+        "setup": "DROP TABLE IF EXISTS sales; CREATE TABLE sales (id SERIAL PRIMARY KEY, region_id INTEGER, sales_date DATE, amount DECIMAL(10,2)); DROP TABLE IF EXISTS regions; CREATE TABLE regions (id SERIAL PRIMARY KEY, name VARCHAR(255)); INSERT INTO regions (id, name) VALUES (1, 'East'), (2, 'West'); INSERT INTO sales (region_id, sales_date, amount) VALUES (1, '2022-03-01', 800.00), (2, '2022-03-02', 600.00), (1, '2022-03-03', 700.00), (2, '2022-03-04', 500.00), (1, '2022-03-05', 300.00);",
         "rows": [
           [
-            "Sophia",
-            "Dev",
-            75000,
-            1
+            "East",
+            800
           ],
           [
-            "David",
-            "Dev",
-            80000,
-            2
+            "East",
+            1500
           ],
           [
-            "Oliver",
-            "Dev",
-            85000,
-            3
+            "East",
+            1800
+          ],
+          [
+            "West",
+            600
+          ],
+          [
+            "West",
+            1100
           ]
         ]
       }
